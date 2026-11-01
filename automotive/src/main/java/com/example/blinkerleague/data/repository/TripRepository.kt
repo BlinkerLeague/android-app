@@ -1,11 +1,12 @@
 package com.example.blinkerleague.data.repository
 
 import com.example.blinkerleague.data.local.TripDao
-import com.example.blinkerleague.data.local.TripEntity
 import com.example.blinkerleague.data.remote.ApiResult
 import com.example.blinkerleague.data.remote.TripApi
 import com.example.blinkerleague.domain.model.Trip
+import com.example.blinkerleague.domain.model.TripResult
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 data class UploadSummary(
     val uploaded: Int,
@@ -32,7 +33,9 @@ class TripRepository(
         dao.insertTripWithEvents(mapper.toEntity(trip), mapper.toEventEntities(trip))
     }
 
-    fun observeTrip(tripId: String): Flow<TripEntity?> = dao.observeTrip(tripId)
+    /** 정차 후 결과 화면용. 업로드가 끝나면 점수가 채워진 값이 다시 나옴 */
+    fun observeResult(tripId: String): Flow<TripResult?> =
+        dao.observeTripWithEvents(tripId).map { it?.let(mapper::toResult) }
 
     fun observePendingCount(): Flow<Int> = dao.observePendingCount()
 
