@@ -31,8 +31,9 @@ interface TripDao {
     @Query("SELECT * FROM trip WHERE tripId = :tripId")
     suspend fun trip(tripId: String): TripWithEvents?
 
+    @Transaction
     @Query("SELECT * FROM trip WHERE tripId = :tripId")
-    fun observeTrip(tripId: String): Flow<TripEntity?>
+    fun observeTripWithEvents(tripId: String): Flow<TripWithEvents?>
 
     @Query("SELECT COUNT(*) FROM trip WHERE uploadState = 'PENDING'")
     fun observePendingCount(): Flow<Int>

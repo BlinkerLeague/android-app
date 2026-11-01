@@ -3,12 +3,19 @@ package com.example.blinkerleague.data.repository
 import com.example.blinkerleague.data.local.TripEntity
 import com.example.blinkerleague.data.local.TripEventEntity
 import com.example.blinkerleague.data.local.TripWithEvents
+import com.example.blinkerleague.data.local.UploadState
+import com.example.blinkerleague.data.remote.dto.ScoreStatus
 import com.example.blinkerleague.data.remote.dto.TripEventDto
 import com.example.blinkerleague.data.remote.dto.TripEventType
 import com.example.blinkerleague.data.remote.dto.TripUploadRequest
 import com.example.blinkerleague.data.remote.dto.TurnPayload
+import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.Trip
 import com.example.blinkerleague.domain.model.TripEvent
+import com.example.blinkerleague.domain.model.TripResult
+import com.example.blinkerleague.domain.model.TurnDirection
+import com.example.blinkerleague.domain.model.TurnRecord
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.Instant
@@ -57,6 +64,36 @@ class TripMapper(
             )
         },
     )
+
+    fun toResult(stored: TripWithEvents): TripResult {
+        val trip = stored.trip
+        val scoreState = when {
+            trip.uploadState == UploadState.REJECTED -> ScoreState.REJECTED
+            trip.uploadState == UploadState.PENDING -> ScoreState.PENDING
+            trip.scoreStatus == ScoreStatus.SCORED -> ScoreState.SCORED
+            trip.scoreStatus == ScoreStatus.NO_TURN -> ScoreState.NO_TURN
+            trip.scoreStatus == ScoreStatus.EXCLUDED_SHORT -> ScoreState.EXCLUDED_SHORT
+            else -> ScoreState.PENDING
+        }
+        val turns = stored.events
+            .filter { it.type == TripEventType.TURN }
+            .sortedBy { it.occurredAtMs }
+            .map {
+                val payload = lenientJson.decodeFromString<TurnPayload>(it.payload)
+                TurnRecord(it.occurredAtMs, TurnDirection.valueOf(payload.direction), payload.signalOn)
+            }
+        return TripResult(
+            tripId = trip.tripId,
+            startedAtMs = trip.startedAtMs,
+            endedAtMs = trip.endedAtMs,
+            distanceKm = trip.distanceKm,
+            scoreState = scoreState,
+            score = trip.score,
+            turns = turns,
+        )
+    }
+
+    private val lenientJson = Json { ignoreUnknownKeys = true }
 
     /** 초 단위까지, 오프셋 포함 (예: 2026-11-03T08:00:00+09:00) */
     private fun isoTime(epochMs: Long): String =
