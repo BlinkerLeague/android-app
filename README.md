@@ -79,7 +79,7 @@ BlinkerLeague
 | `fix/버그명` | 버그 수정 |
 
 - 작업은 `feature/*` 브랜치에서 진행한 뒤 `develop`으로 PR을 보냅니다.
-- 머지 방식: <!-- TODO: Squash merge / Merge commit 중 선택 -->
+- 머지 방식: **Squash merge** (PR당 커밋 1개로 `develop`에 반영, 머지 후 브랜치 삭제)
 
 ## 📝 커밋 컨벤션
 
