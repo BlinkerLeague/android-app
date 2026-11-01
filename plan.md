@@ -38,12 +38,13 @@
 - [ ] 11. 사용자 자산 관리·인앱 구매 API
 
 ### 1. 프로젝트 기반 정리
-- [ ] Compose 설정 추가 (Kotlin 1.9.22에 맞춰 Compose Compiler 1.5.10, Compose BOM)
-- [ ] JVM target을 1.8에서 17로 상향
-- [ ] 의존성 추가: activity-compose, lifecycle-viewmodel/runtime-compose, coroutines, Room, Retrofit 또는 Ktor, play-services-location
+- [x] Compose 설정 추가 (Kotlin 1.9.22에 맞춰 Compose Compiler 1.5.10, Compose BOM)
+- [x] JVM target을 1.8에서 17로 상향
+- [x] 의존성 추가: activity-compose, lifecycle-viewmodel/runtime-compose, coroutines
+- [ ] 의존성 추가: Room, Retrofit 또는 Ktor, play-services-location (해당 단계에서 추가)
 - [ ] (선택) Version Catalog(`gradle/libs.versions.toml`) 도입
-- [ ] `MainActivity`를 Compose로 교체하고 Door 샘플 코드 제거
-- [ ] Manifest 정리: `appCategory="audio"`와 `CAR_DOORS` 같은 템플릿 잔재를 지우고 필요한 권한만 남김
+- [x] `MainActivity`를 Compose로 교체하고 Door 샘플 코드 제거
+- [x] Manifest 정리: `appCategory="audio"`와 `CAR_DOORS` 권한 제거 (필요한 권한은 스파이크 결과에 따라 추가)
 - [ ] 패키지 구조 생성 (CLAUDE.md 참고)
 
 ### 2. 수집과 판정 (11.2 ~ 11.5)
@@ -64,7 +65,7 @@
 - [ ] `GET /api/missions/today`: 상태(`IN_PROGRESS`/`ACHIEVED`/`FAILED`)와 진행률 표시
 
 ### 4. 화면과 음성 (11.9 ~ 11.12)
-- [ ] 테마: 다크 배경 #101317, 카드 #1B2027, 강조색 #5AA2FF, 폰트 Noto Sans KR (목업 기준)
+- [x] 테마: 다크 배경 #101317, 카드 #1B2027, 강조색 #5AA2FF, 폰트 Noto Sans KR (목업 기준)
 - [ ] 정차 후 운행 결과 화면: 회전 기록 목록(제때 켬 / 안 켬), 오늘 미션 진행률, 적립 포인트
 - [ ] 미션 화면 (MVP에서는 오늘의 미션 1종만)
 - [ ] 정차·P단 상태에서만 화면 진입 허용

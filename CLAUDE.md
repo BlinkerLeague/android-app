@@ -15,6 +15,8 @@
 ./gradlew :automotive:testDebugUnitTest # 단위 테스트
 ```
 
+- JDK 17로 빌드함. 기본 `java`가 다른 버전이면 `export JAVA_HOME=$(/usr/libexec/java_home -v 17)`
+
 - 모듈은 `:automotive` 하나이고, 패키지 루트는 `com.example.blinkerleague`
 - Vehicle SDK(`ai.pleos.playground:Vehicle`)는 Pleos Nexus 저장소에서 받음 (`settings.gradle.kts`)
 
@@ -67,7 +69,8 @@ com.example.blinkerleague
 - **주행 중에는 점수·알림 화면을 띄우지 않음.** 상세 화면은 정차 또는 기어 P일 때만 보여줌.
 - 음성은 **시동 시 1회(미션 안내), 운행 종료 시 1회(결과)** 만 재생함. 내비 음성과 겹치지 않게 처리함.
 - '빨리 도착'처럼 위험한 운전을 유도하는 미션이나 문구는 만들지 않음.
-- UI 기준: 1280×720 다크 테마, 큰 글씨와 큰 터치 영역(64px 이상), 최소한의 텍스트.
+- UI 기준: 다크 테마(`ui/theme`), 큰 글씨와 큰 터치 영역(64dp 이상), 최소한의 텍스트. 목업은 1280×720 기준.
+- Pleos 화면에서 앱은 전체 화면이 아니라 오른쪽 영역에만 그려짐(왼쪽은 차량 상태 패널). 고정 크기 대신 `fillMaxSize`, `weight` 기반의 유동 레이아웃으로 만듦.
 
 ## Pleos SDK 주의사항
 
