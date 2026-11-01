@@ -51,6 +51,15 @@ class TripMapperTest {
     }
 
     @Test
+    fun `유턴 여부를 모르면 payload에서 uTurn을 뺌`() {
+        val unknown = trip.copy(
+            events = listOf(TripEvent.TurnEvent("e1", start + 1_000, TurnDirection.LEFT, signalOn = true, uTurn = null)),
+        )
+        val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(unknown), mapper.toEventEntities(unknown)))
+        assertEquals(setOf("direction", "signalOn"), request.events.single().payload.jsonObject.keys)
+    }
+
+    @Test
     fun `지원 신호가 없으면 빈 목록`() {
         val noSignal = trip.copy(supported = emptySet(), events = emptyList())
         val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(noSignal), emptyList()))

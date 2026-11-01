@@ -4,6 +4,7 @@
 
 - 기획서 (원본): https://claude.ai/artifact/8xWTvcr2nsR3zC57iVAYgZ
 - UI 목업 (주행 중 / 정차 후 결과 / 미션·포인트): https://claude.ai/artifact/EjjhjWCfMLr6d3aFThibn9
+- 구현 가이드 (10/27, 기획서 문서의 탭): SDK 사용 흐름, 핸들 각도 판정, 확인 목록
 - 서버 저장소와 서버 계획: https://github.com/BlinkerLeague/server (`plan.md`). API 형식은 이 문서를 따름
 
 ## 일정
@@ -17,7 +18,9 @@
 ## MVP 측정 기준 (초기값, 튜닝 예정)
 
 - **운행**: 시동 on 또는 주행 상태 진입 시 시작합니다. 시동 off 또는 P단이 3분 이상 유지되면 종료합니다. 1km 미만 운행은 점수 대상에서 제외합니다.
-- **회전**: 속도 5km/h 이상에서 10초 안에 진행 방향(heading)이 60° 이상 바뀌면 회전입니다. 부호로 좌·우를 구분하고, 150° 이상이면 유턴입니다. 5km/h 미만 구간과 연속 회전(회전교차로)은 묶거나 제외합니다.
+- **회전 (핸들 각도)**: 핸들 각도 절댓값이 20°를 넘은 때부터 다시 20° 아래로 내려올 때까지를 한 번의 조향으로 보고, 그 사이 90° 이상 꺾였으면 회전입니다. 부호로 좌·우를 구분합니다(부호 방향은 스파이크로 확인). 유턴은 구분하지 않습니다.
+- **회전 제외**: 기어 P·R, 비상등 켜짐, (속도를 알 때) 회전 내내 5km/h 미만. 3초 이내 연속 회전은 같은 방향이면 합치고 좌우가 섞이면(회전교차로) 제외합니다.
+- (보조) 진행 방향(heading) 기반 감지 `HeadingTurnDetector`: 10초 안에 60° 이상 변화. 위치에 heading이 있을 때 정확도 보강용으로 남겨둠, 현재 미사용
 - **깜빡이 성공**: 회전 시작 5초 전부터 회전이 끝날 때까지, 같은 방향 방향지시등이 한 번이라도 켜지면 성공입니다.
 - **MVP 점수**: 깜빡이 사용률 × 100입니다. 회전이 없는 운행은 "측정할 회전이 없었어요"로 표시합니다.
 
@@ -28,7 +31,7 @@
 - [ ] 1. TurnSignal 상태를 실시간으로 구독할 수 있는지, 좌·우가 구분되는지
 - [ ] 2. 앱이 백그라운드에 있을 때도 신호와 위치를 계속 받을 수 있는지
 - [ ] 3. 주행 중 앱 실행 제한의 범위 (정차·P단 조건)
-- [ ] 4. Fused Location의 갱신 주기와 heading·speed 제공 여부
+- [ ] 4. 위치: 실차는 FusedLocation 미지원(구현 가이드) → NaviHelper `getCurrentLocationInfo`의 필드(속도 포함 여부)와 갱신 주기
 - [ ] 5. Brake API가 페달 상태를 주는지
 - [ ] 6. Light API로 전조등·오토라이트 상태를 알 수 있는지
 - [ ] 7. Safety API가 주는 경고 종류
@@ -36,6 +39,9 @@
 - [ ] 9. 각 기능의 checkXXXCapability 결과 (앱 시작 시 로그로 출력)
 - [ ] 10. TextToSpeech 사용 조건과 내비 음성과 겹칠 때의 처리
 - [ ] 11. 사용자 자산 관리·인앱 구매 API
+- [ ] 12. 핸들 각도의 단위·범위·부호(양수가 오른쪽인지)와 갱신 주기 → `TurnConfig.steeringRightPositive`
+- [ ] 13. 차량 속도를 받는 API (저속 조향 제외 조건)
+- [ ] 14. `getTBTInfo` 응답 필드(회전 방향, 남은 거리)와 갱신 주기 (내비 미리 켜기, 2차)
 
 ### 1. 프로젝트 기반 정리
 - [x] Compose 설정 추가 (Kotlin 1.9.22에 맞춰 Compose Compiler 1.5.10, Compose BOM)
@@ -50,7 +56,8 @@
 
 ### 2. 수집과 판정 (11.2 ~ 11.5)
 - [x] `VehicleSignalSource`, `LocationSource` 인터페이스 + Fake 구현체 (시나리오 재생)
-- [ ] SDK 구현체 (`data/vehicle`), Fused Location 구현체 (`data/location`): 스파이크 1·4·8·9번 결과 필요
+- [x] 핸들 각도 회전 감지 (`SteeringTurnDetector`) + 단위 테스트, 운행 조립을 핸들 감지로 전환
+- [ ] SDK 구현체 (`data/vehicle`, 핸들 각도 포함), NaviHelper 위치 구현체 (`data/location`): 스파이크 1·4·8·9·12번 결과 필요
 - [x] 시나리오 재생기 (`data/scenario`, 테스트와 시연에 공용): "좌회전 + 깜빡이", "우회전 + 깜빡이 없음", "회전교차로", "주차장 이동"
 - [x] 운행 구분 (`TripSegmenter`) + 단위 테스트
 - [x] 회전 감지 (`TurnDetector`) + 단위 테스트
@@ -88,11 +95,12 @@
 | 항목 | 서버 쪽 제안 | 필요 시점 |
 | --- | --- | --- |
 | 인증 방식과 토큰 보관 | 등록할 때 토큰 발급, 이후 Bearer 헤더 | 서버 `driver-register` 전 |
-| `TURN` 이벤트 payload | `direction`(LEFT/RIGHT), `signalOn`, 필요하면 `uTurn`. 앱은 `uTurn`을 항상 보냄 | 서버 `trip-upload` 전 |
+| `TURN` 이벤트 payload | `direction`(LEFT/RIGHT), `signalOn`, 필요하면 `uTurn`. 핸들 감지는 유턴을 몰라서 앱은 `uTurn`을 보내지 않음 | 서버 `trip-upload` 전 |
 | `POST /api/trips` 요청 형식 | 앱 DTO(`data/remote/dto/TripDtos.kt`): `tripId`, `startedAt`, `endedAt`, `distanceKm`, `supported`, `events[{eventId, type, occurredAt, payload}]`. 시각은 `2026-11-03T08:00:00+09:00` 형식. 서버 plan.md 3.4 테이블 기준으로 만듦 → 기획서 8.2와 대조 필요 | 서버 `trip-upload` 전 |
 | `supported` 신호 이름 목록 | 예: `TURN_SIGNAL`, `BRAKE` (전체 목록은 스파이크 9번 결과로 확정) | 서버 `trip-upload` 전 |
 | 기준값 JSON 형식 | 서버 plan.md 3.3 (`trip`, `turn`, `harsh`, `weights`, `point`) | 서버 `threshold-config` 전 |
-| 앱 전용 회전 튜닝값 | 앱 `TurnConfig`에 `headingNoiseDeg`(2), `mergeGapSec`(3) 추가. 실차 튜닝 후 서버 `turn`에 넣을지 결정 | 2차 전 |
+| 기준값 `turn` 항목 (핸들 각도 전환) | 앱 `TurnConfig`에 `steeringEnterDeg`(90), `steeringExitDeg`(20), `mergeGapSec`(3) 추가. 서버 plan.md 3.3의 `windowSec`·`minAngleDeg`·`uTurnAngleDeg`는 진행 방향 기준이라 MVP에서 안 씀 → **서버 plan.md 3.3 갱신 필요** | 서버 `threshold-config` 전 |
+| `supported` 신호 이름 | 앱에 `STEERING_ANGLE` 추가. 회전 측정은 `TURN_SIGNAL`과 `STEERING_ANGLE`이 모두 있어야 가능 | 서버 `trip-upload` 전 |
 | `HARSH_*`, `SAFETY_WARNING`, `NIGHT_SEGMENT` payload | 스파이크 5~7번 결과 반영 | 2차 |
 
 ## 결정 필요
@@ -117,4 +125,6 @@
 | 2026-11-01 | JSON은 kotlinx.serialization | Retrofit·Ktor 어느 쪽을 골라도 같이 쓸 수 있음. HTTP 클라이언트 결정과 별개 |
 | 2026-11-01 | 업로드 실패 처리: 네트워크 오류·5xx·401·408·429는 대기열에 남겨 재전송, 그 외 4xx는 `REJECTED`로 멈춤(데이터는 보존) | 같은 요청을 다시 보내도 결과가 같은 오류를 무한 재시도하지 않기 위함 |
 | 2026-11-01 | Room 스키마 내보내기는 MVP에서 끔(`exportSchema = false`). DAO 테스트는 Robolectric으로 JVM에서 실행 | 일정. 출시 후 스키마가 바뀌면 Migration 도입 |
+| 2026-11-01 | 회전 감지는 핸들 각도(진입 90°·해제 20°)로 함. 진행 방향 감지는 보조로 남김 | 구현 가이드: 실차는 FusedLocation 미지원. 핸들 각도는 Virtual Console로 조작 가능해 시연에도 유리 |
+| 2026-11-01 | MVP 깜빡이 판정은 성공/실패 2단계 (회전 시작 5초 전 ~ 회전 끝). 4단계(제때·늦게·반대 방향·안 켬)는 2차 검토 | 서버 `signalOn` 형식과 점수 규칙을 그대로 쓸 수 있음 |
 | 2026-11-01 | 서버는 별도 저장소(BlinkerLeague/server)이고 Java 17 + Spring Boot 3.3 | 이미 만들어져 있음. 서버 plan.md에서 확정한 내용 |

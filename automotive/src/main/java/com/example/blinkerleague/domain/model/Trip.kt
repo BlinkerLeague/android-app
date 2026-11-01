@@ -23,6 +23,6 @@ sealed interface TripEvent {
         override val occurredAtMs: Long,
         val direction: TurnDirection,
         val signalOn: Boolean,
-        val uTurn: Boolean,
+        val uTurn: Boolean?,
     ) : TripEvent
 }

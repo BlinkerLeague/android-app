@@ -2,6 +2,7 @@ package com.example.blinkerleague.data.vehicle
 
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
+import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.VehicleStateSample
 import kotlinx.coroutines.flow.Flow
 
@@ -12,6 +13,9 @@ import kotlinx.coroutines.flow.Flow
 interface VehicleSignalSource {
     /** 이 차량에서 측정 가능한 신호 (SDK checkXXXCapability 결과). 없는 신호는 측정에서 제외함 */
     suspend fun supportedSignals(): Set<SignalType>
+
+    /** 핸들 각도 변화 (회전 감지 입력) */
+    val steeringAngles: Flow<SteeringSample>
 
     /** 방향지시등 상태 변화 */
     val turnSignals: Flow<SignalSample>

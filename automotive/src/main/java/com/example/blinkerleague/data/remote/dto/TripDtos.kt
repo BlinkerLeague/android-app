@@ -24,12 +24,15 @@ data class TripEventDto(
     val payload: JsonElement,
 )
 
-/** `TURN` 이벤트 payload. 서버와 맞출 항목 (plan.md "서버와 맞춰야 할 항목") */
+/**
+ * `TURN` 이벤트 payload. 서버와 맞출 항목 (plan.md "서버와 맞춰야 할 항목").
+ * [uTurn]은 알 수 없으면(핸들 감지) null이고, 기본값과 같으므로 JSON에서 빠짐
+ */
 @Serializable
 data class TurnPayload(
     val direction: String,
     val signalOn: Boolean,
-    val uTurn: Boolean,
+    val uTurn: Boolean? = null,
 )
 
 /** `POST /api/trips` 응답과 `GET /api/trips/{id}/score` 응답 */

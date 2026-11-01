@@ -4,6 +4,7 @@ import com.example.blinkerleague.data.scenario.Scenario
 import com.example.blinkerleague.data.scenario.replay
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
+import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.VehicleStateSample
 import kotlinx.coroutines.flow.Flow
 
@@ -19,6 +20,9 @@ class FakeVehicleSignalSource(
 ) : VehicleSignalSource {
 
     override suspend fun supportedSignals(): Set<SignalType> = scenario.supported
+
+    override val steeringAngles: Flow<SteeringSample> =
+        replay(scenario.steering, { it.timestampMs }, speed) { it.copy(timestampMs = startMs + it.timestampMs) }
 
     override val turnSignals: Flow<SignalSample> =
         replay(scenario.signals, { it.timestampMs }, speed) { it.copy(timestampMs = startMs + it.timestampMs) }

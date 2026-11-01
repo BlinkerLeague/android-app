@@ -18,7 +18,7 @@ import kotlin.math.sign
  *
  * heading은 북=0, 시계 방향이므로 변화량이 양수면 우회전, 음수면 좌회전.
  */
-class TurnDetector(private val config: TurnConfig) {
+class HeadingTurnDetector(private val config: TurnConfig) {
 
     fun detect(samples: List<LocationSample>): List<Turn> {
         val raw = splitMovingRuns(samples.sortedBy { it.timestampMs }).flatMap(::detectInRun)

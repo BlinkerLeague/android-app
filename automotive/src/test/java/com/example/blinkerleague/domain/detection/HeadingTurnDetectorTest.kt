@@ -5,14 +5,13 @@ import com.example.blinkerleague.domain.config.TurnConfig
 import com.example.blinkerleague.domain.model.LocationSample
 import com.example.blinkerleague.domain.model.TurnDirection
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class TurnDetectorTest {
+class HeadingTurnDetectorTest {
 
     private val config = TurnConfig()
-    private val detector = TurnDetector(config)
+    private val detector = HeadingTurnDetector(config)
 
     @Test
     fun `직진만 하면 회전 없음`() {
@@ -37,7 +36,7 @@ class TurnDetectorTest {
         val turn = turns.single()
         assertEquals(TurnDirection.LEFT, turn.direction)
         assertEquals(90f, turn.angleDeg, 0.1f)
-        assertFalse(turn.uTurn)
+        assertEquals(false, turn.uTurn)
         assertEquals(20_000L, turn.startMs)
         assertEquals(26_000L, turn.endMs)
     }
@@ -63,7 +62,7 @@ class TurnDetectorTest {
         }
         val turn = detector.detect(s.locations).single()
         assertEquals(TurnDirection.LEFT, turn.direction)
-        assertTrue(turn.uTurn)
+        assertEquals(true, turn.uTurn)
     }
 
     @Test
@@ -90,9 +89,9 @@ class TurnDetectorTest {
 
     @Test
     fun `heading 359에서 1로 넘어가도 2도 변화로 계산`() {
-        assertEquals(2f, TurnDetector.headingDelta(359f, 1f), 0.001f)
-        assertEquals(-2f, TurnDetector.headingDelta(1f, 359f), 0.001f)
-        assertEquals(180f, TurnDetector.headingDelta(0f, 180f), 0.001f)
+        assertEquals(2f, HeadingTurnDetector.headingDelta(359f, 1f), 0.001f)
+        assertEquals(-2f, HeadingTurnDetector.headingDelta(1f, 359f), 0.001f)
+        assertEquals(180f, HeadingTurnDetector.headingDelta(0f, 180f), 0.001f)
     }
 
     @Test
@@ -125,7 +124,7 @@ class TurnDetectorTest {
         }
         val turn = detector.detect(s.locations).single()
         assertEquals(180f, turn.angleDeg, 0.1f)
-        assertTrue(turn.uTurn)
+        assertEquals(true, turn.uTurn)
     }
 
     @Test

@@ -3,6 +3,7 @@ package com.example.blinkerleague.data.scenario
 import com.example.blinkerleague.domain.model.LocationSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
+import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.VehicleStateSample
 
 /**
@@ -11,13 +12,15 @@ import com.example.blinkerleague.domain.model.VehicleStateSample
 data class Scenario(
     val name: String,
     val locations: List<LocationSample>,
+    val steering: List<SteeringSample>,
     val signals: List<SignalSample>,
     val vehicleStates: List<VehicleStateSample>,
-    val supported: Set<SignalType> = setOf(SignalType.TURN_SIGNAL),
+    val supported: Set<SignalType> = setOf(SignalType.TURN_SIGNAL, SignalType.STEERING_ANGLE),
 ) {
     val durationMs: Long
         get() = listOfNotNull(
             locations.lastOrNull()?.timestampMs,
+            steering.lastOrNull()?.timestampMs,
             signals.lastOrNull()?.timestampMs,
             vehicleStates.lastOrNull()?.timestampMs,
         ).maxOrNull() ?: 0L
