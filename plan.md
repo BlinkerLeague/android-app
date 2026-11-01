@@ -45,14 +45,15 @@
 - [ ] (선택) Version Catalog(`gradle/libs.versions.toml`) 도입
 - [x] `MainActivity`를 Compose로 교체하고 Door 샘플 코드 제거
 - [x] Manifest 정리: `appCategory="audio"`와 `CAR_DOORS` 권한 제거 (필요한 권한은 스파이크 결과에 따라 추가)
-- [ ] 패키지 구조 생성 (CLAUDE.md 참고)
+- [x] 패키지 구조 생성: `domain/model·config·detection`, `data/vehicle·location·scenario`. 나머지(`local`, `remote`, `service`, `voice`)는 해당 단계에서 만듦
 
 ### 2. 수집과 판정 (11.2 ~ 11.5)
-- [ ] `VehicleSignalSource`, `LocationSource` 인터페이스 작성 + SDK 구현체 + Fake 구현체
-- [ ] 시나리오 재생기: "좌회전 + 깜빡이", "우회전 + 깜빡이 없음", "회전교차로", "주차장 이동"
-- [ ] 운행 구분 (`TripSegmenter`)
-- [ ] 회전 감지 (`TurnDetector`) + 단위 테스트
-- [ ] 깜빡이 판정 (`SignalJudge`) + 단위 테스트
+- [x] `VehicleSignalSource`, `LocationSource` 인터페이스 + Fake 구현체 (시나리오 재생)
+- [ ] SDK 구현체 (`data/vehicle`), Fused Location 구현체 (`data/location`): 스파이크 1·4·8·9번 결과 필요
+- [x] 시나리오 재생기 (`data/scenario`, 테스트와 시연에 공용): "좌회전 + 깜빡이", "우회전 + 깜빡이 없음", "회전교차로", "주차장 이동"
+- [x] 운행 구분 (`TripSegmenter`) + 단위 테스트
+- [x] 회전 감지 (`TurnDetector`) + 단위 테스트
+- [x] 깜빡이 판정 (`SignalJudge`) + 단위 테스트
 - [ ] Room에 운행·이벤트 선저장, 업로드 대기열 구현
 - [ ] 운행 수집 서비스 (스파이크 2번 결과에 따라 방식 결정)
 
@@ -86,6 +87,7 @@
 | `TURN` 이벤트 payload | `direction`(LEFT/RIGHT), `signalOn`, 필요하면 `uTurn` | 서버 `trip-upload` 전 |
 | `supported` 신호 이름 목록 | 예: `TURN_SIGNAL`, `BRAKE` (전체 목록은 스파이크 9번 결과로 확정) | 서버 `trip-upload` 전 |
 | 기준값 JSON 형식 | 서버 plan.md 3.3 (`trip`, `turn`, `harsh`, `weights`, `point`) | 서버 `threshold-config` 전 |
+| 앱 전용 회전 튜닝값 | 앱 `TurnConfig`에 `headingNoiseDeg`(2), `mergeGapSec`(3) 추가. 실차 튜닝 후 서버 `turn`에 넣을지 결정 | 2차 전 |
 | `HARSH_*`, `SAFETY_WARNING`, `NIGHT_SEGMENT` payload | 스파이크 5~7번 결과 반영 | 2차 |
 
 ## 결정 필요
@@ -105,4 +107,6 @@
 | --- | --- | --- |
 | 2026-11-01 | 앱 아키텍처는 MVVM, UI는 Jetpack Compose | — |
 | 2026-11-01 | 판정은 앱에서, 점수·미션·포인트 계산은 서버에서 | 기획서 7장. 규칙을 바꿀 때 앱을 다시 배포하지 않아도 됨 |
+| 2026-11-01 | 연속 회전은 간격 3초 이내면 묶음. 같은 방향이면 합치고, 좌우가 섞이면(회전교차로·S자) 판정에서 제외 | 회전교차로의 깜빡이 규칙은 복잡해서 MVP에서 감점하지 않음 |
+| 2026-11-01 | 비상등(HAZARD)은 깜빡이로 인정하지 않음. 운행 종료 시각은 P단에 들어간 시각 | — |
 | 2026-11-01 | 서버는 별도 저장소(BlinkerLeague/server)이고 Java 17 + Spring Boot 3.3 | 이미 만들어져 있음. 서버 plan.md에서 확정한 내용 |
