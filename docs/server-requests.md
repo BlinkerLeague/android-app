@@ -1,0 +1,131 @@
+# 서버 요청 사항 (앱 → 서버)
+
+> 앱 팀이 서버 팀에 전달하는 문서입니다. 서버 저장소 `plan.md` 3장(P0 API)을 기준으로, 앱 구현 중에 바뀌었거나 정해야 하는 것만 적었습니다.
+> 마지막 갱신: 2026-11-01 · 앱 기준 커밋 `develop` b966886
+
+## 요약
+
+| # | 항목 | 관련 API | 서버 plan.md | 필요 시점 | 종류 |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 회전 감지 기준값을 핸들 각도 기준으로 변경 | `GET /api/config/thresholds` | 3.3 | `threshold-config` 전 | **변경** |
+| 2 | `supported` 신호 이름에 `STEERING_ANGLE` 추가 | `POST /api/trips` | 3.4, 3.5 | `trip-upload` 전 | **변경** |
+| 3 | `TURN` payload의 `uTurn`은 보내지 않음 | `POST /api/trips` | 3.4 | `trip-upload` 전 | **변경** |
+| 4 | 운행 업로드 요청 형식 확인 | `POST /api/trips` | 3.4 | `trip-upload` 전 | 확인 |
+| 5 | 오류 응답 코드와 앱의 재전송 규칙 | 전체 | 3.1, 3.4 | `trip-upload` 전 | 확인 |
+| 6 | 오늘의 미션: 운행이 없는 날의 응답 | `GET /api/missions/today` | 3.6 | `daily-mission` 전 | 확인 |
+
+---
+
+## 1. 회전 감지 기준값을 핸들 각도 기준으로 변경 (변경)
+
+**배경**: 구현 가이드에 실차는 FusedLocation이 미지원으로 표시돼 있어, 위치의 진행 방향(heading)으로 회전을 감지하는 방식을 버리고 **핸들 각도**로 감지하기로 했습니다.
+
+**새 회전 기준**
+- 핸들 각도 절댓값이 `steeringExitDeg`(20°)를 넘은 때부터 다시 그 아래로 내려온 때까지를 한 번의 조향으로 봅니다.
+- 그 사이 `steeringEnterDeg`(90°) 이상 꺾였으면 회전입니다.
+- 회전 시작 `signalLeadSec`(5초) 전 ~ 회전 끝 사이에 같은 방향 깜빡이가 켜지면 성공입니다.
+- `mergeGapSec`(3초) 안에 이어진 회전은 같은 방향이면 하나로 합치고, 좌우가 섞이면(회전교차로) 제외합니다.
+- 기어 P·R, 비상등 켜짐, 회전 내내 `minSpeedKmh`(5) 미만(속도를 알 때)인 회전은 제외합니다.
+
+**요청**: `turn` 객체를 아래처럼 바꿔 주세요. 앱은 모르는 필드를 무시하므로 기존 필드(`windowSec`, `minAngleDeg`, `uTurnAngleDeg`)는 남겨도 되지만 MVP에서는 쓰지 않습니다.
+
+```json
+{
+  "version": 2,
+  "trip": { "minDistanceKm": 1.0, "parkEndMinutes": 3 },
+  "turn": {
+    "steeringEnterDeg": 90,
+    "steeringExitDeg": 20,
+    "signalLeadSec": 5,
+    "minSpeedKmh": 5,
+    "mergeGapSec": 3
+  },
+  "harsh": { "deltaKmhPerSec": 10 },
+  "safetyWarning": { "mergeWindowSec": 10 },
+  "weights": { "TURN_SIGNAL": 0.4, "SMOOTH_DRIVING": 0.3, "SAFETY_WARNING": 0.2, "NIGHT_HEADLIGHT": 0.1 },
+  "point": { "tripMaxKm": 50, "dailyCap": 150 }
+}
+```
+
+## 2. `supported` 신호 이름에 `STEERING_ANGLE` 추가 (변경)
+
+앱이 보내는 `supported` 값은 아래 중 차량이 지원하는 것입니다.
+
+| 이름 | 뜻 |
+| --- | --- |
+| `TURN_SIGNAL` | 방향지시등 |
+| `STEERING_ANGLE` | 핸들 각도 (**추가**) |
+| `BRAKE` | 브레이크 페달 (2차) |
+| `HEADLIGHT` | 전조등 (2차) |
+| `SAFETY_WARNING` | 안전 경고 (2차) |
+
+**요청**: 깜빡이 항목(`TURN_SIGNAL` 점수)은 `TURN_SIGNAL`과 `STEERING_ANGLE`이 **둘 다** `supported`에 있을 때만 측정 가능한 것으로 봐 주세요. 앱은 둘 중 하나라도 없으면 `TURN` 이벤트를 만들지 않습니다. 이 경우 가중치 재분배에서 제외되어야 하고 0점이 되면 안 됩니다.
+
+## 3. `TURN` payload의 `uTurn`은 보내지 않음 (변경)
+
+핸들 각도로는 유턴을 구분할 수 없어서 앱은 `uTurn` 필드를 **보내지 않습니다**. 서버는 이 필드를 선택 항목(없으면 null)으로 받아 주세요.
+
+```json
+{ "direction": "LEFT", "signalOn": true }
+```
+
+- `direction`: `LEFT` 또는 `RIGHT`
+- `signalOn`: 깜빡이를 제때 켰으면 `true`. MVP 판정은 성공/실패 2단계입니다.
+
+## 4. 운행 업로드 요청 형식 확인 (확인)
+
+기획서 8.2의 요청 예시를 받지 못해서, 서버 plan.md 3.4의 테이블 컬럼을 기준으로 아래 형식으로 보내고 있습니다. 다르면 알려주세요.
+
+```json
+{
+  "tripId": "0b6c1f5e-7a1d-4c8e-9f0a-2d3b4c5d6e7f",
+  "startedAt": "2026-11-03T08:00:00+09:00",
+  "endedAt": "2026-11-03T08:10:00+09:00",
+  "distanceKm": 3.2,
+  "supported": ["STEERING_ANGLE", "TURN_SIGNAL"],
+  "events": [
+    {
+      "eventId": "5a7e2c90-1b3d-4f6a-8c9e-0d1f2a3b4c5d",
+      "type": "TURN",
+      "occurredAt": "2026-11-03T08:02:00+09:00",
+      "payload": { "direction": "LEFT", "signalOn": true }
+    }
+  ]
+}
+```
+
+- `tripId`, `eventId`: 앱에서 만든 UUID. 재전송 시 같은 값을 그대로 보냅니다.
+- 시각: ISO-8601, 초 단위, 기기 시간대 오프셋 포함 (한국은 `+09:00`)
+- `occurredAt`: 회전 시작 시각. 항상 `startedAt` ~ `endedAt` 안에 있습니다.
+- `events`: 시각순 정렬. 회전이 없으면 빈 배열
+- 원시 위치 좌표는 보내지 않습니다.
+
+**응답**: 앱은 `status`, `score`만 저장하고, `turns`, `metrics`는 있으면 씁니다. `status`는 `SCORED`, `NO_TURN`, `EXCLUDED_SHORT` 중 하나라고 가정합니다.
+
+## 5. 오류 응답 코드와 앱의 재전송 규칙 (확인)
+
+앱은 운행을 먼저 기기에 저장하고 대기열에서 올립니다. 응답 코드에 따라 이렇게 처리합니다.
+
+| 응답 | 앱 처리 |
+| --- | --- |
+| 2xx | 업로드 완료, 응답 점수 저장 |
+| 네트워크 오류, 5xx, 401, 408, 429 | 대기열에 남겨 나중에 다시 보냄 |
+| 그 외 4xx (400, 404, 409 등) | 다시 보내도 같은 결과라 보고 **재전송을 멈춤** (데이터는 기기에 남김) |
+
+**요청**: 잠깐 지나면 풀리는 문제(DB 일시 장애, 동시 요청 충돌 등)에는 4xx가 아니라 5xx를 돌려주세요. 4xx를 받으면 그 운행은 다시 올라가지 않습니다.
+
+## 6. 오늘의 미션: 운행이 없는 날의 응답 (확인)
+
+앱은 서버 plan.md 3.6 형식 그대로 씁니다.
+
+```json
+{
+  "missionId": 1,
+  "title": "회전 깜빡이 완벽",
+  "periodKey": "2026-11-03",
+  "status": "IN_PROGRESS",
+  "progress": { "turns": 2, "successTurns": 2, "requiredTurns": 3 }
+}
+```
+
+**요청**: 그날 운행이 아직 없어도 404가 아니라 `status: "IN_PROGRESS"`, `turns: 0`, `successTurns: 0`인 응답을 주세요. 앱은 시동 시 이 값으로 미션을 안내합니다.
