@@ -5,6 +5,9 @@
         android:name="android.hardware.type.automotive"
         android:required="true" />
 
+    <!-- 음성 안내: Pleos TextToSpeech SDK가 요구하는 권한 (SDK의 TTS_PERMISSION 상수) -->
+    <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
+
     <application
         android:name=".BlinkerLeagueApplication"
         android:allowBackup="true"

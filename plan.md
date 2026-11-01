@@ -38,6 +38,8 @@
 - [ ] 8. 시동·주행 상태(DrivingMode, P단)를 감지할 수 있는지
 - [ ] 9. 각 기능의 checkXXXCapability 결과 (앱 시작 시 로그로 출력)
 - [ ] 10. TextToSpeech 사용 조건과 내비 음성과 겹칠 때의 처리
+  - [x] 에뮬레이터: Pleos TextToSpeech SDK 3.3.1 `Mode.ON_DEVICE` + `ko-KR`로 재생됨. 권한 `pleos.car.permission.TTS_SERVICE` 필요. Android 표준 TextToSpeech는 엔진(caas SpeechService) 연결 실패
+  - [ ] 내비 안내 음성 중일 때 오디오 포커스 동작 (지연·거절) 확인
 - [ ] 11. 사용자 자산 관리·인앱 구매 API
 - [ ] 12. 핸들 각도의 단위·범위·부호(양수가 오른쪽인지)와 갱신 주기 → `TurnConfig.steeringRightPositive`
 - [ ] 13. 차량 속도를 받는 API (저속 조향 제외 조건)
@@ -88,7 +90,7 @@
 - [x] 시나리오 재생 화면 (`ui/demo`): Fake 신호로 운행을 1·5·10배속 재생 → 결과 화면. 시연·화면 테스트용
 - [x] 미션 화면 (MVP에서는 오늘의 미션 1종만, `ui/missions`)
 - [ ] 정차·P단 상태에서만 화면 진입 허용
-- [ ] 음성: 시동 시 미션 안내, 운행 종료 시 결과 한마디
+- [x] 음성: 시동 시 미션 안내, 운행 종료 시 결과 한마디 (`voice/`, `service/TripVoiceGuide`). 운행당 1회씩, 오디오 포커스를 받은 뒤에만 재생
 
 ### 5. 1차 제출 (11.13 ~ 11.15)
 - [ ] 시연 영상: "좌회전 깜빡이 성공 → 우회전 실패 → 운행 종료 → 점수·미션 화면"
@@ -137,4 +139,5 @@
 | 2026-11-01 | DI는 임시로 수동 DI(`AppContainer`). 화면 전환은 navigation-compose | Hilt 도입 여부는 미정. 객체가 적은 지금은 수동으로 충분 |
 | 2026-11-01 | 업로드는 기록(`TripRecorder`)에서 하지 않고 결과 화면 진입 시 트리거 (나중에 WorkManager) | 기록과 업로드의 수명이 다름. 기록이 끝나 취소돼도 업로드가 끊기지 않게 |
 | 2026-11-01 | 서버 작업은 앱 팀이 하지 않음. 서버 요청은 `docs/server-requests.md`로 전달 | 서버는 다른 팀 담당 |
+| 2026-11-01 | 음성은 Pleos TextToSpeech SDK(ON_DEVICE)로. 종료 안내는 서버 점수를 기다리지 않고 기기 판정 결과로 말함 | 표준 TTS는 에뮬레이터에서 동작 안 함. 서버 응답이 늦거나 오프라인이어도 종료 안내는 1회 나가야 함 |
 | 2026-11-01 | 서버는 별도 저장소(BlinkerLeague/server)이고 Java 17 + Spring Boot 3.3 | 이미 만들어져 있음. 서버 plan.md에서 확정한 내용 |

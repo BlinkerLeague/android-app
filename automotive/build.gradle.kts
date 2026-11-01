@@ -54,6 +54,8 @@ dependencies {
 
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("ai.pleos.playground:Vehicle:2.3.2")
+    // 음성 안내. 에뮬레이터 caas 4.2.10 ≥ SDK 최소 요구 4.1.29
+    implementation("ai.pleos.playground:TextToSpeech:3.3.1")
 
     // Compose
     val composeBom = platform("androidx.compose:compose-bom:2024.02.00")

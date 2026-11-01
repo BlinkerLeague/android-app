@@ -1,0 +1,74 @@
+package com.example.blinkerleague.service
+
+import com.example.blinkerleague.domain.config.TripConfig
+import com.example.blinkerleague.domain.model.MissionStatus
+import com.example.blinkerleague.domain.model.ScoreState
+import com.example.blinkerleague.domain.model.TodayMission
+import com.example.blinkerleague.domain.model.TripResult
+import com.example.blinkerleague.domain.model.TurnDirection
+import com.example.blinkerleague.domain.model.TurnRecord
+import com.example.blinkerleague.voice.VoiceAnnouncer
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class TripVoiceGuideTest {
+
+    private class RecordingAnnouncer : VoiceAnnouncer {
+        val spoken = mutableListOf<String>()
+        override suspend fun speak(text: String): Boolean {
+            spoken += text
+            return true
+        }
+    }
+
+    private val announcer = RecordingAnnouncer()
+    private val mission = TodayMission("회전 깜빡이 완벽", MissionStatus.IN_PROGRESS, 0, 0, 3)
+    private val result = TripResult("t1", 0, 0, 5.0, ScoreState.PENDING, null, listOf(TurnRecord(0, TurnDirection.LEFT, true)))
+
+    private fun TestScope.guide() = TripVoiceGuide(
+        announcer = announcer,
+        todayMission = { mission },
+        tripResult = { id -> result.takeIf { id == "t1" } },
+        tripConfig = TripConfig(),
+        scope = this,
+    )
+
+    @Test
+    fun `운행당 시동 시 1회, 종료 시 1회만 말함`() = runTest {
+        val guide = guide()
+        guide.onRecorderState(RecorderState.Idle)
+        guide.onRecorderState(RecorderState.Recording("t1", 0))
+        guide.onRecorderState(RecorderState.Recording("t1", 0))
+        guide.onRecorderState(RecorderState.Finished("t1"))
+        guide.onRecorderState(RecorderState.Finished("t1"))
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(
+                "오늘의 미션, 회전 깜빡이 완벽. 회전 세 번 모두 깜빡이를 미리 켜 보세요.",
+                "운행이 끝났어요. 회전할 때 깜빡이를 제때 켰어요. 멋져요.",
+            ),
+            announcer.spoken,
+        )
+    }
+
+    @Test
+    fun `다음 운행은 다시 안내함`() = runTest {
+        val guide = guide()
+        guide.onRecorderState(RecorderState.Recording("t1", 0))
+        guide.onRecorderState(RecorderState.Recording("t2", 100))
+        advanceUntilIdle()
+        assertEquals(2, announcer.spoken.size)
+    }
+
+    @Test
+    fun `운행 결과를 찾지 못하면 종료 안내를 하지 않음`() = runTest {
+        val guide = guide()
+        guide.onRecorderState(RecorderState.Finished("unknown"))
+        advanceUntilIdle()
+        assertEquals(emptyList<String>(), announcer.spoken)
+    }
+}

@@ -64,6 +64,7 @@ class DemoViewModel(private val container: AppContainer) : ViewModel() {
                 }
             }
             recorder.state.collect { state ->
+                container.voiceGuide.onRecorderState(state)
                 if (state is RecorderState.Finished) {
                     recording.cancel()
                     _uiState.update { it.copy(phase = DemoPhase.Finished(state.tripId)) }

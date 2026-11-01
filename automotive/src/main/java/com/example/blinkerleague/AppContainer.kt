@@ -8,6 +8,12 @@ import com.example.blinkerleague.data.repository.MissionRepository
 import com.example.blinkerleague.data.repository.TripMapper
 import com.example.blinkerleague.data.repository.TripRepository
 import com.example.blinkerleague.domain.config.DetectionConfig
+import com.example.blinkerleague.service.TripVoiceGuide
+import com.example.blinkerleague.voice.PleosTtsAnnouncer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import java.time.ZoneId
 import java.util.UUID
 
@@ -33,6 +39,17 @@ class AppContainer(context: Context) {
     )
 
     val missionRepository = MissionRepository(missionApi)
+
+    /** 화면·기록 작업보다 오래 사는 작업용 (음성 안내 등) */
+    val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    val voiceGuide = TripVoiceGuide(
+        announcer = PleosTtsAnnouncer(context),
+        todayMission = missionRepository::todayMission,
+        tripResult = { tripId -> tripRepository.observeResult(tripId).first() },
+        tripConfig = config.trip,
+        scope = applicationScope,
+    )
 
     fun newId(): String = UUID.randomUUID().toString()
 }
