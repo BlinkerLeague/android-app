@@ -1,0 +1,52 @@
+package com.example.blinkerleague.voice
+
+import com.example.blinkerleague.domain.model.MissionStatus
+import com.example.blinkerleague.domain.model.ScoreState
+import com.example.blinkerleague.domain.model.TodayMission
+import com.example.blinkerleague.domain.model.TripResult
+import com.example.blinkerleague.domain.model.TurnDirection
+import com.example.blinkerleague.domain.model.TurnRecord
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class VoiceScriptTest {
+
+    private fun mission(status: MissionStatus, success: Int) =
+        TodayMission("회전 깜빡이 완벽", status, turns = success, successTurns = success, requiredTurns = 3)
+
+    private fun result(distanceKm: Double, vararg signalOn: Boolean) = TripResult(
+        tripId = "t", startedAtMs = 0, endedAtMs = 0, distanceKm = distanceKm, scoreState = ScoreState.PENDING, score = null,
+        turns = signalOn.map { TurnRecord(0, TurnDirection.LEFT, it) },
+    )
+
+    @Test
+    fun `시동 안내 - 미션 상태별 문구`() {
+        assertEquals(
+            "오늘의 미션, 회전 깜빡이 완벽. 회전 세 번 모두 깜빡이를 미리 켜 보세요.",
+            VoiceScript.tripStart(mission(MissionStatus.IN_PROGRESS, 0)),
+        )
+        assertEquals(
+            "오늘의 미션, 회전 깜빡이 완벽. 회전 한 번 남았어요. 깜빡이를 미리 켜 주세요.",
+            VoiceScript.tripStart(mission(MissionStatus.IN_PROGRESS, 2)),
+        )
+        assertEquals("오늘의 미션은 이미 달성했어요. 오늘도 깜빡이 잊지 마세요.", VoiceScript.tripStart(mission(MissionStatus.ACHIEVED, 3)))
+        assertEquals("오늘도 회전할 때 깜빡이를 미리 켜 주세요.", VoiceScript.tripStart(mission(MissionStatus.FAILED, 1)))
+        assertEquals("회전할 때 깜빡이를 미리 켜 주세요.", VoiceScript.tripStart(null))
+    }
+
+    @Test
+    fun `종료 안내 - 결과별 문구`() {
+        assertEquals("운행이 끝났어요. 회전 네 번 중 세 번 깜빡이를 제때 켰어요.", VoiceScript.tripEnd(result(5.0, true, true, false, true), 1.0))
+        assertEquals("운행이 끝났어요. 회전 두 번 모두 깜빡이를 제때 켰어요. 멋져요.", VoiceScript.tripEnd(result(5.0, true, true), 1.0))
+        assertEquals("운행이 끝났어요. 다음 회전에는 깜빡이를 미리 켜 봐요.", VoiceScript.tripEnd(result(5.0, false), 1.0))
+        assertEquals("운행이 끝났어요. 이번에는 측정할 회전이 없었어요.", VoiceScript.tripEnd(result(5.0), 1.0))
+        assertEquals("운행이 끝났어요. 짧은 운행이라 점수에는 반영되지 않아요.", VoiceScript.tripEnd(result(0.5, true), 1.0))
+    }
+
+    @Test
+    fun `횟수는 고유어로, 10 넘으면 숫자`() {
+        assertEquals("한 번", VoiceScript.count(1))
+        assertEquals("열 번", VoiceScript.count(10))
+        assertEquals("11번", VoiceScript.count(11))
+    }
+}
