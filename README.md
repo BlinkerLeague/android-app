@@ -29,12 +29,15 @@
 - JDK 17
 - Android Automotive 에뮬레이터 또는 Pleos 지원 차량/디바이스
 
-### Automotive 에뮬레이터 설정
+### Pleos Connect 에뮬레이터 설정
 
-1. Android Studio → **Settings > Languages & Frameworks > Android SDK > SDK Platforms**
-2. **Show Package Details** 체크 후, 원하는 API 레벨의 **Android Automotive System Image** 설치
-3. **Device Manager → Create Virtual Device → Automotive** 카테고리에서 기기 선택
-4. 설치한 Automotive 시스템 이미지로 AVD 생성
+Pleos Connect Emulator(v2.1.0, API 34) 설치, AVD 생성·실행, Virtual Console 사용법은
+👉 **[docs/emulator-setup.md](docs/emulator-setup.md)** 를 참고하세요.
+
+```bash
+# 에뮬레이터 실행 후 Virtual Console 사용
+adb forward tcp:8088 tcp:8088   # 이후 http://127.0.0.1:8088/ 접속
+```
 
 ### 빌드 및 실행
 
