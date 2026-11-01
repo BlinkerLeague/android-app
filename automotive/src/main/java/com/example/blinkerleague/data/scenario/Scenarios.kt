@@ -68,5 +68,19 @@ object Scenarios {
         end()
     }
 
-    val all = listOf(leftTurnWithSignal, rightTurnWithoutSignal, roundabout, parkingLot, demo)
+    /** 1km 이상, 회전 3번 모두 깜빡이 성공 → 오늘의 미션 달성 확인용 */
+    val missionAchieved = scenario("미션 달성: 회전 3번 모두 성공") {
+        start()
+        straight(seconds = 30, speedKmh = 50f)
+        listOf(TurnSignalState.LEFT to -90f, TurnSignalState.RIGHT to 90f, TurnSignalState.LEFT to -90f).forEach { (signal, angle) ->
+            signal(signal)
+            straight(seconds = 3, speedKmh = 25f)
+            turn(angleDeg = angle, seconds = 5, speedKmh = 20f)
+            signal(TurnSignalState.OFF)
+            straight(seconds = 25, speedKmh = 50f)
+        }
+        end()
+    }
+
+    val all = listOf(leftTurnWithSignal, rightTurnWithoutSignal, roundabout, parkingLot, demo, missionAchieved)
 }

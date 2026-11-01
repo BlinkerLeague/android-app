@@ -37,7 +37,10 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.blinkerleague.BlinkerLeagueApplication
 import com.example.blinkerleague.R
 import com.example.blinkerleague.domain.model.ScoreState
+import com.example.blinkerleague.domain.model.MissionStatus
+import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.domain.model.TurnDirection
+import com.example.blinkerleague.ui.missions.MissionCard
 import com.example.blinkerleague.ui.theme.BlinkerLeagueTheme
 import com.example.blinkerleague.ui.theme.OnSuccessContainer
 import com.example.blinkerleague.ui.theme.OnWarningContainer
@@ -49,6 +52,7 @@ private val SummaryViewModelFactory = viewModelFactory {
         SummaryViewModel(
             savedStateHandle = createSavedStateHandle(),
             repository = (this[APPLICATION_KEY] as BlinkerLeagueApplication).container.tripRepository,
+            missionRepository = (this[APPLICATION_KEY] as BlinkerLeagueApplication).container.missionRepository,
         )
     }
 }
@@ -113,6 +117,7 @@ private fun Loaded(state: SummaryUiState.Loaded, onDone: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Box(Modifier.weight(1f))
+            state.mission?.let { MissionCard(it) }
             DoneButton(onDone)
         }
 
@@ -215,6 +220,7 @@ private fun SummaryPreview() {
                         TurnRow("08:02", TurnDirection.LEFT, signalOn = true),
                         TurnRow("08:04", TurnDirection.RIGHT, signalOn = false),
                     ),
+                    mission = TodayMission("회전 깜빡이 완벽", MissionStatus.FAILED, 2, 1, 3),
                 ),
                 onDone = {},
             )

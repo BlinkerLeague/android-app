@@ -76,14 +76,17 @@
   - [ ] HTTP 구현체 (API 클라이언트 결정 후), 재전송 트리거 (WorkManager)
 - [ ] `GET /api/trips/{id}/score`: `status`가 `SCORED`, `NO_TURN`, `EXCLUDED_SHORT` 중 무엇인지에 따라 화면 분기
 - [ ] `GET /api/missions/today`: 상태(`IN_PROGRESS`/`ACHIEVED`/`FAILED`)와 진행률 표시
+  - [x] DTO, `MissionApi`, 서버 규칙(3.6)을 흉내 낸 `FakeMissionApi`, `MissionRepository`
+  - [ ] HTTP 구현체 (API 클라이언트 결정 후)
 
 ### 4. 화면과 음성 (11.9 ~ 11.12)
 - [x] 테마: 다크 배경 #101317, 카드 #1B2027, 강조색 #5AA2FF, 폰트 Noto Sans KR (목업 기준)
 - [ ] 정차 후 운행 결과 화면: 회전 기록 목록(제때 켬 / 안 켬), 오늘 미션 진행률, 적립 포인트
   - [x] 점수·상태 안내(점수 계산 중 / 회전 없음 / 1km 미만), 깜빡이 사용 횟수, 회전 기록 목록 (`ui/summary`)
-  - [ ] 오늘 미션 진행률, 적립 포인트 (미션 API 연동 후)
+  - [x] 오늘 미션 진행률 (업로드 후 미션 조회)
+  - [ ] 적립 포인트 (포인트 원장 P1)
 - [x] 시나리오 재생 화면 (`ui/demo`): Fake 신호로 운행을 1·5·10배속 재생 → 결과 화면. 시연·화면 테스트용
-- [ ] 미션 화면 (MVP에서는 오늘의 미션 1종만)
+- [x] 미션 화면 (MVP에서는 오늘의 미션 1종만, `ui/missions`)
 - [ ] 정차·P단 상태에서만 화면 진입 허용
 - [ ] 음성: 시동 시 미션 안내, 운행 종료 시 결과 한마디
 
