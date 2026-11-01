@@ -1,0 +1,129 @@
+package com.example.blinkerleague.data.repository
+
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
+import com.example.blinkerleague.data.local.AppDatabase
+import com.example.blinkerleague.data.local.UploadState
+import com.example.blinkerleague.data.remote.ApiResult
+import com.example.blinkerleague.data.remote.FakeTripApi
+import com.example.blinkerleague.data.remote.dto.ScoreStatus
+import com.example.blinkerleague.domain.model.SignalType
+import com.example.blinkerleague.domain.model.Trip
+import com.example.blinkerleague.domain.model.TripEvent
+import com.example.blinkerleague.domain.model.TurnDirection
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runTest
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import java.io.IOException
+import java.time.ZoneId
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
+class TripRepositoryTest {
+
+    private lateinit var db: AppDatabase
+    private lateinit var api: FakeTripApi
+    private lateinit var repository: TripRepository
+    private var now = 1_000L
+
+    @Before
+    fun setUp() {
+        db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
+            .allowMainThreadQueries()
+            .build()
+        api = FakeTripApi()
+        repository = TripRepository(db.tripDao(), api, TripMapper(ZoneId.of("Asia/Seoul"))) { now }
+    }
+
+    @After
+    fun tearDown() = db.close()
+
+    private fun trip(id: String, startedAtMs: Long, signalOn: List<Boolean>, distanceKm: Double = 5.0) = Trip(
+        id = id,
+        startedAtMs = startedAtMs,
+        endedAtMs = startedAtMs + 600_000,
+        distanceKm = distanceKm,
+        supported = setOf(SignalType.TURN_SIGNAL),
+        events = signalOn.mapIndexed { i, on ->
+            TripEvent.TurnEvent("$id-e$i", startedAtMs + (i + 1) * 60_000L, TurnDirection.LEFT, on, uTurn = false)
+        },
+    )
+
+    private suspend fun stored(id: String) = db.tripDao().trip(id)!!
+
+    @Test
+    fun `저장한 운행을 올리면 UPLOADED와 서버 점수가 남음`() = runTest {
+        repository.saveFinishedTrip(trip("a", 0, listOf(true, true, true, false)))
+
+        val summary = repository.uploadPending()
+
+        assertEquals(UploadSummary(uploaded = 1, rejected = 0, remaining = 0), summary)
+        val a = stored("a").trip
+        assertEquals(UploadState.UPLOADED, a.uploadState)
+        assertEquals(ScoreStatus.SCORED, a.scoreStatus)
+        assertEquals(75, a.score)
+        assertEquals(1, a.attemptCount)
+        assertEquals(0, repository.observePendingCount().first())
+    }
+
+    @Test
+    fun `같은 운행을 두 번 저장해도 한 건만 남고 이벤트도 중복되지 않음`() = runTest {
+        val a = trip("a", 0, listOf(true, false))
+        repository.saveFinishedTrip(a)
+        repository.saveFinishedTrip(a)
+
+        assertEquals(2, stored("a").events.size)
+        assertEquals(1, repository.observePendingCount().first())
+    }
+
+    @Test
+    fun `네트워크 오류면 PENDING으로 남고 다음 시도에 다시 올림`() = runTest {
+        repository.saveFinishedTrip(trip("a", 0, listOf(true)))
+        repository.saveFinishedTrip(trip("b", 1_000_000, listOf(false)))
+
+        api.failWith = ApiResult.NetworkError(IOException("offline"))
+        assertEquals(UploadSummary(uploaded = 0, rejected = 0, remaining = 2), repository.uploadPending())
+        assertEquals(UploadState.PENDING, stored("a").trip.uploadState)
+        assertEquals(1, stored("a").trip.attemptCount)
+        assertEquals(0, stored("b").trip.attemptCount) // 네트워크 오류 후 나머지는 시도하지 않음
+
+        api.failWith = null
+        now = 2_000L
+        assertEquals(UploadSummary(uploaded = 2, rejected = 0, remaining = 0), repository.uploadPending())
+        assertEquals(listOf("a", "b"), api.received.map { it.tripId }) // 오래된 순
+        assertEquals(2_000L, stored("a").trip.lastAttemptAtMs)
+    }
+
+    @Test
+    fun `5xx는 재전송 대상, 4xx는 REJECTED로 멈춤`() = runTest {
+        repository.saveFinishedTrip(trip("a", 0, listOf(true)))
+
+        api.failWith = ApiResult.HttpError(503)
+        repository.uploadPending()
+        assertEquals(UploadState.PENDING, stored("a").trip.uploadState)
+
+        api.failWith = ApiResult.HttpError(409)
+        assertEquals(UploadSummary(uploaded = 0, rejected = 1, remaining = 0), repository.uploadPending())
+        assertEquals(UploadState.REJECTED, stored("a").trip.uploadState)
+        assertEquals(0, repository.observePendingCount().first())
+    }
+
+    @Test
+    fun `회전 없는 운행과 1km 미만 운행은 서버 상태를 그대로 저장`() = runTest {
+        repository.saveFinishedTrip(trip("no-turn", 0, emptyList()))
+        repository.saveFinishedTrip(trip("short", 1_000_000, listOf(true), distanceKm = 0.4))
+
+        repository.uploadPending()
+
+        assertEquals(ScoreStatus.NO_TURN, stored("no-turn").trip.scoreStatus)
+        assertNull(stored("no-turn").trip.score)
+        assertEquals(ScoreStatus.EXCLUDED_SHORT, stored("short").trip.scoreStatus)
+    }
+}
