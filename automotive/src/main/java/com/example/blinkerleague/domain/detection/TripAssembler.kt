@@ -4,35 +4,52 @@ import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.model.LocationSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
+import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.Trip
 import com.example.blinkerleague.domain.model.TripEvent
+import com.example.blinkerleague.domain.model.VehicleStateSample
+
+/** 운행 한 번 동안 모은 시계열. 신호·기어는 회전 전 구간 판정 때문에 운행 시작 전 것이 섞여 있어도 됨 */
+data class TripRecording(
+    val steering: List<SteeringSample>,
+    val signals: List<SignalSample>,
+    val vehicleStates: List<VehicleStateSample>,
+    val locations: List<LocationSample>,
+)
 
 /**
- * 끝난 운행의 시계열을 모아 [Trip]으로 만듦: 회전 감지 → 깜빡이 판정 → 이벤트, 거리 계산.
+ * 끝난 운행의 시계열을 모아 [Trip]으로 만듦: 핸들 각도로 회전 감지 → 깜빡이 판정 → 이벤트, 거리 계산.
  *
- * - 방향지시등(TURN_SIGNAL)을 지원하지 않는 차량이면 회전 이벤트를 만들지 않음 (서버에서 항목 제외)
- * - 위치는 운행 구간 안의 것만 씀. 신호는 회전 전 인정 구간 때문에 운행 시작 전 것도 같이 넘겨도 됨
+ * - 방향지시등(TURN_SIGNAL)과 핸들 각도(STEERING_ANGLE)가 모두 지원돼야 회전 이벤트를 만듦 (아니면 서버에서 항목 제외)
+ * - 핸들 각도·위치는 운행 구간 안의 것만 씀
  * - id 생성은 밖에서 주입 ([newId]) — 테스트에서 고정값을 쓸 수 있게
  */
 class TripAssembler(
     config: DetectionConfig,
     private val newId: () -> String,
 ) {
-    private val detector = TurnDetector(config.turn)
+    private val detector = SteeringTurnDetector(config.turn)
     private val judge = SignalJudge(config.turn)
 
     fun assemble(
         tripId: String,
         startedAtMs: Long,
         endedAtMs: Long,
-        locations: List<LocationSample>,
-        signals: List<SignalSample>,
+        recording: TripRecording,
         supported: Set<SignalType>,
     ): Trip {
-        val inTrip = locations.filter { it.timestampMs in startedAtMs..endedAtMs }
+        val window = startedAtMs..endedAtMs
+        val locations = recording.locations.filter { it.timestampMs in window }
 
-        val turnEvents = if (SignalType.TURN_SIGNAL in supported) {
-            judge.judge(detector.detect(inTrip), signals).map {
+        val canMeasureTurns = SignalType.TURN_SIGNAL in supported && SignalType.STEERING_ANGLE in supported
+        val turnEvents = if (canMeasureTurns) {
+            val turns = detector.detect(
+                steering = recording.steering.filter { it.timestampMs in window },
+                vehicleStates = recording.vehicleStates,
+                signals = recording.signals,
+                locations = locations,
+            )
+            judge.judge(turns, recording.signals).map {
                 TripEvent.TurnEvent(
                     id = newId(),
                     occurredAtMs = it.turn.startMs,
@@ -49,7 +66,7 @@ class TripAssembler(
             id = tripId,
             startedAtMs = startedAtMs,
             endedAtMs = endedAtMs,
-            distanceKm = TripDistance.km(inTrip),
+            distanceKm = TripDistance.km(locations),
             supported = supported,
             events = turnEvents,
         )

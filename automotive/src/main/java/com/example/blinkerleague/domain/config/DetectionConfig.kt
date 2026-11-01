@@ -22,7 +22,16 @@ data class TripConfig(
 }
 
 data class TurnConfig(
+    /** 핸들 각도 절댓값이 이 이상이 되면 회전 (진입 기준) */
+    val steeringEnterDeg: Float = 90f,
+    /** 회전 중 핸들 각도 절댓값이 이 아래로 내려오면 회전 끝 (해제 기준). 진입 기준과 나눠서 90도 근처 흔들림이 여러 회전으로 찍히지 않게 함 */
+    val steeringExitDeg: Float = 20f,
+    /** 핸들 각도가 양수일 때 우회전인지. SDK에서 부호 확인 후 맞춤 (스파이크) */
+    val steeringRightPositive: Boolean = true,
+    /** 속도를 알 수 있을 때, 회전 동안 이 속도를 한 번도 넘지 않으면 주차장 조작으로 보고 제외 */
     val minSpeedKmh: Float = 5f,
+    // 아래 windowSec ~ uTurnAngleDeg, headingNoiseDeg는 진행 방향 기반 감지(HeadingTurnDetector, 보조)용
+
     val windowSec: Int = 10,
     val minAngleDeg: Float = 60f,
     val uTurnAngleDeg: Float = 150f,

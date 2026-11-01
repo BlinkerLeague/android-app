@@ -8,7 +8,7 @@ import com.example.blinkerleague.domain.detection.SignalJudge
 import com.example.blinkerleague.domain.detection.TripBoundary
 import com.example.blinkerleague.domain.detection.TripDistance
 import com.example.blinkerleague.domain.detection.TripSegmenter
-import com.example.blinkerleague.domain.detection.TurnDetector
+import com.example.blinkerleague.domain.detection.SteeringTurnDetector
 import com.example.blinkerleague.domain.model.JudgedTurn
 import com.example.blinkerleague.domain.model.TurnDirection
 import kotlinx.coroutines.flow.toList
@@ -18,15 +18,15 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** plan.md 2단계 시나리오를 재생해 회전 감지 + 깜빡이 판정 결과를 확인함 */
+/** plan.md 2단계 시나리오를 재생해 핸들 각도 회전 감지 + 깜빡이 판정 결과를 확인함 */
 class ScenarioJudgeTest {
 
     private val config = DetectionConfig.DEFAULT
-    private val detector = TurnDetector(config.turn)
+    private val detector = SteeringTurnDetector(config.turn)
     private val judge = SignalJudge(config.turn)
 
     private fun judge(s: Scenario): List<JudgedTurn> =
-        judge.judge(detector.detect(s.locations), s.signals)
+        judge.judge(detector.detect(s.steering, s.vehicleStates, s.signals, s.locations), s.signals)
 
     @Test
     fun `좌회전 + 깜빡이 - 성공 1회`() {
@@ -79,5 +79,7 @@ class ScenarioJudgeTest {
 
         val signals = FakeVehicleSignalSource(s, startMs = startMs).turnSignals.toList()
         assertEquals(s.signals.map { startMs + it.timestampMs }, signals.map { it.timestampMs })
+        val steering = FakeVehicleSignalSource(s, startMs = startMs).steeringAngles.toList()
+        assertEquals(s.steering.map { it.angleDeg }, steering.map { it.angleDeg })
     }
 }

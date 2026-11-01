@@ -35,7 +35,7 @@
 com.example.blinkerleague
 ├── data/
 │   ├── vehicle/      # Vehicle SDK 래퍼: 지원 여부 확인(checkXXXCapability), 상태 변화 → Flow
-│   ├── location/     # Fused Location 1초 수집 → Flow
+│   ├── location/     # 위치 1초 수집 → Flow (실차는 FusedLocation 미지원 → NaviHelper)
 │   ├── local/        # Room: 운행·이벤트 선저장, 업로드 대기열
 │   ├── remote/       # 서버 API 클라이언트
 │   └── repository/

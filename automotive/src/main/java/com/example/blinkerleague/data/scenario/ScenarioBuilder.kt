@@ -3,13 +3,16 @@ package com.example.blinkerleague.data.scenario
 import com.example.blinkerleague.domain.model.Gear
 import com.example.blinkerleague.domain.model.LocationSample
 import com.example.blinkerleague.domain.model.SignalSample
+import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.TurnSignalState
 import com.example.blinkerleague.domain.model.VehicleStateSample
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 
 /**
  * 시나리오를 동작 단위로 만드는 빌더. 위치는 1초마다 한 점씩, 속도와 heading으로 위치를 이어 붙임.
+ * 핸들 각도는 [turn] 동안 꺾었다가(양수=오른쪽) 끝나면 0으로 돌아옴.
  *
  * ```
  * scenario("좌회전") {
@@ -30,6 +33,7 @@ class ScenarioBuilder(
 ) {
     private var nowMs = 0L
     private val locations = mutableListOf<LocationSample>()
+    private val steering = mutableListOf<SteeringSample>()
     private val signals = mutableListOf<SignalSample>()
     private val vehicleStates = mutableListOf<VehicleStateSample>()
 
@@ -41,8 +45,26 @@ class ScenarioBuilder(
 
     fun straight(seconds: Int, speedKmh: Float) = repeat(seconds) { step(speedKmh, 0f) }
 
-    /** [angleDeg]만큼 [seconds]초에 걸쳐 고르게 회전. 양수는 우회전, 음수는 좌회전 */
-    fun turn(angleDeg: Float, seconds: Int, speedKmh: Float) = repeat(seconds) { step(speedKmh, angleDeg / seconds) }
+    /**
+     * 진행 방향을 [angleDeg]만큼 [seconds]초에 걸쳐 고르게 바꾸는 회전. 양수는 우회전, 음수는 좌회전.
+     * 핸들은 첫 1초·마지막 1초는 [steeringDeg]의 40%, 나머지는 [steeringDeg]만큼 꺾음 (3초 이상일 때)
+     */
+    fun turn(angleDeg: Float, seconds: Int, speedKmh: Float, steeringDeg: Float = 120f) {
+        val side = if (angleDeg >= 0) 1f else -1f
+        repeat(seconds) { i ->
+            val edge = seconds >= 3 && (i == 0 || i == seconds - 1)
+            steer(side * abs(steeringDeg) * (if (edge) 0.4f else 1f))
+            step(speedKmh, angleDeg / seconds)
+        }
+        steer(0f)
+    }
+
+    /** 진행 방향은 그대로 두고 핸들만 [steeringDeg]로 [seconds]초 꺾었다 돌아옴 (차로 변경, 흔들림 등) */
+    fun wiggle(steeringDeg: Float, seconds: Int, speedKmh: Float) {
+        steer(steeringDeg)
+        straight(seconds, speedKmh)
+        steer(0f)
+    }
 
     fun stop(seconds: Int) = repeat(seconds) { step(0f, 0f, hasHeading = false) }
 
@@ -61,7 +83,12 @@ class ScenarioBuilder(
         vehicleStates += VehicleStateSample(nowMs, ignitionOn = false, gear = Gear.P)
     }
 
-    fun build(name: String) = Scenario(name, locations.toList(), signals.toList(), vehicleStates.toList())
+    fun build(name: String) =
+        Scenario(name, locations.toList(), steering.toList(), signals.toList(), vehicleStates.toList())
+
+    private fun steer(angleDeg: Float) {
+        steering += SteeringSample(nowMs, angleDeg)
+    }
 
     private fun step(speedKmh: Float, headingChangeDeg: Float, hasHeading: Boolean = true) {
         nowMs += 1_000L

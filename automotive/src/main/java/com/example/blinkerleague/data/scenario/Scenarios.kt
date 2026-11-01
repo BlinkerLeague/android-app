@@ -39,7 +39,7 @@ object Scenarios {
         end()
     }
 
-    /** 주차장 안에서 저속(5km/h 미만)으로 여러 번 꺾고 후진 → 회전 0회 */
+    /** 주차장 안에서 저속(5km/h 미만)으로 핸들을 크게 꺾고 후진(R) → 회전 0회 */
     val parkingLot = scenario("주차장 이동") {
         start()
         straight(seconds = 10, speedKmh = 4f)
