@@ -41,7 +41,8 @@
 - [x] Compose 설정 추가 (Kotlin 1.9.22에 맞춰 Compose Compiler 1.5.10, Compose BOM)
 - [x] JVM target을 1.8에서 17로 상향
 - [x] 의존성 추가: activity-compose, lifecycle-viewmodel/runtime-compose, coroutines
-- [ ] 의존성 추가: Room, Retrofit 또는 Ktor, play-services-location (해당 단계에서 추가)
+- [x] 의존성 추가: Room 2.6.1(KSP), kotlinx.serialization, Robolectric(테스트)
+- [ ] 의존성 추가: Retrofit 또는 Ktor, play-services-location (해당 단계에서 추가)
 - [ ] (선택) Version Catalog(`gradle/libs.versions.toml`) 도입
 - [x] `MainActivity`를 Compose로 교체하고 Door 샘플 코드 제거
 - [x] Manifest 정리: `appCategory="audio"`와 `CAR_DOORS` 권한 제거 (필요한 권한은 스파이크 결과에 따라 추가)
@@ -54,7 +55,8 @@
 - [x] 운행 구분 (`TripSegmenter`) + 단위 테스트
 - [x] 회전 감지 (`TurnDetector`) + 단위 테스트
 - [x] 깜빡이 판정 (`SignalJudge`) + 단위 테스트
-- [ ] Room에 운행·이벤트 선저장, 업로드 대기열 구현
+- [x] Room에 운행·이벤트 선저장, 업로드 대기열 구현 (`TripRepository`, 재전송 트리거는 3단계에서)
+- [x] 끝난 운행 → `Trip` 조립 (`TripAssembler`: 회전 감지 + 깜빡이 판정 + 거리)
 - [ ] 운행 수집 서비스 (스파이크 2번 결과에 따라 방식 결정)
 
 ### 3. 서버 연동 (서버 feat 브랜치 순서에 맞춰 진행, ~11.8)
@@ -62,6 +64,8 @@
 - [ ] `POST /api/drivers`: 최초 실행 시 닉네임과 지역 코드(시군구 5자리)를 등록하고, 받은 토큰을 로컬(DataStore)에 저장. 이후 요청은 Bearer 헤더로 보냄
 - [ ] `GET /api/config/thresholds`: 앱 시작 시 내려받음. `version`이 바뀌었을 때만 갱신하고, 받지 못하면 로컬 기본값 사용
 - [ ] `POST /api/trips`: 운행이 끝나면 업로드하고, 실패하면 재전송 (WorkManager 검토). 응답에 담긴 점수를 바로 화면에 씀
+  - [x] DTO, `TripApi` 인터페이스, 서버 규칙을 흉내 낸 `FakeTripApi`, 대기열 업로드 로직
+  - [ ] HTTP 구현체 (API 클라이언트 결정 후), 재전송 트리거 (WorkManager)
 - [ ] `GET /api/trips/{id}/score`: `status`가 `SCORED`, `NO_TURN`, `EXCLUDED_SHORT` 중 무엇인지에 따라 화면 분기
 - [ ] `GET /api/missions/today`: 상태(`IN_PROGRESS`/`ACHIEVED`/`FAILED`)와 진행률 표시
 
@@ -84,7 +88,8 @@
 | 항목 | 서버 쪽 제안 | 필요 시점 |
 | --- | --- | --- |
 | 인증 방식과 토큰 보관 | 등록할 때 토큰 발급, 이후 Bearer 헤더 | 서버 `driver-register` 전 |
-| `TURN` 이벤트 payload | `direction`(LEFT/RIGHT), `signalOn`, 필요하면 `uTurn` | 서버 `trip-upload` 전 |
+| `TURN` 이벤트 payload | `direction`(LEFT/RIGHT), `signalOn`, 필요하면 `uTurn`. 앱은 `uTurn`을 항상 보냄 | 서버 `trip-upload` 전 |
+| `POST /api/trips` 요청 형식 | 앱 DTO(`data/remote/dto/TripDtos.kt`): `tripId`, `startedAt`, `endedAt`, `distanceKm`, `supported`, `events[{eventId, type, occurredAt, payload}]`. 시각은 `2026-11-03T08:00:00+09:00` 형식. 서버 plan.md 3.4 테이블 기준으로 만듦 → 기획서 8.2와 대조 필요 | 서버 `trip-upload` 전 |
 | `supported` 신호 이름 목록 | 예: `TURN_SIGNAL`, `BRAKE` (전체 목록은 스파이크 9번 결과로 확정) | 서버 `trip-upload` 전 |
 | 기준값 JSON 형식 | 서버 plan.md 3.3 (`trip`, `turn`, `harsh`, `weights`, `point`) | 서버 `threshold-config` 전 |
 | 앱 전용 회전 튜닝값 | 앱 `TurnConfig`에 `headingNoiseDeg`(2), `mergeGapSec`(3) 추가. 실차 튜닝 후 서버 `turn`에 넣을지 결정 | 2차 전 |
@@ -109,4 +114,7 @@
 | 2026-11-01 | 판정은 앱에서, 점수·미션·포인트 계산은 서버에서 | 기획서 7장. 규칙을 바꿀 때 앱을 다시 배포하지 않아도 됨 |
 | 2026-11-01 | 연속 회전은 간격 3초 이내면 묶음. 같은 방향이면 합치고, 좌우가 섞이면(회전교차로·S자) 판정에서 제외 | 회전교차로의 깜빡이 규칙은 복잡해서 MVP에서 감점하지 않음 |
 | 2026-11-01 | 비상등(HAZARD)은 깜빡이로 인정하지 않음. 운행 종료 시각은 P단에 들어간 시각 | — |
+| 2026-11-01 | JSON은 kotlinx.serialization | Retrofit·Ktor 어느 쪽을 골라도 같이 쓸 수 있음. HTTP 클라이언트 결정과 별개 |
+| 2026-11-01 | 업로드 실패 처리: 네트워크 오류·5xx·401·408·429는 대기열에 남겨 재전송, 그 외 4xx는 `REJECTED`로 멈춤(데이터는 보존) | 같은 요청을 다시 보내도 결과가 같은 오류를 무한 재시도하지 않기 위함 |
+| 2026-11-01 | Room 스키마 내보내기는 MVP에서 끔(`exportSchema = false`). DAO 테스트는 Robolectric으로 JVM에서 실행 | 일정. 출시 후 스키마가 바뀌면 Migration 도입 |
 | 2026-11-01 | 서버는 별도 저장소(BlinkerLeague/server)이고 Java 17 + Spring Boot 3.3 | 이미 만들어져 있음. 서버 plan.md에서 확정한 내용 |
