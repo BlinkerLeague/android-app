@@ -1,4 +1,8 @@
 <resources>
-
-    <style name="Theme.BlinkerLeague" parent="android:Theme.Material.Light.DarkActionBar" />
+    <!-- Compose가 화면을 그리기 전 창 배경. 실제 테마는 ui/theme/Theme.kt -->
+    <style name="Theme.BlinkerLeague" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/background</item>
+        <item name="android:navigationBarColor">@color/background</item>
+    </style>
 </resources>
