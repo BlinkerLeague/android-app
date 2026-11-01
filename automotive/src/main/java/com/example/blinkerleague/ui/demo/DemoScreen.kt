@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,6 +45,7 @@ private val DemoViewModelFactory = viewModelFactory {
 @Composable
 fun DemoScreen(
     onTripFinished: (tripId: String) -> Unit,
+    onOpenMissions: () -> Unit,
     viewModel: DemoViewModel = viewModel(factory = DemoViewModelFactory),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -61,6 +63,7 @@ fun DemoScreen(
         onSelectSpeed = viewModel::selectSpeed,
         onPlay = viewModel::play,
         onStop = viewModel::stop,
+        onOpenMissions = onOpenMissions,
     )
 }
 
@@ -70,6 +73,7 @@ fun DemoContent(
     onSelectSpeed: (Int) -> Unit,
     onPlay: (Int) -> Unit,
     onStop: () -> Unit,
+    onOpenMissions: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -79,7 +83,7 @@ fun DemoContent(
     ) {
         when (val phase = uiState.phase) {
             is DemoPhase.Running -> RunningPanel(phase, onStop)
-            else -> ScenarioPicker(uiState, onSelectSpeed, onPlay)
+            else -> ScenarioPicker(uiState, onSelectSpeed, onPlay, onOpenMissions)
         }
     }
 }
@@ -89,6 +93,7 @@ private fun ScenarioPicker(
     uiState: DemoUiState,
     onSelectSpeed: (Int) -> Unit,
     onPlay: (Int) -> Unit,
+    onOpenMissions: () -> Unit,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(modifier = Modifier.weight(1f)) {
@@ -99,6 +104,10 @@ private fun ScenarioPicker(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        OutlinedButton(onClick = onOpenMissions, modifier = Modifier.heightIn(min = 64.dp)) {
+            Text(stringResource(R.string.mission_open), style = MaterialTheme.typography.labelLarge)
+        }
+        Spacer(Modifier.width(24.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.demo_speed), style = MaterialTheme.typography.labelMedium)
             SPEED_OPTIONS.forEach { speed ->
@@ -178,7 +187,7 @@ private fun DemoPickerPreview() {
                 uiState = DemoUiState(
                     scenarios = listOf(ScenarioItem(0, "좌회전 + 깜빡이", 52), ScenarioItem(1, "회전교차로", 62)),
                 ),
-                onSelectSpeed = {}, onPlay = {}, onStop = {},
+                onSelectSpeed = {}, onPlay = {}, onStop = {}, onOpenMissions = {},
             )
         }
     }
@@ -191,7 +200,7 @@ private fun DemoRunningPreview() {
         Surface(color = MaterialTheme.colorScheme.background) {
             DemoContent(
                 uiState = DemoUiState(emptyList(), phase = DemoPhase.Running("시연", 0.4f, recording = true)),
-                onSelectSpeed = {}, onPlay = {}, onStop = {},
+                onSelectSpeed = {}, onPlay = {}, onStop = {}, onOpenMissions = {},
             )
         }
     }

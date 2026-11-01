@@ -33,6 +33,10 @@ class FakeTripApi(
         return ApiResult.Success(stored.getOrPut(request.tripId) { score(request) })
     }
 
+    /** 지금까지 올라온 운행과 그 결과 (tripId당 하나, 처음 받은 요청 기준) */
+    fun uploadedTrips(): List<Pair<TripUploadRequest, TripScoreResponse>> =
+        received.distinctBy { it.tripId }.map { it to stored.getValue(it.tripId) }
+
     private fun score(request: TripUploadRequest): TripScoreResponse {
         val turns = request.events
             .filter { it.type == TripEventType.TURN }

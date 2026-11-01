@@ -43,6 +43,13 @@ class ScenarioJudgeTest {
     }
 
     @Test
+    fun `미션 달성 시나리오 - 1km 이상, 회전 3번 모두 성공`() {
+        val s = Scenarios.missionAchieved
+        assertEquals(listOf(true, true, true), judge(s).map { it.signalOn })
+        assertTrue(TripDistance.km(s.locations) > 1.0)
+    }
+
+    @Test
     fun `회전교차로 - 판정 대상 회전 없음`() {
         assertTrue(judge(Scenarios.roundabout).isEmpty())
     }

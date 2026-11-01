@@ -2,8 +2,9 @@ package com.example.blinkerleague
 
 import android.content.Context
 import com.example.blinkerleague.data.local.AppDatabase
+import com.example.blinkerleague.data.remote.FakeMissionApi
 import com.example.blinkerleague.data.remote.FakeTripApi
-import com.example.blinkerleague.data.remote.TripApi
+import com.example.blinkerleague.data.repository.MissionRepository
 import com.example.blinkerleague.data.repository.TripMapper
 import com.example.blinkerleague.data.repository.TripRepository
 import com.example.blinkerleague.domain.config.DetectionConfig
@@ -18,15 +19,20 @@ class AppContainer(context: Context) {
 
     private val database = AppDatabase.create(context)
 
-    // HTTP 구현체는 API 클라이언트 결정 후 교체. 그 전까지 서버 규칙을 흉내 내는 Fake를 씀
-    private val tripApi: TripApi = FakeTripApi()
+    private val zone: ZoneId = ZoneId.systemDefault()
+
+    // HTTP 구현체는 API 클라이언트 결정 후 교체. 그 전까지 서버 규칙을 흉내 내는 Fake를 씀 (앱을 끄면 초기화됨)
+    private val tripApi = FakeTripApi()
+    private val missionApi = FakeMissionApi(tripApi, System::currentTimeMillis, zone)
 
     val tripRepository = TripRepository(
         dao = database.tripDao(),
         api = tripApi,
-        mapper = TripMapper(ZoneId.systemDefault()),
+        mapper = TripMapper(zone),
         clock = System::currentTimeMillis,
     )
+
+    val missionRepository = MissionRepository(missionApi)
 
     fun newId(): String = UUID.randomUUID().toString()
 }
