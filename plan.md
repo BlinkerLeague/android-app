@@ -141,3 +141,4 @@
 | 2026-11-01 | 서버 작업은 앱 팀이 하지 않음. 서버 요청은 `docs/server-requests.md`로 전달 | 서버는 다른 팀 담당 |
 | 2026-11-01 | 음성은 Pleos TextToSpeech SDK(ON_DEVICE)로. 종료 안내는 서버 점수를 기다리지 않고 기기 판정 결과로 말함 | 표준 TTS는 에뮬레이터에서 동작 안 함. 서버 응답이 늦거나 오프라인이어도 종료 안내는 1회 나가야 함 |
 | 2026-11-01 | 서버는 별도 저장소(BlinkerLeague/server)이고 Java 17 + Spring Boot 3.3 | 이미 만들어져 있음. 서버 plan.md에서 확정한 내용 |
+| 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |
