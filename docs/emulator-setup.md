@@ -61,6 +61,11 @@ BlinkerLeague를 실행·테스트하기 위한 **Pleos Connect Emulator**와 **
 ~/Library/Android/sdk/emulator/emulator -list-avds                    # AVD 목록 확인
 ~/Library/Android/sdk/emulator/emulator -avd Pleos_Connect_v2.1.0_API_34
 ```
+```powershell
+# Windows (PowerShell)
+& "$env:LOCALAPPDATA\Android\Sdk\emulator\emulator.exe" -list-avds
+& "$env:LOCALAPPDATA\Android\Sdk\emulator\emulator.exe" -avd Pleos_Connect_v2.1.0_API_34
+```
 
 실행 확인:
 ```bash
@@ -88,7 +93,7 @@ Virtual Console은 브라우저에서 차량 신호(기어, 속도, 방향지시
 
 ## 문제 해결
 
-### `zsh: command not found: adb`
+### `zsh: command not found: adb` / `'adb'은(는) ... 아닙니다`
 
 adb는 SDK에 설치돼 있지만 PATH에 등록되지 않은 상태입니다. 한 번만 설정하면 됩니다.
 
@@ -103,13 +108,27 @@ PATH 설정 없이 바로 쓰려면 전체 경로로 실행합니다.
 ~/Library/Android/sdk/platform-tools/adb forward tcp:8088 tcp:8088
 ```
 
+**Windows**: 시스템 속성 → 환경 변수 → 사용자 변수 `Path`에 `%LOCALAPPDATA%\Android\Sdk\platform-tools`를 추가하고 터미널을 다시 엽니다.
+전체 경로로 실행하려면:
+```powershell
+& "$env:LOCALAPPDATA\Android\Sdk\platform-toolsdb.exe" forward tcp:8088 tcp:8088
+```
+
+### Windows에서 에뮬레이터가 느리거나 실행되지 않을 때
+
+```powershell
+& "$env:LOCALAPPDATA\Android\Sdk\emulator\emulator.exe" -accel-check
+# "WHPX ... is installed and usable" 이 나오면 정상
+```
+나오지 않으면 Windows 기능 켜기/끄기에서 **Windows 하이퍼바이저 플랫폼**을 켜고 재부팅합니다. (BIOS에서 가상화(VT-x/AMD-V)도 켜져 있어야 함)
+
 ### Virtual Console(`127.0.0.1:8088`)에 접속되지 않을 때
 
 1. Pleos Connect Emulator가 실행 중인지 확인
 2. Virtual Console을 지원하는 이미지(v2.1.0 이상)인지 확인
 3. `adb devices`로 에뮬레이터가 연결됐는지 확인
 4. `adb forward tcp:8088 tcp:8088` 재실행
-5. PC의 8088 포트를 다른 프로세스가 쓰고 있는지 확인: `lsof -i :8088`
+5. PC의 8088 포트를 다른 프로세스가 쓰고 있는지 확인: `lsof -i :8088` (Windows: `netstat -ano | findstr 8088`)
 6. 브라우저에서 <http://127.0.0.1:8088/> 재접속
 
 ### 그 외
