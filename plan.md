@@ -34,6 +34,8 @@
   - [x] Vehicle SDK·CarProperty도 같음: 일반 백그라운드는 약 10초 뒤 동결 → 콜백 전부 누락, 동결 해제 시 프로세스 종료. 포그라운드 서비스면 모두 즉시 옴 ([조사](docs/spikes/vehicle-background-speed.md))
 - [ ] 3. 주행 중 앱 실행 제한의 범위 (정차·P단 조건)
 - [ ] 4. 위치: 실차는 FusedLocation 미지원(구현 가이드) → NaviHelper `getCurrentLocationInfo`의 필드(속도 포함 여부)와 갱신 주기
+  - [x] Pleos FusedLocation SDK 1.1.3: 에뮬레이터에서 주입 좌표를 1초마다 따라옴(지연 중앙 12ms), 고도 반영, heading 항상 0, 속도·주소 없음. 권한 `FUSED_LOCATION`은 dangerous. 근접 알림은 원형(중심+반경). NaviHelper 위치는 고정값 ([조사](docs/spikes/fused-location.md))
+  - [ ] 실차 지원 여부(구현 가이드의 "FusedLocation 미지원"이 무엇을 말하는지), 실차 heading·갱신 주기
 - [ ] 5. Brake API가 페달 상태를 주는지
 - [ ] 6. Light API로 전조등·오토라이트 상태를 알 수 있는지
   - [x] 비상등: Light 도메인에 API 없음, Safety 경고등은 에뮬레이터에서 빈 목록 → 감지 불가 ([조사](docs/spikes/vehicle-background-speed.md))
@@ -67,7 +69,7 @@
 ### 2. 수집과 판정 (11.2 ~ 11.5)
 - [x] `VehicleSignalSource`, `LocationSource` 인터페이스 + Fake 구현체 (시나리오 재생)
 - [x] 핸들 각도 회전 감지 (`SteeringTurnDetector`) + 단위 테스트, 운행 조립을 핸들 감지로 전환
-- [ ] SDK 구현체 (`data/vehicle`, 핸들 각도 포함), NaviHelper 위치 구현체 (`data/location`): 스파이크 1·4·8·9·12번 결과 필요
+- [ ] SDK 구현체 (`data/vehicle`, 핸들 각도 포함), 위치 구현체 (`data/location`, Pleos FusedLocation SDK): 스파이크 1·4·8·9·12번 결과 반영
 - [x] 시나리오 재생기 (`data/scenario`, 테스트와 시연에 공용): "좌회전 + 깜빡이", "우회전 + 깜빡이 없음", "회전교차로", "주차장 이동"
 - [x] 운행 구분 (`TripSegmenter`) + 단위 테스트
 - [x] 회전 감지 (`TurnDetector`) + 단위 테스트
@@ -151,4 +153,5 @@
 | 2026-11-03 | `TurnConfig.steeringRightPositive` 기본값 false | 에뮬레이터 실측: 콘솔 오른쪽(+) → Vehicle SDK 음수. 실차가 다르면 서버 설정으로 변경 |
 | 2026-11-03 | 비상등 제외 규칙은 남기되 "TurnSignal로 감지 불가"로 표시 | SDK TurnSignal 값·Light 도메인에 비상등 없음. 출처가 생기면 HAZARD 샘플로 연결 |
 | 2026-11-03 | 운행 거리는 `PERF_VEHICLE_SPEED` 적분 | 트립 거리 API는 에뮬레이터 미지원, 오도미터는 속도를 따라 늘지 않아 검증 불가 |
+| 2026-11-04 | 위치 출처는 Pleos FusedLocation SDK (NaviHelper 위치 아님) | 에뮬레이터에서 FusedLocation은 주입 좌표를 따라오고 NaviHelper 위치는 고정. 실차 지원은 Pleos 확인 필요 |
 | 2026-11-01 | 서버는 별도 저장소(BlinkerLeague/server)이고 Java 17 + Spring Boot 3.3 | 이미 만들어져 있음. 서버 plan.md에서 확정한 내용 |
