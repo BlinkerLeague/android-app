@@ -28,10 +28,14 @@
 
 ### 0. 스파이크 (10.26 ~ 11.1): SDK 체크리스트
 가장 먼저 확인할 항목은 1번과 2번입니다. 이 두 가지가 안 되면 앱이 성립하지 않습니다.
+실제로 실행해 확인한 결과는 [`docs/sdk-test-log.md`](docs/sdk-test-log.md)에 기록합니다.
 - [ ] 1. TurnSignal 상태를 실시간으로 구독할 수 있는지, 좌·우가 구분되는지
 - [ ] 2. 앱이 백그라운드에 있을 때도 신호와 위치를 계속 받을 수 있는지
 - [ ] 3. 주행 중 앱 실행 제한의 범위 (정차·P단 조건)
 - [ ] 4. 위치: 실차는 FusedLocation 미지원(구현 가이드) → NaviHelper `getCurrentLocationInfo`의 필드(속도 포함 여부)와 갱신 주기
+  - [x] 에뮬레이터: Pleos FusedLocation SDK 1.1.3으로 현재 위치 조회와 1초 갱신이 됨 (`isSupported()`=true). `adb emu geo fix`로 위치를 바꿀 수 있음. `LocationData`에 속도 필드는 없음. 권한 `pleos.car.permission.FUSED_LOCATION`(dangerous, 런타임 요청 필요)
+  - [ ] 실차에서 FusedLocation `isSupported()` 결과 (false이면 NaviHelper)
+  - [ ] NaviHelper `getCurrentLocationInfo`의 필드와 갱신 주기
 - [ ] 5. Brake API가 페달 상태를 주는지
 - [ ] 6. Light API로 전조등·오토라이트 상태를 알 수 있는지
 - [ ] 7. Safety API가 주는 경고 종류

@@ -7,6 +7,8 @@
 
     <!-- 음성 안내: Pleos TextToSpeech SDK가 요구하는 권한 (SDK의 TTS_PERMISSION 상수) -->
     <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
+    <!-- 위치: Pleos FusedLocation SDK. protectionLevel dangerous → 런타임 요청 필요 -->
+    <uses-permission android:name="pleos.car.permission.FUSED_LOCATION" />
 
     <application
         android:name=".BlinkerLeagueApplication"
