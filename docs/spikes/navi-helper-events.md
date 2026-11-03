@@ -21,27 +21,30 @@ Pleos Connect 에뮬레이터에서 NaviHelper 이벤트 콜백이 언제, 얼�
 1. **차량 상태**: Virtual Console API로 기어 D, 속도 40km/h를 넣었습니다(`PUT /vehicle/gear`, `PUT /vehicle/controls`). 콘솔은 브라우저 세션 신호(`POST /browser/session`, 3초 타임아웃)가 살아 있어야 쓰기를 받습니다. 세션 신호가 없으면 503을 돌려줍니다.
 2. **위치**: 에뮬레이터 GPS를 1초마다 옮겼습니다(`adb emu geo fix`). 공개 OSRM 서버에서 받은 도로 좌표를 따라갑니다.
 3. **목적지**: `requestRoute(RouteInfo(...))`로 문서 예시의 목적지(42dot, 서울 강남구)를 설정했습니다. adb로 요청을 보냅니다.
-4. **로그 수신**: 앱이 백그라운드에 있어도 로그를 받도록 포그라운드 서비스(`NaviLogService`)에서 로거를 돌렸습니다. 일반 백그라운드 상태에서는 앱 프로세스가 cached 상태로 얼어서 콜백이 오지 않았습니다.
+4. **로그 수신**: 앱이 백그라운드에 있어도 로그를 받도록 포그라운드 서비스(당시 `NaviLogService`, 지금은 `ProbeService`)에서 로거를 돌렸습니다. 일반 백그라운드 상태에서는 앱 프로세스가 cached 상태로 얼어서 콜백이 오지 않았습니다.
 
 재현 명령:
 
 ```bash
-# 앱 실행(디버그 빌드면 로그 서비스가 자동 시작) 후
+# 앱 실행 후 조사용 서비스에서 내비 로거 시작 (자동 시작하지 않음)
+adb shell am start -n com.example.blinkerleague/.MainActivity
+adb shell am start-foreground-service -n com.example.blinkerleague/.service.ProbeService \
+  -a com.example.blinkerleague.PROBE_START --es targets navi
 adb logcat -c
 
 # 1) 목적지 없이 주행
 python3 scripts/navi_drive_sim.py --seconds 90 --speed 40 --to 37.48544722,127.03636666
 
 # 2) 목적지 설정 후 주행
-adb shell am start-foreground-service -n com.example.blinkerleague/.service.NaviLogService \
+adb shell am start-foreground-service -n com.example.blinkerleague/.service.ProbeService \
   -a com.example.blinkerleague.NAVI_REQUEST_ROUTE --ed lat 37.48544722 --ed lng 127.03636666 --es name 42dot
 sleep 12
 python3 scripts/navi_drive_sim.py --seconds 150 --speed 40 --to 37.48544722,127.03636666
 
 # 요약
-adb logcat -d -s NaviTest:I | python3 scripts/navi_log_summary.py
+adb logcat -d -s NaviTest:I | python3 scripts/probe_log_summary.py
 # 목적지 취소
-adb shell am start-foreground-service -n com.example.blinkerleague/.service.NaviLogService -a com.example.blinkerleague.NAVI_CANCEL_ROUTE
+adb shell am start-foreground-service -n com.example.blinkerleague/.service.ProbeService -a com.example.blinkerleague.NAVI_CANCEL_ROUTE
 ```
 
 ## 결과

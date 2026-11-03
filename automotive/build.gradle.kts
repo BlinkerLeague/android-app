@@ -32,6 +32,9 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    // CarPropertyManager(android.car) 사용. Android Developers의 Automotive OS 가이드 방식
+    useLibrary("android.car")
+
     buildFeatures {
         compose = true
     }

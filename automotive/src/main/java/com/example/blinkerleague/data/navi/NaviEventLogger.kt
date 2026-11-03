@@ -1,8 +1,8 @@
 package com.example.blinkerleague.data.navi
 
 import android.content.Context
-import android.os.SystemClock
-import android.util.Log
+import android.os.Handler
+import android.os.Looper
 import ai.pleos.playground.navi.constants.NaviErrorCode
 import ai.pleos.playground.navi.constants.NavigationStatus
 import ai.pleos.playground.navi.constants.RouteOption
@@ -25,9 +25,7 @@ import ai.pleos.playground.navi.data.WaypointChangedInfo
 import ai.pleos.playground.navi.data.WaypointInfo
 import ai.pleos.playground.navi.helper.NaviHelper
 import ai.pleos.playground.navi.helper.listener.NaviHelperEventListener
-import java.lang.reflect.Modifier
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
+import com.example.blinkerleague.data.debug.ProbeLog
 
 /**
  * 조사용: NaviHelper 이벤트 콜백이 언제·얼마나 자주·무엇을 주는지 Logcat `NaviTest` 태그로 남김.
@@ -35,19 +33,19 @@ import java.time.format.DateTimeFormatter
  * API 이름은 Pleos 문서(NaviHelper > Event listeners, Initialization and release)를 따르고,
  * 콜백 인자 타입은 SDK 3.0.5 클래스(javap)로 확인함. `onRouteEnded`는 문서 목록에는 없고 SDK 클래스에만 있음.
  *
- * 로그 한 줄 형식:
- * `HH:mm:ss.SSS +경과초 dt=같은콜백간격초 #횟수 콜백이름 {필드 전체}`
- * `scripts/navi_log_summary.py`로 콜백별 횟수·간격을 요약함.
+ * 로그 형식은 [ProbeLog] (출처 Navi). `scripts/probe_log_summary.py`로 콜백별 횟수·간격을 요약함.
  */
-class NaviEventLogger(context: Context) {
+class NaviEventLogger(context: Context, private val probeLog: ProbeLog) {
 
     private val naviHelper = NaviHelper(context.applicationContext)
-    private val startedAt = SystemClock.elapsedRealtime()
-    private val lastAt = mutableMapOf<String, Long>()
-    private val counts = mutableMapOf<String, Int>()
-    private val clock = DateTimeFormatter.ofPattern("HH:mm:ss.SSS")
+    private val handler = Handler(Looper.getMainLooper())
+    private var started = false
+    private var pollIntervalMs = 0L
 
-    fun start() {
+    fun start(via: String = "") {
+        if (started) return
+        started = true
+        log("start", "via=$via")
         log("initialize", "요청")
         naviHelper.initialize(
             onConnected = {
@@ -58,7 +56,24 @@ class NaviEventLogger(context: Context) {
         )
     }
 
+    /** 목적지 없이 위치를 받기 위한 폴링 (문서: get API 결과는 대응 콜백 onCurrentLocationInfo로 옴). 0이면 중지 */
+    fun pollCurrentLocation(intervalMs: Long) {
+        pollIntervalMs = intervalMs
+        handler.removeCallbacks(poll)
+        log("pollCurrentLocation", "intervalMs=$intervalMs")
+        if (intervalMs > 0) handler.post(poll)
+    }
+
+    private val poll = object : Runnable {
+        override fun run() {
+            log("getCurrentLocationInfo", "호출")
+            naviHelper.getCurrentLocationInfo()
+            if (pollIntervalMs > 0) handler.postDelayed(this, pollIntervalMs)
+        }
+    }
+
     fun stop() {
+        handler.removeCallbacks(poll)
         naviHelper.removeListener(listener)
         naviHelper.release()
         log("release", "")
@@ -124,47 +139,7 @@ class NaviEventLogger(context: Context) {
         override fun onTripInfo(tripInfo: TripInfo) = log("onTripInfo", dump(tripInfo))
     }
 
-    @Synchronized
-    private fun log(name: String, body: String) {
-        val now = SystemClock.elapsedRealtime()
-        val dt = lastAt[name]?.let { "%.3f".format((now - it) / 1000.0) } ?: "-"
-        lastAt[name] = now
-        val n = (counts[name] ?: 0) + 1
-        counts[name] = n
-        val line = "${LocalTime.now().format(clock)} +%.3f dt=$dt #$n $name $body".format((now - startedAt) / 1000.0)
-        // Logcat 한 줄 길이 제한(약 4KB) 때문에 나눠서 찍음. 이어지는 줄은 "  ↳"로 시작
-        line.chunked(3_500).forEachIndexed { i, part -> Log.i(TAG, if (i == 0) part else "  ↳$part") }
-    }
+    private fun log(name: String, body: String) = probeLog.log("Navi", name, body)
 
-    /**
-     * 객체의 필드를 전부 문자열로. SDK 데이터 클래스의 공개 getter(get·is로 시작)를 리플렉션으로 훑고,
-     * 중첩된 Pleos 타입·리스트는 재귀로 펼침 (toString이 모든 필드를 보여준다는 보장이 없어서)
-     */
-    private fun dump(value: Any?, depth: Int = 0): String = when {
-        value == null -> "null"
-        value is Enum<*> -> value.name
-        value is CharSequence -> "\"$value\""
-        value is Number || value is Boolean -> value.toString()
-        value is Collection<*> -> value.joinToString(prefix = "[", postfix = "]") { dump(it, depth + 1) }
-        depth > MAX_DEPTH || !value.javaClass.name.startsWith("ai.pleos.") -> value.toString()
-        else -> {
-            val props = value.javaClass.methods
-                .filter { m ->
-                    m.parameterCount == 0 && !Modifier.isStatic(m.modifiers) && m.declaringClass != Any::class.java &&
-                        (m.name.startsWith("get") && m.name.length > 3 || m.name.startsWith("is") && m.name.length > 2)
-                }
-                .sortedBy { it.name }
-                .joinToString(", ") { m ->
-                    val name = m.name.removePrefix("get").removePrefix("is").replaceFirstChar { it.lowercase() }
-                    val v = runCatching { dump(m.invoke(value), depth + 1) }.getOrElse { "<${it.javaClass.simpleName}>" }
-                    "$name=$v"
-                }
-            "${value.javaClass.simpleName}{$props}"
-        }
-    }
-
-    private companion object {
-        const val TAG = "NaviTest"
-        const val MAX_DEPTH = 5
-    }
+    private fun dump(value: Any?): String = ProbeLog.dump(value)
 }

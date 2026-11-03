@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+"""차량 신호 주입 시나리오 (docs/spikes/vehicle-background-speed.md 실험 1·2).
+
+Virtual Console로 기어·속도·방향지시등·비상등·조향각을 바꾸고, 주입 시각을 Logcat ProbeInject에 남긴다.
+앱 쪽 프로브(VehicleTest·SpeedTest)를 먼저 켜 둔 뒤 실행한다.
+
+  python3 scripts/vehicle_probe_sim.py turn    # 실험 1 시나리오 (약 30초)
+  python3 scripts/vehicle_probe_sim.py speed   # 실험 2: 속도 0→20→40→60→30→0 (5초 간격) + 기어 P→R→N→D→P
+  python3 scripts/vehicle_probe_sim.py range   # 값 범위·구분: 비상등, Flash 모드, 조향각 -470~+700
+  python3 scripts/vehicle_probe_sim.py turn speed   # 여러 개를 이어서
+
+콘솔 엔드포인트 (콘솔 웹 화면의 요청과 /vehicle/catalog로 확인, 모두 PUT):
+  기어   /vehicle/gear?gear=Park|Reverse|Neutral|Drive
+  주행   /vehicle/controls?speed=<km/h>&accelerator=<%>&brake=<%>&steering=<deg>   (조향 범위 -470~500)
+  깜빡이 /vehicle/turn-signal?mode=Off|BlinkLeft|BlinkRight|FlashLeft|FlashRight
+  비상등 /vehicle/lights?feature=hazard&value=true|false
+"""
+import sys
+import time
+
+from vconsole import Console
+
+
+class Car:
+    def __init__(self, console):
+        self.c = console
+        self.speed, self.accel, self.brake, self.steer = 0, 0, 0, 0
+
+    def controls(self, label, **kw):
+        # /vehicle/controls는 빠진 값을 0으로 보는지 확인하지 않았으므로 항상 네 값을 함께 보냄
+        for k, v in kw.items():
+            setattr(self, k, v)
+        q = f"speed={self.speed}&accelerator={self.accel}&brake={self.brake}&steering={self.steer}"
+        self.c.put(f"/vehicle/controls?{q}", label)
+
+    def gear(self, g):
+        self.c.put(f"/vehicle/gear?gear={g}", f"gear={g}")
+
+    def turn(self, mode):
+        self.c.put(f"/vehicle/turn-signal?mode={mode}", f"turn={mode}")
+
+    def hazard(self, on):
+        self.c.put(f"/vehicle/lights?feature=hazard&value={'true' if on else 'false'}", f"hazard={'on' if on else 'off'}")
+
+    def steer_to(self, deg):
+        self.controls(f"steer={deg}", steer=deg)
+
+    def speed_to(self, kmh):
+        self.controls(f"speed={kmh}", speed=kmh, accel=20 if kmh else 0, brake=0 if kmh else 30)
+
+
+def scenario_turn(car):
+    """기어 D, 40km/h → 오른쪽 깜빡이 on → 3초 → 조향 +120 → 3초 → 0 → 깜빡이 off → 왼쪽 같은 순서 → 깜빡이 없이 +120 → 0"""
+    car.c.mark("scenario turn start")
+    car.gear("Drive"); time.sleep(1)
+    car.speed_to(40); time.sleep(2)
+    for mode, angle in (("BlinkRight", 120), ("BlinkLeft", -120)):
+        car.turn(mode); time.sleep(3)
+        car.steer_to(angle); time.sleep(3)
+        car.steer_to(0); time.sleep(1)
+        car.turn("Off"); time.sleep(2)
+    car.steer_to(120); time.sleep(3)
+    car.steer_to(0); time.sleep(2)
+    car.speed_to(0); time.sleep(1)
+    car.gear("Park")
+    car.c.mark("scenario turn end")
+
+
+def scenario_speed(car):
+    car.c.mark("scenario speed start")
+    car.gear("Drive"); time.sleep(2)
+    for kmh in (0, 20, 40, 60, 30, 0):
+        car.speed_to(kmh); time.sleep(5)
+    for g in ("Park", "Reverse", "Neutral", "Drive", "Park"):
+        car.gear(g); time.sleep(3)
+    car.c.mark("scenario speed end")
+
+
+def scenario_range(car):
+    car.c.mark("scenario range start")
+    car.gear("Drive"); time.sleep(1)
+    car.hazard(True); time.sleep(3)
+    car.turn("BlinkRight"); time.sleep(2)   # 비상등 켠 채 깜빡이
+    car.turn("Off"); time.sleep(1)
+    car.hazard(False); time.sleep(2)
+    for mode in ("FlashRight", "Off", "FlashLeft", "Off"):
+        car.turn(mode); time.sleep(2)
+    for deg in (-470, -100, 100, 500, 700, 0):
+        car.steer_to(deg); time.sleep(3)
+    car.gear("Park")
+    car.c.mark("scenario range end")
+
+
+SCENARIOS = {"turn": scenario_turn, "speed": scenario_speed, "range": scenario_range}
+
+
+def main():
+    names = sys.argv[1:] or ["turn"]
+    unknown = [n for n in names if n not in SCENARIOS]
+    if unknown:
+        sys.exit(f"모르는 시나리오: {unknown}. 가능: {list(SCENARIOS)}")
+    console = Console()
+    car = Car(console)
+    console.proc_state("start")
+    try:
+        for n in names:
+            SCENARIOS[n](car)
+            console.proc_state(f"after {n}")
+            time.sleep(1)
+    finally:
+        car.speed, car.accel, car.brake, car.steer = 0, 0, 30, 0
+        car.controls("reset")
+        car.gear("Park")
+        car.turn("Off")
+        time.sleep(1.5)
+        console.close()
+
+
+if __name__ == "__main__":
+    main()
