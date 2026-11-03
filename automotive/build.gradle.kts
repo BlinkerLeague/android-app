@@ -56,6 +56,8 @@ dependencies {
     implementation("ai.pleos.playground:Vehicle:2.3.2")
     // 음성 안내. 에뮬레이터 caas 4.2.10 ≥ SDK 최소 요구 4.1.29
     implementation("ai.pleos.playground:TextToSpeech:3.3.1")
+    // 위치. 실차 지원 여부는 확인 필요 (구현 가이드에는 미지원으로 적혀 있음)
+    implementation("ai.pleos.playground:FusedLocation:1.1.3")
 
     // Compose
     val composeBom = platform("androidx.compose:compose-bom:2024.02.00")
