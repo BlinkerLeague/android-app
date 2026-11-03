@@ -15,8 +15,8 @@ import org.junit.Test
 
 class SteeringTurnDetectorTest {
 
-    // 진입 90°, 해제 20°, 오른쪽 양수, 연속 회전 묶음 3초
-    private val config = TurnConfig()
+    // 진입 90°, 해제 20°, 연속 회전 묶음 3초. 아래 테스트 값은 읽기 쉽게 "오른쪽 양수"로 씀
+    private val config = TurnConfig(steeringRightPositive = true)
     private val detector = SteeringTurnDetector(config)
 
     /** (초, 각도) 목록 → 핸들 샘플 */
@@ -36,6 +36,13 @@ class SteeringTurnDetectorTest {
     fun `음수 각도는 좌회전`() {
         val turn = detector.detect(steering(0 to 0f, 5 to -130f, 9 to 0f)).single()
         assertEquals(TurnDirection.LEFT, turn.direction)
+    }
+
+    @Test
+    fun `기본 설정은 SDK 실측 부호 - 핸들 음수가 우회전`() {
+        val default = SteeringTurnDetector(TurnConfig())
+        assertEquals(TurnDirection.RIGHT, default.detect(steering(0 to 0f, 5 to -130f, 9 to 0f)).single().direction)
+        assertEquals(TurnDirection.LEFT, default.detect(steering(0 to 0f, 5 to 130f, 9 to 0f)).single().direction)
     }
 
     @Test
@@ -73,6 +80,7 @@ class SteeringTurnDetectorTest {
         assertEquals(1, detector.detect(samples, vehicleStates = drive).size)
     }
 
+    // 비상등은 현재 TurnSignal로 감지 불가(SDK에 값 없음). 다른 출처로 HAZARD 샘플이 들어올 때를 위한 규칙 테스트
     @Test
     fun `비상등이 켜져 있던 회전은 제외`() {
         val samples = steering(0 to 0f, 5 to 120f, 9 to 0f)

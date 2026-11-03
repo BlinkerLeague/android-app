@@ -18,12 +18,16 @@ import kotlin.math.sign
  * 1. 핸들 각도 절댓값이 [TurnConfig.steeringExitDeg]를 넘은 때부터 다시 그 아래로 내려온 때까지를 한 번의 조향으로 보고,
  *    그동안 [TurnConfig.steeringEnterDeg] 이상까지 꺾였으면 회전. 회전 구간은 조향 시작~끝
  *    (진입·해제 기준을 나눠서 90도 근처 흔들림이 여러 회전으로 찍히지 않음. 조향 중 좌우가 바뀌면 거기서 끊음)
- * 2. 제외: 회전 중 기어가 P·R이었거나, 비상등이 켜져 있었거나,
+ * 2. 제외: 회전 중 기어가 P·R이었거나, 비상등이 켜져 있었거나(※ 아래 참고),
  *    속도를 알 수 있는데 회전 동안 [TurnConfig.minSpeedKmh]를 한 번도 넘지 않은 경우(주차장 조작)
  * 3. 간격이 [TurnConfig.mergeGapSec] 이내인 연속 회전은 묶음. 방향이 같으면 하나로 합치고,
  *    좌우가 섞이면(회전교차로, S자 도로) 제외
  *
  * 핸들 각도로는 유턴을 구분하지 못하므로 [Turn.uTurn]은 null.
+ *
+ * ※ 비상등 제외 규칙은 현재 동작하지 않음: 비상등은 TurnSignal로 감지 불가
+ *   (Vehicle SDK TurnSignal 값은 OFF/RIGHT/LEFT뿐, Light 도메인에도 비상등 API 없음, Safety 경고등 목록도 에뮬레이터에선 비어 있음).
+ *   비상등을 읽을 출처가 생기면 [TurnSignalState.HAZARD] 샘플로 넣어주면 됨. 규칙과 테스트는 그때를 위해 남겨 둠
  */
 class SteeringTurnDetector(private val config: TurnConfig) {
 

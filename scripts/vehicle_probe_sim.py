@@ -7,6 +7,9 @@ Virtual Console로 기어·속도·방향지시등·비상등·조향각을 바�
   python3 scripts/vehicle_probe_sim.py turn    # 실험 1 시나리오 (약 30초)
   python3 scripts/vehicle_probe_sim.py speed   # 실험 2: 속도 0→20→40→60→30→0 (5초 간격) + 기어 P→R→N→D→P
   python3 scripts/vehicle_probe_sim.py range   # 값 범위·구분: 비상등, Flash 모드, 조향각 -470~+700
+  python3 scripts/vehicle_probe_sim.py distance  # 트립 거리: 60km/h 60초 + 120km/h 30초 (약 2km)
+  python3 scripts/vehicle_probe_sim.py hazard    # 비상등·깜빡이 조합 (경고등 확인용)
+  python3 scripts/vehicle_probe_sim.py odometer  # 콘솔 오도미터 값을 직접 12.5 → 100 → 0 km로
   python3 scripts/vehicle_probe_sim.py turn speed   # 여러 개를 이어서
 
 콘솔 엔드포인트 (콘솔 웹 화면의 요청과 /vehicle/catalog로 확인, 모두 PUT):
@@ -14,6 +17,7 @@ Virtual Console로 기어·속도·방향지시등·비상등·조향각을 바�
   주행   /vehicle/controls?speed=<km/h>&accelerator=<%>&brake=<%>&steering=<deg>   (조향 범위 -470~500)
   깜빡이 /vehicle/turn-signal?mode=Off|BlinkLeft|BlinkRight|FlashLeft|FlashRight
   비상등 /vehicle/lights?feature=hazard&value=true|false
+  오도미터 /vehicle/odometer?traveled_distance_km=<km>  (콘솔은 속도로 오도미터를 늘리지 않음)
 """
 import sys
 import time
@@ -91,7 +95,46 @@ def scenario_range(car):
     car.c.mark("scenario range end")
 
 
-SCENARIOS = {"turn": scenario_turn, "speed": scenario_speed, "range": scenario_range}
+def scenario_distance(car):
+    """60km/h로 60초(1km) + 120km/h로 30초(1km) → 트립 거리·속도 적분 비교"""
+    car.c.mark("scenario distance start")
+    car.gear("Drive"); time.sleep(2)
+    car.speed_to(60); time.sleep(60)
+    car.speed_to(120); time.sleep(30)
+    car.speed_to(0); time.sleep(5)
+    car.gear("Park"); time.sleep(5)
+    car.c.mark("scenario distance end")
+
+
+def scenario_odometer(car):
+    """콘솔 오도미터(PERF_ODOMETER, km)를 직접 바꿔 SDK 값·단위 확인"""
+    car.c.mark("scenario odometer start")
+    for km in (12.5, 100, 0):
+        car.c.put(f"/vehicle/odometer?traveled_distance_km={km}", f"odometer={km}"); time.sleep(6)
+    car.c.mark("scenario odometer end")
+
+
+def scenario_hazard(car):
+    car.c.mark("scenario hazard start")
+    car.gear("Drive"); time.sleep(1)
+    car.hazard(True); time.sleep(4)
+    car.hazard(False); time.sleep(3)
+    car.turn("BlinkRight"); time.sleep(4)
+    car.turn("Off"); time.sleep(3)
+    car.turn("BlinkLeft"); time.sleep(4)
+    car.turn("Off"); time.sleep(3)
+    car.hazard(True); time.sleep(2)
+    car.turn("BlinkRight"); time.sleep(3)  # 비상등 + 오른쪽 깜빡이
+    car.turn("Off"); time.sleep(2)
+    car.hazard(False); time.sleep(2)
+    car.gear("Park")
+    car.c.mark("scenario hazard end")
+
+
+SCENARIOS = {
+    "turn": scenario_turn, "speed": scenario_speed, "range": scenario_range,
+    "distance": scenario_distance, "hazard": scenario_hazard, "odometer": scenario_odometer,
+}
 
 
 def main():

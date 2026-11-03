@@ -18,8 +18,8 @@
 ## MVP 측정 기준 (초기값, 튜닝 예정)
 
 - **운행**: 시동 on 또는 주행 상태 진입 시 시작합니다. 시동 off 또는 P단이 3분 이상 유지되면 종료합니다. 1km 미만 운행은 점수 대상에서 제외합니다.
-- **회전 (핸들 각도)**: 핸들 각도 절댓값이 20°를 넘은 때부터 다시 20° 아래로 내려올 때까지를 한 번의 조향으로 보고, 그 사이 90° 이상 꺾였으면 회전입니다. 부호로 좌·우를 구분합니다(부호 방향은 스파이크로 확인). 유턴은 구분하지 않습니다.
-- **회전 제외**: 기어 P·R, 비상등 켜짐, (속도를 알 때) 회전 내내 5km/h 미만. 3초 이내 연속 회전은 같은 방향이면 합치고 좌우가 섞이면(회전교차로) 제외합니다.
+- **회전 (핸들 각도)**: 핸들 각도 절댓값이 20°를 넘은 때부터 다시 20° 아래로 내려올 때까지를 한 번의 조향으로 보고, 그 사이 90° 이상 꺾였으면 회전입니다. 부호로 좌·우를 구분합니다(에뮬레이터 실측: SDK 음수가 오른쪽 → `steeringRightPositive=false`). 유턴은 구분하지 않습니다.
+- **회전 제외**: 기어 P·R, 비상등 켜짐, (속도를 알 때) 회전 내내 5km/h 미만. ※ 비상등은 TurnSignal로 감지 불가(SDK 값 없음, Light 도메인 API 없음) → 비상등 규칙은 현재 동작하지 않음. 3초 이내 연속 회전은 같은 방향이면 합치고 좌우가 섞이면(회전교차로) 제외합니다.
 - (보조) 진행 방향(heading) 기반 감지 `HeadingTurnDetector`: 10초 안에 60° 이상 변화. 위치에 heading이 있을 때 정확도 보강용으로 남겨둠, 현재 미사용
 - **깜빡이 성공**: 회전 시작 5초 전부터 회전이 끝날 때까지, 같은 방향 방향지시등이 한 번이라도 켜지면 성공입니다.
 - **MVP 점수**: 깜빡이 사용률 × 100입니다. 회전이 없는 운행은 "측정할 회전이 없었어요"로 표시합니다.
@@ -36,6 +36,7 @@
 - [ ] 4. 위치: 실차는 FusedLocation 미지원(구현 가이드) → NaviHelper `getCurrentLocationInfo`의 필드(속도 포함 여부)와 갱신 주기
 - [ ] 5. Brake API가 페달 상태를 주는지
 - [ ] 6. Light API로 전조등·오토라이트 상태를 알 수 있는지
+  - [x] 비상등: Light 도메인에 API 없음, Safety 경고등은 에뮬레이터에서 빈 목록 → 감지 불가 ([조사](docs/spikes/vehicle-background-speed.md))
 - [ ] 7. Safety API가 주는 경고 종류
 - [ ] 8. 시동·주행 상태(DrivingMode, P단)를 감지할 수 있는지
   - [x] 기어: Vehicle SDK `onSelected`와 CarProperty `GEAR_SELECTION` 모두 즉시 옴. `CURRENT_GEAR`는 안 바뀜
@@ -74,7 +75,7 @@
 - [x] Room에 운행·이벤트 선저장, 업로드 대기열 구현 (`TripRepository`, 재전송 트리거는 3단계에서)
 - [x] 끝난 운행 → `Trip` 조립 (`TripAssembler`: 회전 감지 + 깜빡이 판정 + 거리)
 - [x] 운행 기록 흐름 `TripRecorder` (`service/`): 공급원 → 운행 구분 → 조립 → 로컬 저장. Android Service와 분리돼 Fake로 시연·테스트 가능
-- [ ] 운행 수집 서비스: `TripRecorder`를 감싸는 백그라운드 수집 (스파이크 2번 결과에 따라 방식 결정)
+- [ ] 운행 수집 서비스: `TripRecorder`를 감싸는 포그라운드 서비스(`specialUse`). 시작은 앱이 보일 때 + `BOOT_COMPLETED` (동결된 백그라운드에서는 시작 불가, 시동 Resume 경로는 미확인)
 
 ### 3. 서버 연동 (서버 feat 브랜치 순서에 맞춰 진행, ~11.8)
 서버는 `driver-register` → `threshold-config` → `trip-upload` → `trip-score` → `daily-mission` 순서로 만들어집니다. 서버 API가 나오기 전까지 앱은 Fake API로 먼저 개발합니다.
@@ -147,4 +148,7 @@
 | 2026-11-01 | 업로드는 기록(`TripRecorder`)에서 하지 않고 결과 화면 진입 시 트리거 (나중에 WorkManager) | 기록과 업로드의 수명이 다름. 기록이 끝나 취소돼도 업로드가 끊기지 않게 |
 | 2026-11-01 | 서버 작업은 앱 팀이 하지 않음. 서버 요청은 `docs/server-requests.md`로 전달 | 서버는 다른 팀 담당 |
 | 2026-11-01 | 음성은 Pleos TextToSpeech SDK(ON_DEVICE)로. 종료 안내는 서버 점수를 기다리지 않고 기기 판정 결과로 말함 | 표준 TTS는 에뮬레이터에서 동작 안 함. 서버 응답이 늦거나 오프라인이어도 종료 안내는 1회 나가야 함 |
+| 2026-11-03 | `TurnConfig.steeringRightPositive` 기본값 false | 에뮬레이터 실측: 콘솔 오른쪽(+) → Vehicle SDK 음수. 실차가 다르면 서버 설정으로 변경 |
+| 2026-11-03 | 비상등 제외 규칙은 남기되 "TurnSignal로 감지 불가"로 표시 | SDK TurnSignal 값·Light 도메인에 비상등 없음. 출처가 생기면 HAZARD 샘플로 연결 |
+| 2026-11-03 | 운행 거리는 `PERF_VEHICLE_SPEED` 적분 | 트립 거리 API는 에뮬레이터 미지원, 오도미터는 속도를 따라 늘지 않아 검증 불가 |
 | 2026-11-01 | 서버는 별도 저장소(BlinkerLeague/server)이고 Java 17 + Spring Boot 3.3 | 이미 만들어져 있음. 서버 plan.md에서 확정한 내용 |

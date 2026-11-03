@@ -28,6 +28,7 @@ class Console:
         self._stop = threading.Event()
         threading.Thread(target=self._heartbeat, daemon=True).start()
         self.offset_ms, self.tz = self._device_clock()
+        self._measured = time.time()
         time.sleep(1.5)
 
     # ---- Virtual Console ----
@@ -46,6 +47,10 @@ class Console:
 
     def put(self, path, label):
         """PUT 요청을 보내고, 보내기 직전 시각을 주입 시각으로 기록함"""
+        # 호스트·기기 시계가 몇 분 사이에도 100ms 이상 벌어지는 것을 봐서 15초마다 다시 잼
+        if time.time() - self._measured > 15:
+            self.offset_ms, self.tz = self._device_clock(quiet=True)
+            self._measured = time.time()
         sent = time.time() * 1000
         ok = self._request(path, "PUT")
         self.mark(label if ok else f"{label} (실패)", sent)
@@ -55,7 +60,7 @@ class Console:
         self._stop.set()
 
     # ---- 시각 ----
-    def _device_clock(self):
+    def _device_clock(self, quiet=False):
         best = None
         for _ in range(5):
             t0 = time.time() * 1000
@@ -66,7 +71,8 @@ class Console:
         z = adb("shell", "date", "+%z").strip()  # 예: +0900
         sign = -1 if z.startswith("-") else 1
         tz = timezone(sign * timedelta(hours=int(z[1:3]), minutes=int(z[3:5])))
-        print(f"기기 시계 차이 {best[1]:+.0f}ms (왕복 {best[0]:.0f}ms), 기기 시간대 {z}")
+        if not quiet:
+            print(f"기기 시계 차이 {best[1]:+.0f}ms (왕복 {best[0]:.0f}ms), 기기 시간대 {z}")
         return best[1], tz
 
     def device_time(self, host_ms):

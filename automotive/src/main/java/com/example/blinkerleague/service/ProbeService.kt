@@ -40,12 +40,18 @@ class ProbeService : Service() {
             .setSmallIcon(R.mipmap.ic_launcher)
             .setOngoing(true)
             .build()
-        startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        runCatching { startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE) }
+            .onSuccess { probes.event("startForeground", "ok") }
+            .onFailure { probes.event("startForeground", "failed: $it") }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        probes.event("ProbeService.onStartCommand", "action=${intent?.action} via=${intent?.getStringExtra("via")}")
         when (intent?.action) {
-            ACTION_PROBE_START -> probes.start(DebugProbes.parseTargets(intent.getStringExtra("targets")), via = "service")
+            ACTION_PROBE_START -> probes.start(
+                DebugProbes.parseTargets(intent.getStringExtra("targets")),
+                via = "service(${intent.getStringExtra("via") ?: "adb"})",
+            )
             ACTION_REQUEST_ROUTE -> {
                 probes.start(setOf("navi"), via = "service")
                 probes.navi.requestRoute(
@@ -70,7 +76,7 @@ class ProbeService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     companion object {
-        const val ACTION_PROBE_START = "com.example.blinkerleague.PROBE_START"
+        const val ACTION_PROBE_START = DebugProbes.PROBE_START
         const val ACTION_REQUEST_ROUTE = "com.example.blinkerleague.NAVI_REQUEST_ROUTE"
         const val ACTION_CANCEL_ROUTE = "com.example.blinkerleague.NAVI_CANCEL_ROUTE"
         const val ACTION_POLL_LOCATION = "com.example.blinkerleague.NAVI_POLL_LOCATION"

@@ -1,7 +1,7 @@
 # 서버 요청 사항 (앱 → 서버)
 
 > 앱 팀이 서버 팀에 전달하는 문서입니다. 서버 저장소 `plan.md` 3장(P0 API)을 기준으로, 앱 구현 중에 바뀌었거나 정해야 하는 것만 적었습니다.
-> 마지막 갱신: 2026-11-01 · 앱 기준 커밋 `develop` b966886
+> 마지막 갱신: 2026-11-03 (7번 추가)
 
 ## 요약
 
@@ -13,6 +13,7 @@
 | 4 | 운행 업로드 요청 형식 확인 | `POST /api/trips` | 3.4 | `trip-upload` 전 | 확인 |
 | 5 | 오류 응답 코드와 앱의 재전송 규칙 | 전체 | 3.1, 3.4 | `trip-upload` 전 | 확인 |
 | 6 | 오늘의 미션: 운행이 없는 날의 응답 | `GET /api/missions/today` | 3.6 | `daily-mission` 전 | 확인 |
+| 7 | 기준값 `turn`에 조향각 부호(`steeringRightPositive`) 추가 | `GET /api/config/thresholds` | 3.3 | `threshold-config` 전 | **변경** |
 
 ---
 
@@ -129,3 +130,21 @@
 ```
 
 **요청**: 그날 운행이 아직 없어도 404가 아니라 `status: "IN_PROGRESS"`, `turns: 0`, `successTurns: 0`인 응답을 주세요. 앱은 시동 시 이 값으로 미션을 안내합니다.
+
+## 7. 기준값 `turn`에 조향각 부호 추가 (변경)
+
+**배경**: 에뮬레이터에서 Vehicle SDK 조향각은 오른쪽으로 꺾을 때 **음수**로 옵니다(`docs/spikes/vehicle-background-speed.md`). 앱 기본값은 이 실측에 맞췄지만 실차 부호는 아직 확인하지 못했습니다. 실차가 반대로 나오면 앱을 다시 배포하지 않고 바꿀 수 있어야 합니다.
+
+**요청**: 1번의 `turn` 객체에 아래 필드를 추가해 주세요. 값이 없으면 앱은 `false`(음수 = 오른쪽)로 봅니다.
+
+```json
+"turn": {
+  "steeringEnterDeg": 90,
+  "steeringExitDeg": 20,
+  "steeringRightPositive": false,
+  "signalLeadSec": 5,
+  "minSpeedKmh": 5,
+  "mergeGapSec": 3
+}
+```
+

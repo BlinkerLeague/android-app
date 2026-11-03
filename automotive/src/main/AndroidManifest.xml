@@ -16,6 +16,9 @@
     <!-- 차량 신호 (Pleos Vehicle SDK @RequiresPermission): TurnSignal=CAR_LIGHTS, SteeringWheel 각도·Gear=CAR_DRIVE -->
     <uses-permission android:name="pleos.car.permission.CAR_LIGHTS" />
     <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
+    <!-- 조사용: 경고등(telltale). get은 CAR_SAFETY, register는 PRIVATE_CAR_SAFETY (SDK @RequiresPermission) -->
+    <uses-permission android:name="pleos.car.permission.CAR_SAFETY" />
+    <uses-permission android:name="pleos.car.permission.PRIVATE_CAR_SAFETY" />
 
     <!-- 조사용 android.car 속성: 속도(dangerous, 런타임 허용 필요), 기어(normal) -->
     <uses-permission android:name="android.car.permission.CAR_SPEED" />
@@ -24,6 +27,7 @@
     <!-- 조사용 프로브 서비스(디버그) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".BlinkerLeagueApplication"
@@ -42,6 +46,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 조사용(디버그 빌드에서만 동작): 부팅·앱 교체 시 포그라운드 서비스 시작 가능 여부 -->
+        <!-- exported는 adb(shell)에서 PROBE_TRIGGER를 보내기 위함. DUMP 권한은 shell만 가지므로 다른 앱은 보낼 수 없음 -->
+        <receiver
+            android:name=".service.ProbeStartReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="com.example.blinkerleague.PROBE_TRIGGER" />
+            </intent-filter>
+        </receiver>
 
         <service
             android:name=".service.ProbeService"

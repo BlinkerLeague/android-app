@@ -12,7 +12,7 @@ import kotlin.math.sin
 
 /**
  * 시나리오를 동작 단위로 만드는 빌더. 위치는 1초마다 한 점씩, 속도와 heading으로 위치를 이어 붙임.
- * 핸들 각도는 [turn] 동안 꺾었다가(양수=오른쪽) 끝나면 0으로 돌아옴.
+ * 핸들 각도는 [turn] 동안 꺾었다가 끝나면 0으로 돌아옴. 부호는 Vehicle SDK(에뮬레이터 실측)와 같게 오른쪽이 음수.
  *
  * ```
  * scenario("좌회전") {
@@ -50,7 +50,7 @@ class ScenarioBuilder(
      * 핸들은 첫 1초·마지막 1초는 [steeringDeg]의 40%, 나머지는 [steeringDeg]만큼 꺾음 (3초 이상일 때)
      */
     fun turn(angleDeg: Float, seconds: Int, speedKmh: Float, steeringDeg: Float = 120f) {
-        val side = if (angleDeg >= 0) 1f else -1f
+        val side = if (angleDeg >= 0) -1f else 1f // 우회전 = 핸들 음수 (SDK 부호)
         repeat(seconds) { i ->
             val edge = seconds >= 3 && (i == 0 || i == seconds - 1)
             steer(side * abs(steeringDeg) * (if (edge) 0.4f else 1f))
