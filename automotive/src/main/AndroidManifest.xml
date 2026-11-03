@@ -8,6 +8,15 @@
     <!-- 음성 안내: Pleos TextToSpeech SDK가 요구하는 권한 (SDK의 TTS_PERMISSION 상수) -->
     <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
 
+    <!-- 내비 정보 조회(get*Info, 이벤트 리스너). 경로 요청(NAVI_ROUTE_SEARCH)은 쓰지 않음 -->
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
+    <!-- 조사용: 목적지 설정·취소(requestRoute, cancelRoute) -->
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
+
+    <!-- 조사용 내비 이벤트 로그 서비스(디버그) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
     <application
         android:name=".BlinkerLeagueApplication"
         android:allowBackup="true"
@@ -25,6 +34,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".service.NaviLogService"
+            android:exported="true"
+            android:foregroundServiceType="specialUse"
+            android:permission="android.permission.DUMP">
+            <!-- exported는 adb(shell)에서 목적지 요청을 보내기 위함. DUMP 권한은 shell만 가지므로 다른 앱은 호출 못 함 -->
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="NaviHelper 이벤트 조사용 로그 (디버그 빌드 전용)" />
+        </service>
 
     </application>
 

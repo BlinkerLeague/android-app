@@ -2,6 +2,7 @@ package com.example.blinkerleague
 
 import android.content.Context
 import com.example.blinkerleague.data.local.AppDatabase
+import com.example.blinkerleague.data.navi.NaviEventLogger
 import com.example.blinkerleague.data.remote.FakeMissionApi
 import com.example.blinkerleague.data.remote.FakeTripApi
 import com.example.blinkerleague.data.repository.MissionRepository
@@ -50,6 +51,9 @@ class AppContainer(context: Context) {
         tripConfig = config.trip,
         scope = applicationScope,
     )
+
+    /** 조사용 내비 이벤트 로그 (Logcat NaviTest). 디버그 빌드에서 [com.example.blinkerleague.service.NaviLogService]가 시작함 */
+    val naviEventLogger = NaviEventLogger(context)
 
     fun newId(): String = UUID.randomUUID().toString()
 }
