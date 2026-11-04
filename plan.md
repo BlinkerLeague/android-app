@@ -37,10 +37,17 @@
   - [ ] 실차에서 FusedLocation `isSupported()` 결과 (false이면 NaviHelper)
   - [ ] NaviHelper `getCurrentLocationInfo`의 필드와 갱신 주기
 - [ ] 5. Brake API가 페달 상태를 주는지
+  - [x] 에뮬레이터: `Brake.registerBrakePedalStatus` → 눌림 여부 `Boolean`만 옴 (밟은 정도 없음). 권한 `CAR_DRIVE`
 - [ ] 6. Light API로 전조등·오토라이트 상태를 알 수 있는지
+  - [x] 에뮬레이터: 하향등·미등·상향등 `LightState`(OFF/ON/DAYTIME_RUNNING) 조회·콜백 됨. **오토라이트 API는 없음**, 안개등 미지원. 권한 `CAR_LIGHTS`
 - [ ] 7. Safety API가 주는 경고 종류
+  - [x] 에뮬레이터: 경고등(`registerTelltales`)은 켜진 것만 목록으로 옴(`TelltaleType`+`OFF/ON/BLINK`). 오일·워셔액 경고는 미지원. 비상등 API 없음
 - [ ] 8. 시동·주행 상태(DrivingMode, P단)를 감지할 수 있는지
+  - [x] 에뮬레이터: Vehicle SDK에 **시동 상태 API 없음**(`IgnitionState` enum만 있음). `DrivingMode`는 에코·스포츠 모드이고 미지원. P단은 Gear로 됨
+  - [ ] CarProperty `IGNITION_STATE` 읽기 권한·가능 여부
 - [ ] 9. 각 기능의 checkXXXCapability 결과 (앱 시작 시 로그로 출력)
+  - [x] 에뮬레이터: 21개 도메인 전수 조사 (`VehicleSdkSurveyTest`). 미지원은 `onFailed`로 오는데 오류 모양이 두 가지라 클래스로 구분하면 안 됨
+  - [ ] 실차에서 같은 테스트로 비교
 - [ ] 10. TextToSpeech 사용 조건과 내비 음성과 겹칠 때의 처리
   - [x] 에뮬레이터: Pleos TextToSpeech SDK 3.3.1 `Mode.ON_DEVICE` + `ko-KR`로 재생됨. 권한 `pleos.car.permission.TTS_SERVICE` 필요. Android 표준 TextToSpeech는 엔진(caas SpeechService) 연결 실패
   - [ ] 내비 안내 음성 중일 때 오디오 포커스 동작 (지연·거절) 확인
@@ -123,6 +130,10 @@
   - 미션: 기획서 MVP는 1종(회전 깜빡이 완벽)인데, 목업에는 "회전 5번 제때", "내비 안내 회전 미리 켜기", "브레이크 부드럽게 정지" 3종이 있음
   - "내비 안내 회전 미리 켜기 · 보너스"는 기획서에 없음. 내비 안내 지점 정보를 받을 수 있는지도 확인 필요
 - [ ] **게임 요소 확장 아이디어**: 목적지까지 달려서 점수가 가장 높은 사람이 그 도로(땅)를 차지하는 방식. 리그(FR-13)와 어떻게 합칠지, 2차 범위에 넣을지 결정
+- [ ] **점수 항목 추가 후보 (2차 검토)**: SDK 조사로 찾은 데이터. 근거는 `docs/sdk-test-log.md` "점수화에 쓸 수 있는 다른 SDK 데이터"
+  - 과속 비율 (NaviHelper `onCurrentRoadSpeedLimit` + CarProperty 속도), 단속 카메라·구간단속 준수 (`CameraAlert.isOverSpeed`), 어린이보호구역 감속 (`CautionPoint SCHOOL_ZONE`)
+    → 에뮬레이터에서는 값이 안 옴(제한속도 항상 0). 실차 확인 필요
+  - 출발 전 안전벨트 착용 (Vehicle `Seat.registerSeatBeltBuckledState`) → 조회는 됨, 변경 콜백은 실차 확인 필요
 - [ ] **API 클라이언트**: Retrofit + kotlinx.serialization 또는 Ktor
 - [ ] **DI**: Hilt 또는 수동 DI (MVP 일정을 생각하면 수동 DI도 고려)
 - [ ] **정적 분석**: ktlint·detekt 사용 여부
