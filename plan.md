@@ -134,6 +134,8 @@
   - 과속 비율 (NaviHelper `onCurrentRoadSpeedLimit` + CarProperty 속도), 단속 카메라·구간단속 준수 (`CameraAlert.isOverSpeed`), 어린이보호구역 감속 (`CautionPoint SCHOOL_ZONE`)
     → 에뮬레이터에서는 값이 안 옴(제한속도 항상 0). 실차 확인 필요
   - 출발 전 안전벨트 착용 (Vehicle `Seat.registerSeatBeltBuckledState`) → 조회는 됨, 변경 콜백은 실차 확인 필요
+  - **확장안 전체: [`docs/scoring-criteria.md`](docs/scoring-criteria.md)** (11개 항목, 법규 기준, 가중치 초안, 새 이벤트 형식). 팀 확정 후 `server-requests.md`로 전달
+  - 기존 규칙과 충돌: 오토라이트 API가 없어 서버 4.1의 "오토라이트면 100점"·`autoLight` 필드는 쓸 수 없음. 비상등 API가 없어 "비상등 켜진 회전 제외"도 불가
 - [ ] **API 클라이언트**: Retrofit + kotlinx.serialization 또는 Ktor
 - [ ] **DI**: Hilt 또는 수동 DI (MVP 일정을 생각하면 수동 DI도 고려)
 - [ ] **정적 분석**: ktlint·detekt 사용 여부
