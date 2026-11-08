@@ -4,6 +4,7 @@ import com.example.blinkerleague.domain.config.TurnConfig
 import com.example.blinkerleague.domain.model.Gear
 import com.example.blinkerleague.domain.model.LocationSample
 import com.example.blinkerleague.domain.model.SignalSample
+import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.Turn
 import com.example.blinkerleague.domain.model.TurnDirection
@@ -19,7 +20,8 @@ import kotlin.math.sign
  *    그동안 [TurnConfig.steeringEnterDeg] 이상까지 꺾였으면 회전. 회전 구간은 조향 시작~끝
  *    (진입·해제 기준을 나눠서 90도 근처 흔들림이 여러 회전으로 찍히지 않음. 조향 중 좌우가 바뀌면 거기서 끊음)
  * 2. 제외: 회전 중 기어가 P·R이었거나, 비상등이 켜져 있었거나(※ 아래 참고),
- *    속도를 알 수 있는데 회전 동안 [TurnConfig.minSpeedKmh]를 한 번도 넘지 않은 경우(주차장 조작)
+ *    속도를 알 수 있는데 회전 동안 [TurnConfig.minSpeedKmh]를 한 번도 넘지 않은 경우(주차장 조작).
+ *    속도는 차량 속도([SpeedSample])를 먼저 쓰고, 없으면 위치의 속도를 씀
  * 3. 간격이 [TurnConfig.mergeGapSec] 이내인 연속 회전은 묶음. 방향이 같으면 하나로 합치고,
  *    좌우가 섞이면(회전교차로, S자 도로) 제외
  *
@@ -36,13 +38,14 @@ class SteeringTurnDetector(private val config: TurnConfig) {
         vehicleStates: List<VehicleStateSample> = emptyList(),
         signals: List<SignalSample> = emptyList(),
         locations: List<LocationSample> = emptyList(),
+        speeds: List<SpeedSample> = emptyList(),
     ): List<Turn> {
         val gears = vehicleStates.sortedBy { it.timestampMs }
         val sortedSignals = signals.sortedBy { it.timestampMs }
         return findSteeringTurns(steering.sortedBy { it.timestampMs })
             .filterNot { overlapsGear(it, gears, Gear.P, Gear.R) }
             .filterNot { overlapsHazard(it, sortedSignals) }
-            .filterNot { tooSlow(it, locations) }
+            .filterNot { tooSlow(it, speeds, locations) }
             .let(::mergeConsecutive)
     }
 
@@ -92,11 +95,16 @@ class SteeringTurnDetector(private val config: TurnConfig) {
         }
 
     /** 속도 정보가 회전 구간에 있을 때만 판단. 없으면 제외하지 않음 */
-    private fun tooSlow(turn: Turn, locations: List<LocationSample>): Boolean {
-        val speeds = locations
-            .filter { it.timestampMs in turn.startMs..turn.endMs }
-            .mapNotNull { it.speedKmh }
-        return speeds.isNotEmpty() && speeds.max() < config.minSpeedKmh
+    private fun tooSlow(turn: Turn, speeds: List<SpeedSample>, locations: List<LocationSample>): Boolean {
+        val values = if (speeds.isNotEmpty()) {
+            // 회전 시작 시점의 값(직전 샘플)도 포함: 속도 샘플은 바뀔 때만 올 수 있음
+            val sorted = speeds.sortedBy { it.timestampMs }
+            val before = sorted.lastOrNull { it.timestampMs <= turn.startMs }
+            (listOfNotNull(before) + sorted.filter { it.timestampMs in turn.startMs..turn.endMs }).map { abs(it.speedKmh) }
+        } else {
+            locations.filter { it.timestampMs in turn.startMs..turn.endMs }.mapNotNull { it.speedKmh }
+        }
+        return values.isNotEmpty() && values.max() < config.minSpeedKmh
     }
 
     private fun mergeConsecutive(turns: List<Turn>): List<Turn> {

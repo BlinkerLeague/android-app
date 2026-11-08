@@ -14,7 +14,7 @@ class TripSegmenterTest {
     private val segmenter = TripSegmenter(TripConfig(parkEndMinutes = 3))
     private val threeMin = 180_000L
 
-    private fun state(t: Long, on: Boolean, gear: Gear) =
+    private fun state(t: Long, on: Boolean?, gear: Gear) =
         segmenter.onVehicleState(VehicleStateSample(t, on, gear))
 
     @Test
@@ -65,6 +65,21 @@ class TripSegmenterTest {
         assertEquals(TripBoundary.Started(0), state(0, true, Gear.UNKNOWN))
         assertNull(segmenter.onTick(10 * threeMin))
         assertEquals(TripBoundary.Ended(999_000, EndReason.IGNITION_OFF), state(999_000, false, Gear.UNKNOWN))
+    }
+
+    @Test
+    fun `시동을 모르면(Pleos SDK) 기어 D로 시작하고 P단 3분으로 끝남`() {
+        assertNull(state(0, null, Gear.P))
+        assertEquals(TripBoundary.Started(10_000), state(10_000, null, Gear.D))
+        assertNull(state(60_000, null, Gear.P))
+        assertNull(segmenter.onTick(60_000 + threeMin - 1))
+        assertEquals(TripBoundary.Ended(60_000, EndReason.PARKED), segmenter.onTick(60_000 + threeMin))
+    }
+
+    @Test
+    fun `시동을 모를 때 기어를 알 수 없으면 시작하지 않음`() {
+        assertNull(state(0, null, Gear.UNKNOWN))
+        assertFalse(segmenter.inTrip)
     }
 
     @Test

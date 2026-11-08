@@ -17,7 +17,7 @@
 
 ## MVP 측정 기준 (초기값, 튜닝 예정)
 
-- **운행**: 시동 on 또는 주행 상태 진입 시 시작합니다. 시동 off 또는 P단이 3분 이상 유지되면 종료합니다. 1km 미만 운행은 점수 대상에서 제외합니다.
+- **운행**: 기어가 P가 아닌 단(D·R·N)이 되면 시작하고, P단이 3분 이상 유지되면 종료합니다(종료 시각은 P단에 들어간 시각). Pleos SDK에 시동 상태 API가 없어 실제로는 기어만으로 구분하고, 시동을 알 수 있는 경우(시나리오)에만 시동 on/off도 씁니다. 거리는 차량 속도 적분이고, 1km 미만 운행은 점수 대상에서 제외합니다.
 - **회전 (핸들 각도)**: 핸들 각도 절댓값이 20°를 넘은 때부터 다시 20° 아래로 내려올 때까지를 한 번의 조향으로 보고, 그 사이 90° 이상 꺾였으면 회전입니다. 부호로 좌·우를 구분합니다(에뮬레이터 실측: SDK 음수가 오른쪽 → `steeringRightPositive=false`). 유턴은 구분하지 않습니다.
 - **회전 제외**: 기어 P·R, 비상등 켜짐, (속도를 알 때) 회전 내내 5km/h 미만. ※ 비상등은 TurnSignal로 감지 불가(SDK 값 없음, Light 도메인 API 없음) → 비상등 규칙은 현재 동작하지 않음. 3초 이내 연속 회전은 같은 방향이면 합치고 좌우가 섞이면(회전교차로) 제외합니다.
 - (보조) 진행 방향(heading) 기반 감지 `HeadingTurnDetector`: 10초 안에 60° 이상 변화. 위치에 heading이 있을 때 정확도 보강용으로 남겨둠, 현재 미사용
@@ -79,7 +79,8 @@
 ### 2. 수집과 판정 (11.2 ~ 11.5)
 - [x] `VehicleSignalSource`, `LocationSource` 인터페이스 + Fake 구현체 (시나리오 재생)
 - [x] 핸들 각도 회전 감지 (`SteeringTurnDetector`) + 단위 테스트, 운행 조립을 핸들 감지로 전환
-- [ ] SDK 구현체 (`data/vehicle`, 핸들 각도 포함), 위치 구현체 (`data/location`, Pleos FusedLocation SDK): 스파이크 1·4·8·9·12번 결과 반영
+- [x] SDK 구현체 `PleosVehicleSignalSource`(방향지시등·핸들 각도·기어 + CarProperty 속도, `CapabilityReport`), 위치 구현체 `PleosLocationSource`(Pleos FusedLocation SDK). 에뮬레이터 계측 테스트 `PleosSourcesTest`
+- [x] 시동 없이 운행 구분(`VehicleStateSample.ignitionOn`은 알 수 없으면 null), 속도 Flow 추가, 저속 회전 제외·운행 거리를 차량 속도로 계산
 - [x] 시나리오 재생기 (`data/scenario`, 테스트와 시연에 공용): "좌회전 + 깜빡이", "우회전 + 깜빡이 없음", "회전교차로", "주차장 이동"
 - [x] 운행 구분 (`TripSegmenter`) + 단위 테스트
 - [x] 회전 감지 (`TurnDetector`) + 단위 테스트
@@ -171,5 +172,6 @@
 | 2026-11-03 | 비상등 제외 규칙은 남기되 "TurnSignal로 감지 불가"로 표시 | SDK TurnSignal 값·Light 도메인에 비상등 없음. 출처가 생기면 HAZARD 샘플로 연결 |
 | 2026-11-03 | 운행 거리는 `PERF_VEHICLE_SPEED` 적분 | 트립 거리 API는 에뮬레이터 미지원, 오도미터는 속도를 따라 늘지 않아 검증 불가 |
 | 2026-11-04 | 위치 출처는 Pleos FusedLocation SDK (NaviHelper 위치 아님) | 에뮬레이터에서 FusedLocation은 주입 좌표를 따라오고 NaviHelper 위치는 고정. 실차 지원은 Pleos 확인 필요 |
+| 2026-11-08 | 운행 구분은 기어 기준(시동은 알 수 있을 때만), 공급원에 속도 Flow 추가, 지원 여부는 `CapabilityReport`로 노출 | Pleos SDK에 시동 상태 API 없음(스파이크 8). 화면 계획(`docs/screen-plan.md`)이 기어·속도 Flow와 CapabilityReport를 신호 쪽에 요청 |
 | 2026-11-01 | 서버는 별도 저장소(BlinkerLeague/server)이고 Java 17 + Spring Boot 3.3 | 이미 만들어져 있음. 서버 plan.md에서 확정한 내용 |
 | 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |

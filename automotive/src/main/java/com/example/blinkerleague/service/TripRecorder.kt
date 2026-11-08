@@ -10,6 +10,7 @@ import com.example.blinkerleague.domain.detection.TripRecording
 import com.example.blinkerleague.domain.detection.TripSegmenter
 import com.example.blinkerleague.domain.model.LocationSample
 import com.example.blinkerleague.domain.model.SignalSample
+import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.VehicleStateSample
 import kotlinx.coroutines.delay
@@ -58,6 +59,7 @@ class TripRecorder(
         data class Steering(val sample: SteeringSample) : Input
         data class Signal(val sample: SignalSample) : Input
         data class Location(val sample: LocationSample) : Input
+        data class Speed(val sample: SpeedSample) : Input
         data class Tick(val nowMs: Long) : Input
     }
 
@@ -70,6 +72,8 @@ class TripRecorder(
     private val signals = mutableListOf<SignalSample>()
     private val vehicleStates = mutableListOf<VehicleStateSample>()
     private val locations = mutableListOf<LocationSample>()
+    private val speeds = mutableListOf<SpeedSample>()
+    private var lastSpeed: SpeedSample? = null
     private var lastSignal: SignalSample? = null
     private var lastVehicleState: VehicleStateSample? = null
 
@@ -80,6 +84,7 @@ class TripRecorder(
             vehicle.steeringAngles.map { Input.Steering(it) },
             vehicle.turnSignals.map { Input.Signal(it) },
             location.locations.map { Input.Location(it) },
+            vehicle.speeds.map { Input.Speed(it) },
             ticks(),
         ).collect { handle(it) }
     }
@@ -104,6 +109,10 @@ class TripRecorder(
                 if (tripId != null) signals += input.sample
             }
             is Input.Location -> if (tripId != null) locations += input.sample
+            is Input.Speed -> {
+                lastSpeed = input.sample
+                if (tripId != null) speeds += input.sample
+            }
             is Input.Tick -> segmenter.onTick(input.nowMs)?.let { onBoundary(it) }
         }
     }
@@ -119,10 +128,11 @@ class TripRecorder(
         val id = newId()
         tripId = id
         startedAtMs = atMs
-        listOf(steering, signals, vehicleStates, locations).forEach { it.clear() }
+        listOf(steering, signals, vehicleStates, locations, speeds).forEach { it.clear() }
         // 운행 시작 전부터 이어지던 상태(켜져 있던 깜빡이, 기어)를 이어받음
         lastSignal?.let { signals += it }
         lastVehicleState?.let { vehicleStates += it }
+        lastSpeed?.let { speeds += it.copy(timestampMs = maxOf(it.timestampMs, atMs)) }
         _state.value = RecorderState.Recording(id, atMs)
     }
 
@@ -133,7 +143,9 @@ class TripRecorder(
             tripId = id,
             startedAtMs = startedAtMs,
             endedAtMs = maxOf(atMs, startedAtMs),
-            recording = TripRecording(steering.toList(), signals.toList(), vehicleStates.toList(), locations.toList()),
+            recording = TripRecording(
+                steering.toList(), signals.toList(), vehicleStates.toList(), locations.toList(), speeds.toList(),
+            ),
             supported = vehicle.supportedSignals(),
         )
         repository.saveFinishedTrip(trip)

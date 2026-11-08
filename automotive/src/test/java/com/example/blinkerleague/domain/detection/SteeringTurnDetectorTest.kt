@@ -4,6 +4,7 @@ import com.example.blinkerleague.domain.config.TurnConfig
 import com.example.blinkerleague.domain.model.Gear
 import com.example.blinkerleague.domain.model.LocationSample
 import com.example.blinkerleague.domain.model.SignalSample
+import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.TurnDirection
 import com.example.blinkerleague.domain.model.TurnSignalState
@@ -103,6 +104,18 @@ class SteeringTurnDetectorTest {
         assertTrue(detector.detect(samples, locations = slow).isEmpty())
         assertEquals(1, detector.detect(samples, locations = moving).size)
         assertEquals(1, detector.detect(samples, locations = unknown).size)
+    }
+
+    @Test
+    fun `차량 속도가 있으면 그것으로 저속 판단 - 회전 시작 전 마지막 값도 포함`() {
+        val samples = steering(0 to 0f, 5 to 120f, 9 to 0f)
+        val slow = listOf(SpeedSample(1_000, 3f), SpeedSample(7_000, 2f))
+        val movingBefore = listOf(SpeedSample(1_000, 20f)) // 회전 중에는 샘플이 없지만 직전 값이 20km/h
+        val reversing = listOf(SpeedSample(4_000, -12f)) // 후진은 음수지만 절댓값으로 봄
+
+        assertTrue(detector.detect(samples, speeds = slow).isEmpty())
+        assertEquals(1, detector.detect(samples, speeds = movingBefore).size)
+        assertEquals(1, detector.detect(samples, speeds = reversing).size)
     }
 
     @Test
