@@ -100,6 +100,8 @@
   - [x] DTO, `TripApi` 인터페이스, 서버 규칙을 흉내 낸 `FakeTripApi`, 대기열 업로드 로직
   - [ ] HTTP 구현체 (API 클라이언트 결정 후), 재전송 트리거 (WorkManager)
 - [ ] `GET /api/trips/{id}/score`: `status`가 `SCORED`, `NO_TURN`, `EXCLUDED_SHORT` 중 무엇인지에 따라 화면 분기
+  - [x] `TripApi.getScore`·`getRecentTrips`(`GET /api/trips?limit=N`), 응답 DTO에 `grade`·`summary`·`plays`·`mission`(모두 선택값), `FakeTripApi` 구현(등급 S95·A85·B70·C50, 득점=켠 회전·실점=안 켠 회전). 서버 요청 8(`plays.direction`)·9(목록 모양)
+  - [ ] HTTP 구현체 (API 클라이언트 결정 후)
 - [ ] `GET /api/missions/today`: 상태(`IN_PROGRESS`/`ACHIEVED`/`FAILED`)와 진행률 표시
   - [x] DTO, `MissionApi`, 서버 규칙(3.6)을 흉내 낸 `FakeMissionApi`, `MissionRepository`
   - [ ] HTTP 구현체 (API 클라이언트 결정 후)

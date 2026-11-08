@@ -1,7 +1,7 @@
 # 서버 요청 사항 (앱 → 서버)
 
 > 앱 팀이 서버 팀에 전달하는 문서입니다. 서버 저장소 `plan.md` 3장(P0 API)을 기준으로, 앱 구현 중에 바뀌었거나 정해야 하는 것만 적었습니다.
-> 마지막 갱신: 2026-11-03 (7번 추가)
+> 마지막 갱신: 2026-11-08 (8·9번 추가)
 
 ## 요약
 
@@ -14,6 +14,8 @@
 | 5 | 오류 응답 코드와 앱의 재전송 규칙 | 전체 | 3.1, 3.4 | `trip-upload` 전 | 확인 |
 | 6 | 오늘의 미션: 운행이 없는 날의 응답 | `GET /api/missions/today` | 3.6 | `daily-mission` 전 | 확인 |
 | 7 | 기준값 `turn`에 조향각 부호(`steeringRightPositive`) 추가 | `GET /api/config/thresholds` | 3.3 | `threshold-config` 전 | **변경** |
+| 8 | 점수 응답 `plays`에 회전 방향 `direction` 추가 | `GET /api/trips/{id}/score`, `POST /api/trips` | 3.5 | `trip-score` 전 | **변경** |
+| 9 | 최근 경기 목록 응답 모양 확인 | `GET /api/trips?limit=N` | 3.5 | `trip-score` 전 | 확인 |
 
 ---
 
@@ -148,3 +150,33 @@
 }
 ```
 
+## 8. 점수 응답 `plays`에 회전 방향 `direction` 추가 (변경)
+
+**배경**: 플레이 타임라인(SCR-02a)은 카드마다 좌·우 아이콘을 그립니다(앱 `docs/screen-plan.md` 4.5). 서버 plan.md 3.5의 `plays` 항목에는 `occurredAt`, `type`, `result`만 있어서 방향을 알 수 없습니다.
+
+**요청**: `TURN` 플레이에 앱이 보낸 `payload.direction`(`LEFT`/`RIGHT`)을 그대로 실어 주세요. 다른 종류의 플레이(P1 급가감속 등)는 빼도 됩니다.
+
+```json
+"plays": [
+  { "occurredAt": "2026-11-03T08:12:30+09:00", "type": "TURN", "direction": "LEFT", "result": "GOAL" },
+  { "occurredAt": "2026-11-03T08:15:02+09:00", "type": "TURN", "direction": "RIGHT", "result": "CONCEDED" }
+]
+```
+
+- 앱은 `grade`, `summary`, `plays`, `mission`이 없어도 동작합니다(없으면 기기에 저장된 회전 기록으로 그림). 반칙(`fouls`)은 P0 화면에 표시하지 않습니다.
+- 앱이 쓰는 등급 기준: 서버 3.3 `grades`(S95·A85·B70·C50), 50점 미만은 `grade: null`.
+
+## 9. 최근 경기 목록 응답 모양 확인 (확인)
+
+**배경**: 홈(SCR-01)의 최근 경기 2건에 `GET /api/trips?limit=2`를 씁니다. 서버 plan.md 3.5에 항목 필드는 있지만 응답 바깥 모양이 정해지지 않았습니다.
+
+**앱이 가정한 형식**: 감싸는 객체 없이 배열, 종료 시각 최신순.
+
+```json
+[
+  { "tripId": "5f1c...", "endedAt": "2026-11-03T18:10:00+09:00", "distanceKm": 12.4, "status": "SCORED", "score": 67, "grade": null },
+  { "tripId": "9a2b...", "endedAt": "2026-11-03T08:42:00+09:00", "distanceKm": 0.6, "status": "EXCLUDED_SHORT", "score": null, "grade": null }
+]
+```
+
+**확인 요청**: 배열이 맞는지(페이지 정보로 감싸면 그 형식), `limit` 기본값·최댓값, 업로드 대기 중이라 서버에 없는 운행은 앱이 로컬 기록과 합쳐 보여 준다는 점.
