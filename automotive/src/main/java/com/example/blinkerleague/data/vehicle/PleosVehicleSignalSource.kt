@@ -21,10 +21,15 @@ import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.TurnSignalState
 import com.example.blinkerleague.domain.model.VehicleStateSample
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
@@ -43,10 +48,14 @@ import kotlin.coroutines.resume
  * 백그라운드에서도 받으려면 포그라운드 서비스 안에서 수집해야 함 (일반 백그라운드는 약 10초 뒤 동결).
  *
  * @param clock 샘플 타임스탬프용 현재 시각 (epoch ms). 다른 공급원과 같은 기준
+ * @param speedGranted 속도 권한 허용 여부 Flow ([com.example.blinkerleague.data.permission.PermissionRepository]).
+ *   수집 중에 권한이 허용되면 그때 속도를 구독함. null이면 구독 시점에 한 번만 확인
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class PleosVehicleSignalSource(
     context: Context,
     private val clock: () -> Long = System::currentTimeMillis,
+    private val speedGranted: Flow<Boolean>? = null,
 ) : VehicleSignalSource {
 
     private val appContext = context.applicationContext
@@ -143,7 +152,12 @@ class PleosVehicleSignalSource(
         awaitClose { gear.unregisterGearSelection(listener) }
     }
 
-    override val speeds: Flow<SpeedSample> = callbackFlow {
+    /** 권한이 생기면 구독하고, 없어지면 멈춤. 권한이 없는 동안은 아무것도 보내지 않음(끝나지 않음) */
+    override val speeds: Flow<SpeedSample> = (speedGranted ?: flowOf(true))
+        .distinctUntilChanged()
+        .flatMapLatest { granted -> if (granted) speedUpdates else emptyFlow() }
+
+    private val speedUpdates: Flow<SpeedSample> = callbackFlow {
         val manager = propertyManager
         if (manager == null || !speedGranted()) {
             Log.w(TAG, "속도를 받을 수 없음 (권한 ${speedGranted()}, 서비스 ${manager != null})")
@@ -165,6 +179,7 @@ class PleosVehicleSignalSource(
             close()
             return@callbackFlow
         }
+        Log.i(TAG, "속도 구독 시작")
         awaitClose { manager.unregisterCallback(callback) }
     }
 

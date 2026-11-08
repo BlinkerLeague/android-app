@@ -57,6 +57,8 @@
 1. **런타임 권한은 사용자별로 줘야 합니다.** 에뮬레이터는 사용자가 둘(시스템 u0, 운전자 u10)입니다.
    `adb shell pm grant --user current com.example.blinkerleague android.car.permission.CAR_SPEED`
    (`FUSED_LOCATION`도 같은 방식)
+   - 앱에서 요청 창 띄우기(디버그 빌드): `adb shell am start -n com.example.blinkerleague/.MainActivity --es requestPermission speed`
+   - `CAR_SPEED` 요청 창은 "**위치 정보**에 액세스"라고 표시됨 (권한 그룹이 위치). 허용하면 운행 수집이 재시작 없이 속도를 받기 시작함
 2. **Virtual Console**(`adb forward tcp:8088 tcp:8088` → http://127.0.0.1:8088)은 브라우저를 켜 둬야 값이 바뀝니다. 스크립트로 쓸 때는 1초마다 세션 신호(`POST /browser/session`)를 보내야 하는데, `scripts/vconsole.py`가 해 줍니다.
 3. **에뮬레이터 Wi-Fi**가 꺼져 있으면 내비 경로 탐색이 실패합니다. 설정 → 연결 → Wi-Fi → `AndroidWifi`를 눌러 연결합니다.
 4. **위치 주입**은 `adb emu geo fix 경도 위도 고도`입니다. 경도가 먼저입니다.

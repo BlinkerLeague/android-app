@@ -4,6 +4,8 @@ import android.content.Context
 import com.example.blinkerleague.data.local.AppDatabase
 import com.example.blinkerleague.data.location.LocationSource
 import com.example.blinkerleague.data.location.PleosLocationSource
+import com.example.blinkerleague.data.permission.PermissionRepository
+import com.example.blinkerleague.data.permission.RuntimePermission
 import com.example.blinkerleague.data.remote.FakeMissionApi
 import com.example.blinkerleague.data.remote.FakeTripApi
 import com.example.blinkerleague.data.repository.MissionRepository
@@ -12,6 +14,7 @@ import com.example.blinkerleague.data.repository.TripRepository
 import com.example.blinkerleague.data.vehicle.PleosVehicleSignalSource
 import com.example.blinkerleague.data.vehicle.VehicleSignalSource
 import com.example.blinkerleague.domain.config.DetectionConfig
+import com.example.blinkerleague.domain.model.PermissionStatus
 import com.example.blinkerleague.service.RecordingStatus
 import com.example.blinkerleague.service.TripVoiceGuide
 import com.example.blinkerleague.voice.PleosTtsAnnouncer
@@ -22,6 +25,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import java.time.ZoneId
 import java.util.UUID
 
@@ -35,11 +39,21 @@ class AppContainer(context: Context) {
 
     private val zone: ZoneId = ZoneId.systemDefault()
 
-    /** 실제 차량 신호 (Vehicle SDK + CarProperty). 처음 쓸 때 SDK에 연결함 */
-    val vehicleSignalSource: VehicleSignalSource by lazy { PleosVehicleSignalSource(context) }
+    /** 런타임 권한(속도·위치) 상태. 화면이 다시 보일 때 refresh */
+    val permissions = PermissionRepository(context)
 
-    /** 실제 위치 (Pleos FusedLocation SDK) */
-    val locationSource: LocationSource by lazy { PleosLocationSource(context) }
+    private fun granted(permission: RuntimePermission) =
+        permissions.status(permission).map { it == PermissionStatus.GRANTED }
+
+    /** 실제 차량 신호 (Vehicle SDK + CarProperty). 처음 쓸 때 SDK에 연결함. 속도는 권한이 생기면 그때 구독 */
+    val vehicleSignalSource: VehicleSignalSource by lazy {
+        PleosVehicleSignalSource(context, speedGranted = granted(RuntimePermission.SPEED))
+    }
+
+    /** 실제 위치 (Pleos FusedLocation SDK). 권한이 생기면 그때 구독 */
+    val locationSource: LocationSource by lazy {
+        PleosLocationSource(context, locationGranted = granted(RuntimePermission.LOCATION))
+    }
 
     // HTTP 구현체는 API 클라이언트 결정 후 교체. 그 전까지 서버 규칙을 흉내 내는 Fake를 씀 (앱을 끄면 초기화됨)
     private val tripApi = FakeTripApi()

@@ -146,9 +146,9 @@
 
 | # | 작업 | 담당 | 선행 | 상태 |
 | --- | --- | --- | --- | --- |
-| 1 | 업로드 자동 재전송 (WorkManager) | 신호 | — | PR #25 |
-| 2 | `TripApi.getScore`·`getRecentTrips` + Fake (screen-plan 4.3·4.4 데이터) | 신호 | — | 진행 |
-| 3 | 속도 권한(`CAR_SPEED`) 상태 Flow: 홈 안내 "속도 권한이 없어…"·온보딩 4단계용 | 신호 | — | 대기 |
+| 1 | 업로드 자동 재전송 (WorkManager) | 신호 | — | 완료 (#25) |
+| 2 | `TripApi.getScore`·`getRecentTrips` + Fake (screen-plan 4.3·4.4 데이터) | 신호 | — | 완료 (#28) |
+| 3 | 속도 권한(`CAR_SPEED`) 상태 Flow: 홈 안내 "속도 권한이 없어…"·온보딩 4단계용 | 신호 | — | 완료: `container.permissions`, `rememberPermissionRequester` |
 | 4 | 주행 안전 가드 `DrivingGuard` + DRV 화면 + `MainActivity` 연결 (7장 1) | 화면 | 기어·속도 Flow(완료) | 미착수 |
 | 5 | NavHost 재구성, SCR-01 홈 (7장 2) | 화면 | 4 | 미착수 |
 | 6 | SCR-02 확장 + SCR-02a (7장 3) | 화면 | 5, 2번 | 미착수 |
@@ -157,6 +157,8 @@
 | 9 | HTTP 구현체 (`TripApi`·`MissionApi`·등록) | 신호 | API 클라이언트 결정, 서버 API | 결정 대기 |
 | 10 | 시연 영상, release APK, README, 제출 양식 (5장) | 함께 | 4~8 | 11.13~ |
 
+- 권한 사용법(화면 쪽): 상태는 `container.permissions.status(RuntimePermission.SPEED)`(`GRANTED`/`DENIED`/`NOT_REQUESTED`), 요청은 `rememberPermissionRequester(container.permissions, RuntimePermission.SPEED)`. 허용되면 운행 수집이 재시작 없이 속도를 받기 시작함
+- **주의(온보딩 문구)**: `CAR_SPEED` 시스템 요청 창은 "이 기기의 **위치 정보**에 액세스하도록 허용하시겠습니까?"로 뜸(에뮬레이터). 요청 전 앱 화면에서 "속도를 쓰기 위해 묻는 것"이라고 먼저 설명해야 함
 - 화면(4~8)이 11.6 계획보다 늦음. 신호 쪽이 비면 4번(가드 판정 순수 함수·테스트)을 먼저 맡을 수 있음 → 팀원과 조율
 
 ## 서버와 맞춰야 할 항목
