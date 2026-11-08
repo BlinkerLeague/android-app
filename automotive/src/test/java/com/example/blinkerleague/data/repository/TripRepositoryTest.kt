@@ -11,6 +11,7 @@ import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.Trip
 import com.example.blinkerleague.domain.model.TripEvent
 import com.example.blinkerleague.domain.model.TurnDirection
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -71,6 +72,19 @@ class TripRepositoryTest {
         assertEquals(75, a.score)
         assertEquals(1, a.attemptCount)
         assertEquals(0, repository.observePendingCount().first())
+    }
+
+    @Test
+    fun `업로드를 동시에 두 번 불러도 같은 운행은 한 번만 보냄`() = runTest {
+        repository.saveFinishedTrip(trip("a", 0, listOf(true)))
+        repository.saveFinishedTrip(trip("b", 1_000_000, listOf(false)))
+
+        val first = async { repository.uploadPending() }
+        val second = async { repository.uploadPending() }
+        val total = first.await().uploaded + second.await().uploaded
+
+        assertEquals(2, total)
+        assertEquals(listOf("a", "b"), api.received.map { it.tripId })
     }
 
     @Test
