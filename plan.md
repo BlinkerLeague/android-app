@@ -34,7 +34,7 @@
 - [ ] 2. 앱이 백그라운드에 있을 때도 신호와 위치를 계속 받을 수 있는지
   - [x] NaviHelper 콜백: 일반 백그라운드는 cached로 얼어 못 받음, 포그라운드 서비스면 받음 ([조사 기록](docs/spikes/navi-helper-events.md))
   - [x] Vehicle SDK·CarProperty도 같음: 일반 백그라운드는 약 10초 뒤 동결 → 콜백 전부 누락, 동결 해제 시 프로세스 종료. 포그라운드 서비스면 모두 즉시 옴 ([조사](docs/spikes/vehicle-background-speed.md))
-- [ ] 3. 주행 중 앱 실행 제한의 범위 (정차·P단 조건)
+- [x] 3. 주행 중 앱 실행 제한의 범위 (정차·P단 조건) — 에뮬레이터: 기어 D(속도 0 포함)면 시스템이 앱 화면을 "주행 중에는 사용할 수 없습니다"로 덮음(앱이 distraction-optimized가 아니라서). P로 돌아오면 보던 화면 복귀. 앱 가드(`DrivingGuard`)는 이와 별개로 주행 중 화면으로 바꿔 이중으로 막음. 앱을 DO로 표시하지 않음(그러면 시스템 차단이 풀려 앱 가드만 남음)
 - [ ] 4. 위치: 실차는 FusedLocation 미지원(구현 가이드) → NaviHelper `getCurrentLocationInfo`의 필드(속도 포함 여부)와 갱신 주기
   - [x] 에뮬레이터: Pleos FusedLocation SDK 1.1.3으로 현재 위치 조회와 1초 갱신이 됨 (`isSupported()`=true). `adb emu geo fix`로 위치를 바꿀 수 있음. `LocationData`에 속도 필드는 없음. 권한 `pleos.car.permission.FUSED_LOCATION`(dangerous, 런타임 요청 필요)
   - [x] Pleos FusedLocation SDK 1.1.3: 에뮬레이터에서 주입 좌표를 1초마다 따라옴(지연 중앙 12ms), 고도 반영, heading 항상 0, 속도·주소 없음. 권한 `FUSED_LOCATION`은 dangerous. 근접 알림은 원형(중심+반경). NaviHelper 위치는 고정값 ([조사](docs/spikes/fused-location.md))
@@ -119,7 +119,7 @@
   - [ ] 적립 포인트 (포인트 원장 P1)
 - [x] 시나리오 재생 화면 (`ui/demo`): Fake 신호로 운행을 1·5·10배속 재생 → 결과 화면. 시연·화면 테스트용
 - [x] 미션 화면 (MVP에서는 오늘의 미션 1종만, `ui/missions`)
-- [ ] 정차·P단 상태에서만 화면 진입 허용
+- [x] 정차·P단 상태에서만 화면 진입 허용 — `DrivingGuard`(순수 함수) + `DrivingGuardViewModel` + 주행 중 화면(`ui/driving`), `MainActivity` 최상위에서 덮음. 디버그 우회 `--ez guardBypass true`
 - [x] 음성: 시동 시 미션 안내, 운행 종료 시 결과 한마디 (`voice/`, `service/TripVoiceGuide`). 운행당 1회씩, 오디오 포커스를 받은 뒤에만 재생
 
 ### 5. 1차 제출 (11.13 ~ 11.15)
@@ -151,17 +151,17 @@
 | 1 | 업로드 자동 재전송 (WorkManager) | 신호 | — | 완료 (#25) |
 | 2 | `TripApi.getScore`·`getRecentTrips` + Fake (screen-plan 4.3·4.4 데이터) | 신호 | — | 완료 (#28) |
 | 3 | 속도 권한(`CAR_SPEED`) 상태 Flow: 홈 안내 "속도 권한이 없어…"·온보딩 4단계용 | 신호 | — | 완료: `container.permissions`, `rememberPermissionRequester` |
-| 4 | 주행 안전 가드 `DrivingGuard` + DRV 화면 + `MainActivity` 연결 (7장 1) | 화면 | 기어·속도 Flow(완료) | 미착수 |
-| 5 | NavHost 재구성, SCR-01 홈 (7장 2) | 화면 | 4 | 미착수 |
-| 6 | SCR-02 확장 + SCR-02a (7장 3) | 화면 | 5, 2번 | 미착수 |
-| 7 | SCR-03 퀘스트 상세 (7장 4) | 화면 | 5 | 미착수 |
-| 8 | SCR-00 온보딩 (7장 5) | 화면 | 등록 API Fake, 3번 | 미착수 |
+| 4 | 주행 안전 가드 `DrivingGuard` + DRV 화면 + `MainActivity` 연결 (7장 1) | 신호(혼자 개발) | 기어·속도 Flow(완료) | 진행 |
+| 5 | NavHost 재구성, SCR-01 홈 (7장 2) | 신호(혼자 개발) | 4 | 미착수 |
+| 6 | SCR-02 확장 + SCR-02a (7장 3) | 신호(혼자 개발) | 5, 2번 | 미착수 |
+| 7 | SCR-03 퀘스트 상세 (7장 4) | 신호(혼자 개발) | 5 | 미착수 |
+| 8 | SCR-00 온보딩 (7장 5) | 신호(혼자 개발) | 등록 API Fake, 3번 | 미착수 |
 | 9 | HTTP 구현체 (`TripApi`·`MissionApi`·등록) | 신호 | — | 완료: Retrofit, 토큰 재발급, `DriverRepository`. 서버 주소 설정 시 사용 |
 | 10 | 시연 영상, release APK, README, 제출 양식 (5장) | 함께 | 4~8 | 11.13~ |
 
 - 권한 사용법(화면 쪽): 상태는 `container.permissions.status(RuntimePermission.SPEED)`(`GRANTED`/`DENIED`/`NOT_REQUESTED`), 요청은 `rememberPermissionRequester(container.permissions, RuntimePermission.SPEED)`. 허용되면 운행 수집이 재시작 없이 속도를 받기 시작함
 - **주의(온보딩 문구)**: `CAR_SPEED` 시스템 요청 창은 "이 기기의 **위치 정보**에 액세스하도록 허용하시겠습니까?"로 뜸(에뮬레이터). 요청 전 앱 화면에서 "속도를 쓰기 위해 묻는 것"이라고 먼저 설명해야 함
-- 화면(4~8)이 11.6 계획보다 늦음. 신호 쪽이 비면 4번(가드 판정 순수 함수·테스트)을 먼저 맡을 수 있음 → 팀원과 조율
+- 11.08부터 앱 개발은 1인. 화면(4~8)도 screen-plan 7장 순서대로 진행
 
 ## 서버와 맞춰야 할 항목
 서버 `plan.md` 7장과 같은 목록입니다. 서버 작업은 우리가 하지 않으므로, 서버에 필요한 내용은 [`docs/server-requests.md`](docs/server-requests.md)에 정리해 전달합니다.
@@ -219,4 +219,5 @@
 | 2026-11-08 | 화면·테마는 `docs/screen-plan.md`(11.05)를 기준으로 함. 11.08 개정 목업과 다르면 screen-plan을 따름 | 팀 결정: screen-plan이 최신 기준 |
 | 2026-11-08 | HTTP는 Retrofit + OkHttp. 서버 주소(`blinker.serverUrl`)가 없으면 Fake API. 401이면 `POST /api/auth/refresh`로 한 번 재발급, 그것도 거부되면 토큰 삭제 → 재등록 | kotlinx.serialization을 그대로 씀. 시연은 서버 없이도 되게 |
 | 2026-11-08 | 업로드 `supported`는 신호 이름이 아니라 서버 점수 항목(`ScoreItem`: TURN_SIGNAL 등) | 서버가 `Set<ScoreItem>`으로 받음. 신호 이름(`STEERING_ANGLE`)을 보내면 400으로 거부돼 업로드가 멈춤 |
+| 2026-11-08 | 주행 안전 가드는 정차 화면(NavHost)을 그대로 두고 주행 중 화면으로 덮음(터치·접근성 차단). 앱은 distraction-optimized로 표시하지 않음 | P로 돌아오면 보던 화면 복귀(screen-plan 3장). 시스템 차단 + 앱 가드 이중 보호 |
 | 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |
