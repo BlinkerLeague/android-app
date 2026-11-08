@@ -12,6 +12,8 @@
 
     <!-- 내비 정보 조회(get*Info, 이벤트 리스너). 경로 요청(NAVI_ROUTE_SEARCH)은 쓰지 않음 -->
     <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
+    <!-- 차량 위치 (FusedLocation SDK @RequiresPermission). 기기 prot=dangerous → 런타임 허용 필요 -->
+    <uses-permission android:name="pleos.car.permission.FUSED_LOCATION" />
     <!-- 조사용: 목적지 설정·취소(requestRoute, cancelRoute) -->
     <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
 

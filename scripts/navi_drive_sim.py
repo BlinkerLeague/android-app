@@ -14,54 +14,10 @@ Pleos 내비 앱과 Virtual Console에는 위치 시뮬레이션 기능이 없�
 전제: 에뮬레이터 실행 중. 8088 포트 포워딩은 스크립트가 함.
 """
 import argparse
-import json
-import math
-import subprocess
 import time
 
+from geo_route import road_points, straight, walk
 from vconsole import Console, geo_fix
-
-M_PER_DEG = 111_320.0
-
-
-def distance_m(a, b):
-    dlat = (b[0] - a[0]) * M_PER_DEG
-    dlng = (b[1] - a[1]) * M_PER_DEG * math.cos(math.radians(a[0]))
-    return math.hypot(dlat, dlng)
-
-
-def road_points(start, dest):
-    url = (
-        "https://router.project-osrm.org/route/v1/driving/"
-        f"{start[1]},{start[0]};{dest[1]},{dest[0]}?overview=full&geometries=geojson"
-    )
-    # macOS 기본 Python의 SSL 문제를 피하려고 curl로 받음
-    body = subprocess.run(["curl", "-s", "-m", "20", url], check=True, capture_output=True, text=True).stdout
-    coords = json.loads(body)["routes"][0]["geometry"]["coordinates"]
-    return [(lat, lng) for lng, lat in coords]
-
-
-def walk(points, step_m):
-    """폴리라인을 따라 step_m 간격의 점을 만든다."""
-    out, carry = [points[0]], 0.0
-    for a, b in zip(points, points[1:]):
-        seg = distance_m(a, b)
-        pos = step_m - carry
-        while pos <= seg:
-            t = pos / seg
-            out.append((a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t))
-            pos += step_m
-        carry = (carry + seg) % step_m
-    return out
-
-
-def straight(start, bearing, step_m, n):
-    pts, (lat, lng), b = [start], start, math.radians(bearing)
-    for _ in range(n):
-        lat += step_m * math.cos(b) / M_PER_DEG
-        lng += step_m * math.sin(b) / (M_PER_DEG * math.cos(math.radians(lat)))
-        pts.append((lat, lng))
-    return pts
 
 
 def main():

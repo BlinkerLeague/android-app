@@ -22,7 +22,17 @@ class MainActivity : ComponentActivity() {
         val debuggable = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
         val probes = (application as BlinkerLeagueApplication).container.debugProbes
         val probe = intent.getStringExtra("probe")
-        if (probe != null && debuggable) probes.start(DebugProbes.parseTargets(probe), via = "activity")
+        if (probe != null && debuggable) {
+            probes.start(DebugProbes.parseTargets(probe), via = "activity", naviPollMs = intent.getLongExtra("naviPollMs", 0L))
+            // 근접 알림: --ed proxLat … --ed proxLng … --ef proxRadius 100
+            if (intent.hasExtra("proxLat")) {
+                probes.location.addProximityAlert(
+                    intent.getDoubleExtra("proxLat", Double.NaN),
+                    intent.getDoubleExtra("proxLng", Double.NaN),
+                    intent.getFloatExtra("proxRadius", 100f),
+                )
+            }
+        }
         // 조사용: --el fgsDelayMs 5000 → 앱이 백그라운드로 간 뒤 앱 스스로 포그라운드 서비스 시작을 시도
         val fgsDelayMs = intent.getLongExtra("fgsDelayMs", -1L)
         if (fgsDelayMs >= 0 && debuggable) {

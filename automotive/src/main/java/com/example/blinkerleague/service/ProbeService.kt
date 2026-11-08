@@ -23,6 +23,8 @@ import com.example.blinkerleague.data.debug.DebugProbes
  *   -a com.example.blinkerleague.NAVI_REQUEST_ROUTE --ed lat … --ed lng … --es name …
  *   -a com.example.blinkerleague.NAVI_CANCEL_ROUTE
  *   -a com.example.blinkerleague.NAVI_POLL_LOCATION --el intervalMs 5000
+ * # 위치: 근접 알림 (원형, 서비스에서 location 프로브가 시작돼 있어야 함)
+ *   -a com.example.blinkerleague.LOCATION_PROXIMITY --ed lat … --ed lng … --ef radius 100
  * ```
  */
 class ProbeService : Service() {
@@ -51,6 +53,12 @@ class ProbeService : Service() {
             ACTION_PROBE_START -> probes.start(
                 DebugProbes.parseTargets(intent.getStringExtra("targets")),
                 via = "service(${intent.getStringExtra("via") ?: "adb"})",
+                naviPollMs = intent.getLongExtra("naviPollMs", 0L),
+            )
+            ACTION_PROXIMITY -> probes.location.addProximityAlert(
+                latitude = intent.getDoubleExtra("lat", Double.NaN),
+                longitude = intent.getDoubleExtra("lng", Double.NaN),
+                radiusMeters = intent.getFloatExtra("radius", 100f),
             )
             ACTION_REQUEST_ROUTE -> {
                 probes.start(setOf("navi"), via = "service")
@@ -80,6 +88,7 @@ class ProbeService : Service() {
         const val ACTION_REQUEST_ROUTE = "com.example.blinkerleague.NAVI_REQUEST_ROUTE"
         const val ACTION_CANCEL_ROUTE = "com.example.blinkerleague.NAVI_CANCEL_ROUTE"
         const val ACTION_POLL_LOCATION = "com.example.blinkerleague.NAVI_POLL_LOCATION"
+        const val ACTION_PROXIMITY = "com.example.blinkerleague.LOCATION_PROXIMITY"
         private const val CHANNEL_ID = "probe"
         private const val NOTIFICATION_ID = 1001
     }
