@@ -12,6 +12,7 @@ import android.util.Log
 import com.example.blinkerleague.AppContainer
 import com.example.blinkerleague.BlinkerLeagueApplication
 import com.example.blinkerleague.R
+import com.example.blinkerleague.data.sync.TripUploadWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -29,7 +30,7 @@ import kotlinx.coroutines.launch
  * - type `specialUse`: 차량 신호 수집에 맞는 표준 type이 없음 (Android 14, 실험 6)
  * - 시작 경로: 앱 화면이 보일 때([MainActivity][com.example.blinkerleague.MainActivity]), 부팅·앱 업데이트([BootReceiver]).
  *   동결된 백그라운드에서는 시작할 수 없음. 시동 Resume 때 깨어나는 경로는 미확인
- * - 운행 상태를 음성 안내([TripVoiceGuide])로 넘기고, 운행이 끝나면 업로드 대기열을 올림
+ * - 운행 상태를 음성 안내([TripVoiceGuide])로 넘기고, 운행이 끝나면 업로드 작업([TripUploadWorker])을 예약함
  * - 알림은 "깜빡이리그 · 기록 중" 한 줄. 점수·결과를 알림으로 보여주지 않음 (주행 안전 원칙)
  */
 class TripCollectionService : Service() {
@@ -74,18 +75,14 @@ class TripCollectionService : Service() {
                 when (state) {
                     is RecorderState.Recording -> Log.i(TAG, "운행 시작 ${state.tripId}")
                     is RecorderState.Finished -> {
-                        Log.i(TAG, "운행 끝 ${state.tripId} → 저장됨, 업로드 시도")
-                        // 기록과 업로드는 수명이 달라서 앱 수명 스코프에서 올림 (재전송 WorkManager는 3단계)
-                        container.applicationScope.launch {
-                            val upload = container.tripRepository.uploadPending()
-                            val result = container.tripRepository.observeResult(state.tripId).first()
-                            Log.i(
-                                TAG,
-                                "결과 ${state.tripId}: ${result?.scoreState} 점수=${result?.score} " +
-                                    "거리=%.2fkm 회전=${result?.turns?.map { "${it.direction}:${if (it.signalOn) "켬" else "안 켬"}" }} 업로드=$upload"
-                                        .format(result?.distanceKm ?: 0.0),
-                            )
-                        }
+                        val result = container.tripRepository.observeResult(state.tripId).first()
+                        Log.i(
+                            TAG,
+                            "운행 끝 ${state.tripId} → 저장됨: 거리=%.2fkm 회전=${result?.turns?.map { "${it.direction}:${if (it.signalOn) "켬" else "안 켬"}" }}"
+                                .format(result?.distanceKm ?: 0.0),
+                        )
+                        // 업로드는 기록과 수명이 달라서 WorkManager에 맡김 (네트워크가 연결되면 실행, 실패하면 재시도)
+                        TripUploadWorker.enqueue(this@TripCollectionService, reason = "trip-finished")
                     }
                     RecorderState.Idle -> Unit
                 }

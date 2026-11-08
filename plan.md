@@ -98,7 +98,8 @@
 - [ ] `GET /api/config/thresholds`: 앱 시작 시 내려받음. `version`이 바뀌었을 때만 갱신하고, 받지 못하면 로컬 기본값 사용
 - [ ] `POST /api/trips`: 운행이 끝나면 업로드하고, 실패하면 재전송 (WorkManager 검토). 응답에 담긴 점수를 바로 화면에 씀
   - [x] DTO, `TripApi` 인터페이스, 서버 규칙을 흉내 낸 `FakeTripApi`, 대기열 업로드 로직
-  - [ ] HTTP 구현체 (API 클라이언트 결정 후), 재전송 트리거 (WorkManager)
+  - [x] 재전송 트리거 `TripUploadWorker`(WorkManager): 네트워크 연결 시 실행, 대기열이 남으면 지수 백오프(30초~) 재시도, 최대 10회. 운행 종료·앱 시작 때 예약. 업로드는 한 번에 하나만(Mutex)
+  - [ ] HTTP 구현체 (API 클라이언트 결정 후)
 - [ ] `GET /api/trips/{id}/score`: `status`가 `SCORED`, `NO_TURN`, `EXCLUDED_SHORT` 중 무엇인지에 따라 화면 분기
 - [ ] `GET /api/missions/today`: 상태(`IN_PROGRESS`/`ACHIEVED`/`FAILED`)와 진행률 표시
   - [x] DTO, `MissionApi`, 서버 규칙(3.6)을 흉내 낸 `FakeMissionApi`, `MissionRepository`
@@ -176,5 +177,6 @@
 | 2026-11-04 | 위치 출처는 Pleos FusedLocation SDK (NaviHelper 위치 아님) | 에뮬레이터에서 FusedLocation은 주입 좌표를 따라오고 NaviHelper 위치는 고정. 실차 지원은 Pleos 확인 필요 |
 | 2026-11-08 | 운행 구분은 기어 기준(시동은 알 수 있을 때만), 공급원에 속도 Flow 추가, 지원 여부는 `CapabilityReport`로 노출 | Pleos SDK에 시동 상태 API 없음(스파이크 8). 화면 계획(`docs/screen-plan.md`)이 기어·속도 Flow와 CapabilityReport를 신호 쪽에 요청 |
 | 2026-11-08 | 조사 코드·권한은 `src/debug`, main은 `DebugTools`로만 부름 | Pleos 심사: 승인되지 않은 권한 선언 시 탈락. 릴리스 APK에 조사용 권한·클래스가 들어가지 않게 |
+| 2026-11-08 | 업로드는 WorkManager(`TripUploadWorker`)에 맡기고 운행 종료·앱 시작 때 예약 | 운행이 끝날 때 오프라인이어도 연결되면 자동으로 올라감. 앱이 동결돼도 WorkManager가 깨워 실행 |
 | 2026-11-01 | 서버는 별도 저장소(BlinkerLeague/server)이고 Java 17 + Spring Boot 3.3 | 이미 만들어져 있음. 서버 plan.md에서 확정한 내용 |
 | 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |

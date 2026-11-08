@@ -88,6 +88,9 @@ dependencies {
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
 
+    // 업로드 재전송 (네트워크 연결 시 실행, 지수 백오프)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
     // JSON (이벤트 payload, API DTO). HTTP 클라이언트(Retrofit/Ktor)와 무관하게 씀
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 

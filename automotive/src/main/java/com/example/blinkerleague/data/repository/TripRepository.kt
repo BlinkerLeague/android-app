@@ -7,6 +7,8 @@ import com.example.blinkerleague.domain.model.Trip
 import com.example.blinkerleague.domain.model.TripResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 data class UploadSummary(
     val uploaded: Int,
@@ -22,6 +24,8 @@ data class UploadSummary(
  * - tripId·eventId가 클라이언트 UUID라서 같은 운행을 다시 올려도 서버에서 중복되지 않음.
  *   그래서 업로드 중 앱이 죽어 PENDING이 남아도 다음에 그냥 다시 보내면 됨
  * - 4xx(인증·타임아웃·요청 과다 제외)는 다시 보내도 같은 결과라 REJECTED로 멈춤
+ * - 업로드는 결과 화면·재전송 작업([com.example.blinkerleague.data.sync.TripUploadWorker]) 등 여러 곳에서 불리므로
+ *   한 번에 하나만 돌게 막음 (같은 운행을 동시에 두 번 보내지 않게)
  */
 class TripRepository(
     private val dao: TripDao,
@@ -29,6 +33,8 @@ class TripRepository(
     private val mapper: TripMapper,
     private val clock: () -> Long,
 ) {
+    private val uploadLock = Mutex()
+
     suspend fun saveFinishedTrip(trip: Trip) {
         dao.insertTripWithEvents(mapper.toEntity(trip), mapper.toEventEntities(trip))
     }
@@ -40,7 +46,9 @@ class TripRepository(
     fun observePendingCount(): Flow<Int> = dao.observePendingCount()
 
     /** 대기열을 오래된 순서로 올림. 네트워크 오류가 나면 남은 것은 다음 시도로 미룸 */
-    suspend fun uploadPending(): UploadSummary {
+    suspend fun uploadPending(): UploadSummary = uploadLock.withLock { uploadPendingLocked() }
+
+    private suspend fun uploadPendingLocked(): UploadSummary {
         val pending = dao.pendingTrips()
         var uploaded = 0
         var rejected = 0
