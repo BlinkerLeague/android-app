@@ -44,7 +44,7 @@ import com.example.blinkerleague.domain.model.MissionStatus
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.service.RecordingStatus
-import com.example.blinkerleague.ui.missions.MissionCard
+import com.example.blinkerleague.ui.quest.MissionCard
 import com.example.blinkerleague.ui.theme.BlinkerLeagueTheme
 import java.time.ZoneId
 

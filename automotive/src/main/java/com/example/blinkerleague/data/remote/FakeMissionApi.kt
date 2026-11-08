@@ -1,5 +1,6 @@
 package com.example.blinkerleague.data.remote
 
+import com.example.blinkerleague.data.remote.dto.MissionConditionDto
 import com.example.blinkerleague.data.remote.dto.MissionProgressDto
 import com.example.blinkerleague.data.remote.dto.ScoreStatus
 import com.example.blinkerleague.data.remote.dto.TodayMissionResponse
@@ -45,6 +46,11 @@ class FakeMissionApi(
                 periodKey = today.toString(),
                 status = status,
                 progress = MissionProgressDto(turns, success, requiredTurns),
+                rewardPoint = 20,
+                conditions = listOf(
+                    MissionConditionDto("TURN_COUNT", turns, requiredTurns),
+                    MissionConditionDto("SIGNAL_RATE", if (turns == 0) 0 else success * 100 / turns, 100),
+                ),
             ),
         )
     }
