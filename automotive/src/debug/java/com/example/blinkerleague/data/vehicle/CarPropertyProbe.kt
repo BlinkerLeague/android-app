@@ -86,6 +86,8 @@ class CarPropertyProbe(private val context: Context, private val log: ProbeLog) 
             VehiclePropertyIds.CURRENT_GEAR to CarPropertyManager.SENSOR_RATE_ONCHANGE,
             VehiclePropertyIds.PERF_STEERING_ANGLE to CarPropertyManager.SENSOR_RATE_FASTEST,
             VehiclePropertyIds.TURN_SIGNAL_STATE to CarPropertyManager.SENSOR_RATE_ONCHANGE,
+            // 스파이크 8: 시동 상태 (VehicleIgnitionState: 0 UNDEFINED, 1 LOCK, 2 OFF, 3 ACC, 4 ON, 5 START)
+            VehiclePropertyIds.IGNITION_STATE to CarPropertyManager.SENSOR_RATE_ONCHANGE,
         )
     }
 }

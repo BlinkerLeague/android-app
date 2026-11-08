@@ -31,7 +31,7 @@
 가장 먼저 확인할 항목은 1번과 2번입니다. 이 두 가지가 안 되면 앱이 성립하지 않습니다.
 실제로 실행해 확인한 결과는 [`docs/sdk-test-log.md`](docs/sdk-test-log.md)에 기록합니다.
 - [x] 1. TurnSignal 상태를 실시간으로 구독할 수 있는지, 좌·우가 구분되는지 — 에뮬레이터: 즉시 옴, OFF/RIGHT/LEFT 구분. 비상등은 TurnSignal 값에 없음 ([조사](docs/spikes/vehicle-background-speed.md))
-- [ ] 2. 앱이 백그라운드에 있을 때도 신호와 위치를 계속 받을 수 있는지
+- [x] 2. 앱이 백그라운드에 있을 때도 신호와 위치를 계속 받을 수 있는지 — 포그라운드 서비스로 해결(`TripCollectionService`)
   - [x] NaviHelper 콜백: 일반 백그라운드는 cached로 얼어 못 받음, 포그라운드 서비스면 받음 ([조사 기록](docs/spikes/navi-helper-events.md))
   - [x] Vehicle SDK·CarProperty도 같음: 일반 백그라운드는 약 10초 뒤 동결 → 콜백 전부 누락, 동결 해제 시 프로세스 종료. 포그라운드 서비스면 모두 즉시 옴 ([조사](docs/spikes/vehicle-background-speed.md))
 - [x] 3. 주행 중 앱 실행 제한의 범위 (정차·P단 조건) — 에뮬레이터: 기어 D(속도 0 포함)면 시스템이 앱 화면을 "주행 중에는 사용할 수 없습니다"로 덮음(앱이 distraction-optimized가 아니라서). P로 돌아오면 보던 화면 복귀. 앱 가드(`DrivingGuard`)는 이와 별개로 주행 중 화면으로 바꿔 이중으로 막음. 앱을 DO로 표시하지 않음(그러면 시스템 차단이 풀려 앱 가드만 남음)
@@ -51,7 +51,7 @@
 - [ ] 8. 시동·주행 상태(DrivingMode, P단)를 감지할 수 있는지
   - [x] 에뮬레이터: Vehicle SDK에 **시동 상태 API 없음**(`IgnitionState` enum만 있음). `DrivingMode`는 에코·스포츠 모드이고 미지원. P단은 Gear로 됨
   - [x] 기어: Vehicle SDK `onSelected`와 CarProperty `GEAR_SELECTION` 모두 즉시 옴. `CURRENT_GEAR`는 안 바뀜
-  - [ ] CarProperty `IGNITION_STATE` 읽기 권한·가능 여부
+  - [x] CarProperty `IGNITION_STATE` 읽기 권한·가능 여부 — 권한 `CAR_POWERTRAIN`(normal)은 허용되지만 에뮬레이터 속성 목록에 **없음**(등록 실패). Virtual Console 전원 상태(`/vehicle/power-system/simulator`, Off/Ready/On)는 차량 HAL 로그에만 찍히고 Android는 계속 깨어 있음(앱 서비스·프로세스 유지) → **에뮬레이터로는 시동 꺼짐·Resume을 재현할 수 없음.** 실차·Pleos 문의
 - [ ] 9. 각 기능의 checkXXXCapability 결과 (앱 시작 시 로그로 출력)
   - [x] 에뮬레이터: 21개 도메인 전수 조사 (`VehicleSdkSurveyTest`). 미지원은 `onFailed`로 오는데 오류 모양이 두 가지라 클래스로 구분하면 안 됨
   - [ ] 실차에서 같은 테스트로 비교
@@ -91,7 +91,7 @@
 - [x] 끝난 운행 → `Trip` 조립 (`TripAssembler`: 회전 감지 + 깜빡이 판정 + 거리)
 - [x] 운행 기록 흐름 `TripRecorder` (`service/`): 공급원 → 운행 구분 → 조립 → 로컬 저장. Android Service와 분리돼 Fake로 시연·테스트 가능
 - [x] 운행 수집 서비스 `TripCollectionService`: 실제 공급원으로 `TripRecorder`를 도는 포그라운드 서비스(`specialUse`). 앱 화면이 보일 때 + 부팅·앱 업데이트(`BootReceiver`)에 시작. 운행 상태를 음성 안내로 넘기고 운행이 끝나면 업로드. 기록 상태(`AppContainer.recordingStatus`: OFF/WAITING/RECORDING)를 화면에 노출. 에뮬레이터에서 내비를 앞에 둔 채 한 운행 끝까지 확인(`scripts/vehicle_probe_sim.py trip`)
-- [ ] 시동 Resume 때 서비스를 다시 깨우는 경로 (Pleos 문의)
+- [ ] 시동 Resume 때 서비스를 다시 깨우는 경로 (Pleos 문의) — 에뮬레이터 전원 Off/On으로는 절전이 일어나지 않아 확인 불가(11.08)
 
 ### 3. 서버 연동 (서버 feat 브랜치 순서에 맞춰 진행, ~11.8)
 서버는 `driver-register` → `threshold-config` → `trip-upload` → `trip-score` → `daily-mission` 순서로 만들어집니다. 서버 API가 나오기 전까지 앱은 Fake API로 먼저 개발합니다.

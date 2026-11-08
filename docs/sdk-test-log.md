@@ -226,8 +226,8 @@ python scripts/vehicle_survey_sim.py      # 리스너 등록 후(약 5초 뒤) �
 - [ ] 실차에서 같은 덤프를 한 번 돌려 지원 목록 비교 (특히 주행 모드, 트립 거리, 안개등, 경고등)
 - [ ] 실차 비상등이 경고등 `TURN_SIGNAL_LEFT`·`RIGHT` 동시 `BLINK`로 오는지
 - [ ] 오토라이트 상태에서 실차 하향등 `LightState`가 실제 점등을 따라가는지 (야간 전조등 판정 근거)
-- [ ] 시동 on/off를 앱이 알 방법 (Vehicle SDK에 없음. CarProperty `IGNITION_STATE` 권한 확인 필요) → 스파이크 8번
-- [ ] Virtual Console `power-system`(Off/Ready/On/Driving) 주입 시 앱에 오는 신호 — 에뮬레이터 상태를 흔들 수 있어 이번엔 하지 않음
+- [x] 시동 on/off를 앱이 알 방법 → 에뮬레이터에서는 없음 (2026-11-08): CarProperty `IGNITION_STATE`는 `CAR_POWERTRAIN`(normal) 허용 상태에서도 속성 목록에 없음
+- [x] Virtual Console `power-system`(Off/Ready/On/Driving) 주입 시 앱에 오는 신호 (2026-11-08): `PUT /vehicle/power-system/simulator?state=Off&area_id=0` → 차량 HAL 로그 `ev power state: Off`만 찍히고 Android `mWakefulness=Awake` 유지, 앱 포그라운드 서비스·프로세스 그대로. 앱이 받는 신호 없음. On으로 되돌림
 
 ---
 
