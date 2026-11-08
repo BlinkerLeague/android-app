@@ -24,7 +24,8 @@
     <!-- 조사용: CarProperty 기어(GEAR_SELECTION) 비교 -->
     <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
 
-    <application>
+    <!-- 로컬 서버(http://10.0.2.2) 접속용. 릴리스에는 들어가지 않음 -->
+    <application android:networkSecurityConfig="@xml/network_security_config">
         <!-- exported는 adb(shell)에서 PROBE_TRIGGER를 보내기 위함. DUMP 권한은 shell만 가지므로 다른 앱은 보낼 수 없음 -->
         <receiver
             android:name=".service.ProbeStartReceiver"

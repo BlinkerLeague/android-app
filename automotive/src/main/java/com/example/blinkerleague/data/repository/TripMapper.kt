@@ -1,5 +1,7 @@
 package com.example.blinkerleague.data.repository
 
+import com.example.blinkerleague.domain.model.ScoreItem
+import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.data.local.TripEntity
 import com.example.blinkerleague.data.local.TripEventEntity
 import com.example.blinkerleague.data.local.TripWithEvents
@@ -54,7 +56,10 @@ class TripMapper(
         startedAt = isoTime(stored.trip.startedAtMs),
         endedAt = isoTime(stored.trip.endedAtMs),
         distanceKm = stored.trip.distanceKm,
-        supported = stored.trip.supported.split(",").filter { it.isNotBlank() },
+        // 서버는 신호 이름이 아니라 측정 가능한 점수 항목(ScoreItem)을 받음. 모르는 이름이면 400으로 거부됨
+        supported = ScoreItem.measurable(
+            stored.trip.supported.split(",").mapNotNull { name -> SignalType.entries.firstOrNull { it.name == name } }.toSet(),
+        ).map { it.name }.sorted(),
         events = stored.events.sortedBy { it.occurredAtMs }.map {
             TripEventDto(
                 eventId = it.eventId,

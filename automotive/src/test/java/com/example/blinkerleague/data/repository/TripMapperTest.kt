@@ -38,7 +38,8 @@ class TripMapperTest {
         assertEquals("trip-1", request.tripId)
         assertEquals("2026-11-03T08:00:00+09:00", request.startedAt)
         assertEquals("2026-11-03T08:10:00+09:00", request.endedAt)
-        assertEquals(listOf("BRAKE", "TURN_SIGNAL"), request.supported)
+        // 핸들 각도가 없으면 깜빡이 항목은 측정 불가, 브레이크는 점수 항목이 아님 → 빈 목록
+        assertEquals(emptyList<String>(), request.supported)
         assertEquals(listOf("e1", "e2"), request.events.map { it.eventId })
 
         val first = request.events.first()
@@ -57,6 +58,13 @@ class TripMapperTest {
         )
         val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(unknown), mapper.toEventEntities(unknown)))
         assertEquals(setOf("direction", "signalOn"), request.events.single().payload.jsonObject.keys)
+    }
+
+    @Test
+    fun `supported는 서버 점수 항목 이름 - 방향지시등과 핸들 각도가 있으면 TURN_SIGNAL`() {
+        val measurable = trip.copy(supported = setOf(SignalType.TURN_SIGNAL, SignalType.STEERING_ANGLE, SignalType.HEADLIGHT))
+        val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(measurable), mapper.toEventEntities(measurable)))
+        assertEquals(listOf("NIGHT_HEADLIGHT", "TURN_SIGNAL"), request.supported)
     }
 
     @Test

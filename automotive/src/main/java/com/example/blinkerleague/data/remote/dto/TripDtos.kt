@@ -12,6 +12,7 @@ data class TripUploadRequest(
     val startedAt: String,
     val endedAt: String,
     val distanceKm: Double,
+    /** 측정 가능한 점수 항목 이름 ([com.example.blinkerleague.domain.model.ScoreItem]) */
     val supported: List<String>,
     val events: List<TripEventDto>,
 )
@@ -115,6 +116,8 @@ object TripEventType {
 }
 
 object ScoreStatus {
+    /** 서버가 받았지만 아직 점수 계산 전 (서버 `TripStatus.UPLOADED`). 화면은 "결과 집계 중" */
+    const val UPLOADED = "UPLOADED"
     const val SCORED = "SCORED"
     const val NO_TURN = "NO_TURN"
     const val EXCLUDED_SHORT = "EXCLUDED_SHORT"

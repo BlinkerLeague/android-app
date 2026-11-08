@@ -1,14 +1,14 @@
 # 서버 요청 사항 (앱 → 서버)
 
 > 앱 팀이 서버 팀에 전달하는 문서입니다. 서버 저장소 `plan.md` 3장(P0 API)을 기준으로, 앱 구현 중에 바뀌었거나 정해야 하는 것만 적었습니다.
-> 마지막 갱신: 2026-11-08 (8·9번 추가)
+> 마지막 갱신: 2026-11-08 (2번 철회, 8·9번 추가)
 
 ## 요약
 
 | # | 항목 | 관련 API | 서버 plan.md | 필요 시점 | 종류 |
 | --- | --- | --- | --- | --- | --- |
 | 1 | 회전 감지 기준값을 핸들 각도 기준으로 변경 | `GET /api/config/thresholds` | 3.3 | `threshold-config` 전 | **변경** |
-| 2 | `supported` 신호 이름에 `STEERING_ANGLE` 추가 | `POST /api/trips` | 3.4, 3.5 | `trip-upload` 전 | **변경** |
+| 2 | ~~`supported` 신호 이름에 `STEERING_ANGLE` 추가~~ → **철회**: 앱이 서버 `ScoreItem`에 맞춤 | `POST /api/trips` | 3.4, 3.5 | — | 철회 |
 | 3 | `TURN` payload의 `uTurn`은 보내지 않음 | `POST /api/trips` | 3.4 | `trip-upload` 전 | **변경** |
 | 4 | 운행 업로드 요청 형식 확인 | `POST /api/trips` | 3.4 | `trip-upload` 전 | 확인 |
 | 5 | 오류 응답 코드와 앱의 재전송 규칙 | 전체 | 3.1, 3.4 | `trip-upload` 전 | 확인 |
@@ -50,7 +50,9 @@
 }
 ```
 
-## 2. `supported` 신호 이름에 `STEERING_ANGLE` 추가 (변경)
+## 2. `supported` 신호 이름에 `STEERING_ANGLE` 추가 (철회, 2026-11-08)
+
+> **철회**: 서버 `TripController`가 `supported`를 `Set<ScoreItem>`(`TURN_SIGNAL`, `SMOOTH_DRIVING`, `SAFETY_WARNING`, `NIGHT_HEADLIGHT`)으로 받는 것을 확인했습니다. 앱이 "측정 가능한 점수 항목"으로 바꿔 보냅니다(방향지시등 + 핸들 각도 → `TURN_SIGNAL`). 서버 변경은 필요 없습니다. 아래는 이전 내용입니다.
 
 앱이 보내는 `supported` 값은 아래 중 차량이 지원하는 것입니다.
 

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -17,6 +19,16 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // 서버 주소. 비어 있으면 Fake API로 동작(시연·화면 개발용).
+        // local.properties에 `blinker.serverUrl=http://10.0.2.2:8080` (에뮬레이터 → 내 PC) 또는 -Pblinker.serverUrl=…
+        val localProps = Properties().apply {
+            rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+        }
+        val serverUrl = (project.findProperty("blinker.serverUrl") as String?)
+            ?: localProps.getProperty("blinker.serverUrl")
+            ?: ""
+        buildConfigField("String", "SERVER_URL", "\"$serverUrl\"")
     }
 
     buildTypes {
@@ -37,6 +49,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         // Kotlin 1.9.22와 짝이 맞는 Compose Compiler 버전
@@ -90,6 +103,12 @@ dependencies {
 
     // 업로드 재전송 (네트워크 연결 시 실행, 지수 백오프)
     implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    // 서버 API: Retrofit + OkHttp, JSON은 kotlinx.serialization 변환기
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 
     // JSON (이벤트 payload, API DTO). HTTP 클라이언트(Retrofit/Ktor)와 무관하게 씀
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")

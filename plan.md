@@ -71,7 +71,7 @@
 - [x] JVM target을 1.8에서 17로 상향
 - [x] 의존성 추가: activity-compose, lifecycle-viewmodel/runtime-compose, coroutines
 - [x] 의존성 추가: Room 2.6.1(KSP), kotlinx.serialization, Robolectric(테스트)
-- [ ] 의존성 추가: Retrofit 또는 Ktor, play-services-location (해당 단계에서 추가)
+- [x] 의존성 추가: Retrofit 2.11 + OkHttp 4.12 + kotlinx.serialization 변환기 (play-services-location은 쓰지 않음, 위치는 Pleos FusedLocation)
 - [ ] (선택) Version Catalog(`gradle/libs.versions.toml`) 도입
 - [x] 조사용 코드·권한을 디버그 빌드 전용(`src/debug`)으로 분리. 릴리스 APK에는 실제 기능 권한(TTS_SERVICE, FUSED_LOCATION, CAR_LIGHTS, CAR_DRIVE, CAR_SPEED, 포그라운드 서비스·부팅)만 들어감. NaviHelper SDK는 `debugImplementation`
 - [x] `MainActivity`를 Compose로 교체하고 Door 샘플 코드 제거
@@ -95,18 +95,20 @@
 
 ### 3. 서버 연동 (서버 feat 브랜치 순서에 맞춰 진행, ~11.8)
 서버는 `driver-register` → `threshold-config` → `trip-upload` → `trip-score` → `daily-mission` 순서로 만들어집니다. 서버 API가 나오기 전까지 앱은 Fake API로 먼저 개발합니다.
-- [ ] `POST /api/drivers`: 최초 실행 시 닉네임과 지역 코드(시군구 5자리)를 등록하고, 받은 토큰을 로컬(DataStore)에 저장. 이후 요청은 Bearer 헤더로 보냄
+- [ ] `POST /api/drivers`: 최초 실행 시 닉네임과 지역 코드(시군구 5자리)를 등록하고, 받은 토큰을 로컬에 저장. 이후 요청은 Bearer 헤더로 보냄
+  - [x] `DriverRepository.register`(결과: 등록됨/닉네임 중복/입력 오류/오프라인), 토큰은 `PrefsTokenStore`(SharedPreferences), `registered` Flow로 온보딩·홈 분기. Access 만료 시 자동 재발급
+  - [ ] 온보딩 화면 연결 (화면 담당)
 - [ ] `GET /api/config/thresholds`: 앱 시작 시 내려받음. `version`이 바뀌었을 때만 갱신하고, 받지 못하면 로컬 기본값 사용
 - [ ] `POST /api/trips`: 운행이 끝나면 업로드하고, 실패하면 재전송 (WorkManager 검토). 응답에 담긴 점수를 바로 화면에 씀
   - [x] DTO, `TripApi` 인터페이스, 서버 규칙을 흉내 낸 `FakeTripApi`, 대기열 업로드 로직
   - [x] 재전송 트리거 `TripUploadWorker`(WorkManager): 네트워크 연결 시 실행, 대기열이 남으면 지수 백오프(30초~) 재시도, 최대 10회. 운행 종료·앱 시작 때 예약. 업로드는 한 번에 하나만(Mutex)
-  - [ ] HTTP 구현체 (API 클라이언트 결정 후)
+  - [x] HTTP 구현체 (`data/remote/http`, Retrofit)
 - [ ] `GET /api/trips/{id}/score`: `status`가 `SCORED`, `NO_TURN`, `EXCLUDED_SHORT` 중 무엇인지에 따라 화면 분기
   - [x] `TripApi.getScore`·`getRecentTrips`(`GET /api/trips?limit=N`), 응답 DTO에 `grade`·`summary`·`plays`·`mission`(모두 선택값), `FakeTripApi` 구현(등급 S95·A85·B70·C50, 득점=켠 회전·실점=안 켠 회전). 서버 요청 8(`plays.direction`)·9(목록 모양)
-  - [ ] HTTP 구현체 (API 클라이언트 결정 후)
+  - [x] HTTP 구현체 (`data/remote/http`, Retrofit)
 - [ ] `GET /api/missions/today`: 상태(`IN_PROGRESS`/`ACHIEVED`/`FAILED`)와 진행률 표시
   - [x] DTO, `MissionApi`, 서버 규칙(3.6)을 흉내 낸 `FakeMissionApi`, `MissionRepository`
-  - [ ] HTTP 구현체 (API 클라이언트 결정 후)
+  - [x] HTTP 구현체 (`data/remote/http`, Retrofit)
 
 ### 4. 화면과 음성 (11.9 ~ 11.12)
 - 화면 구현 계획: [`docs/screen-plan.md`](docs/screen-plan.md) (주행 안전 가드 → 홈 → 결과·타임라인 → 퀘스트 → 온보딩 순)
@@ -154,7 +156,7 @@
 | 6 | SCR-02 확장 + SCR-02a (7장 3) | 화면 | 5, 2번 | 미착수 |
 | 7 | SCR-03 퀘스트 상세 (7장 4) | 화면 | 5 | 미착수 |
 | 8 | SCR-00 온보딩 (7장 5) | 화면 | 등록 API Fake, 3번 | 미착수 |
-| 9 | HTTP 구현체 (`TripApi`·`MissionApi`·등록) | 신호 | API 클라이언트 결정, 서버 API | 결정 대기 |
+| 9 | HTTP 구현체 (`TripApi`·`MissionApi`·등록) | 신호 | — | 완료: Retrofit, 토큰 재발급, `DriverRepository`. 서버 주소 설정 시 사용 |
 | 10 | 시연 영상, release APK, README, 제출 양식 (5장) | 함께 | 4~8 | 11.13~ |
 
 - 권한 사용법(화면 쪽): 상태는 `container.permissions.status(RuntimePermission.SPEED)`(`GRANTED`/`DENIED`/`NOT_REQUESTED`), 요청은 `rememberPermissionRequester(container.permissions, RuntimePermission.SPEED)`. 허용되면 운행 수집이 재시작 없이 속도를 받기 시작함
@@ -185,7 +187,7 @@
   - 출발 전 안전벨트 착용 (Vehicle `Seat.registerSeatBeltBuckledState`) → 조회는 됨, 변경 콜백은 실차 확인 필요
   - **확장안 전체: [`docs/scoring-criteria.md`](docs/scoring-criteria.md)** (11개 항목, 법규 기준, 가중치 초안, 새 이벤트 형식). 팀 확정 후 `server-requests.md`로 전달
   - 기존 규칙과 충돌: 오토라이트 API가 없어 서버 4.1의 "오토라이트면 100점"·`autoLight` 필드는 쓸 수 없음. 비상등 API가 없어 "비상등 켜진 회전 제외"도 불가
-- [ ] **API 클라이언트**: Retrofit + kotlinx.serialization 또는 Ktor
+- [x] **API 클라이언트**: Retrofit + OkHttp + kotlinx.serialization (11.08)
 - [ ] **DI**: Hilt 또는 수동 DI (MVP 일정을 생각하면 수동 DI도 고려)
 - [ ] **정적 분석**: ktlint·detekt 사용 여부
 
@@ -215,4 +217,6 @@
 | 2026-11-08 | 업로드는 WorkManager(`TripUploadWorker`)에 맡기고 운행 종료·앱 시작 때 예약 | 운행이 끝날 때 오프라인이어도 연결되면 자동으로 올라감. 앱이 동결돼도 WorkManager가 깨워 실행 |
 | 2026-11-01 | 서버는 별도 저장소(BlinkerLeague/server)이고 Java 17 + Spring Boot 3.3 | 이미 만들어져 있음. 서버 plan.md에서 확정한 내용 |
 | 2026-11-08 | 화면·테마는 `docs/screen-plan.md`(11.05)를 기준으로 함. 11.08 개정 목업과 다르면 screen-plan을 따름 | 팀 결정: screen-plan이 최신 기준 |
+| 2026-11-08 | HTTP는 Retrofit + OkHttp. 서버 주소(`blinker.serverUrl`)가 없으면 Fake API. 401이면 `POST /api/auth/refresh`로 한 번 재발급, 그것도 거부되면 토큰 삭제 → 재등록 | kotlinx.serialization을 그대로 씀. 시연은 서버 없이도 되게 |
+| 2026-11-08 | 업로드 `supported`는 신호 이름이 아니라 서버 점수 항목(`ScoreItem`: TURN_SIGNAL 등) | 서버가 `Set<ScoreItem>`으로 받음. 신호 이름(`STEERING_ANGLE`)을 보내면 400으로 거부돼 업로드가 멈춤 |
 | 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |

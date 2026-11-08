@@ -63,7 +63,8 @@
 3. **에뮬레이터 Wi-Fi**가 꺼져 있으면 내비 경로 탐색이 실패합니다. 설정 → 연결 → Wi-Fi → `AndroidWifi`를 눌러 연결합니다.
 4. **위치 주입**은 `adb emu geo fix 경도 위도 고도`입니다. 경도가 먼저입니다.
 5. **SDK API 이름은 추측하지 마세요.** 문서에 없으면 SDK 파일을 받아 `javap`로 확인합니다. 권한도 `@RequiresPermission`에 적혀 있습니다.
-6. **권한은 쓰는 것만 선언**: Pleos 심사는 Vehicle SDK 권한을 **사전 승인된 것만** 허용합니다.
+6. **서버 연결**: 기본은 Fake API(서버 없이 동작). 실제 서버에 붙이려면 `local.properties`에 `blinker.serverUrl=http://10.0.2.2:8080`(에뮬레이터 → 내 PC)을 넣고 다시 빌드합니다. http는 디버그 빌드에서 10.0.2.2·localhost만 허용됩니다.
+7. **권한은 쓰는 것만 선언**: Pleos 심사는 Vehicle SDK 권한을 **사전 승인된 것만** 허용합니다.
    - 조사용 코드와 권한(`PRIVATE_CAR_SAFETY`, `NAVI_ROUTE` 등)은 `automotive/src/debug`에만 있어 릴리스 APK에는 들어가지 않습니다.
    - 새 권한을 추가할 때는 `src/main/AndroidManifest.xml`에 넣을지(실제 기능), `src/debug`에 넣을지(조사) 구분하세요.
 
