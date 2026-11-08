@@ -29,7 +29,7 @@
 | **지역 진입·이탈 알림** | ⚠️ | FusedLocation `addProximityAlert` → `onTransition` | `FUSED_LOCATION` | `ENTER` / `EXIT`. 경계를 넘으면 수십 ms 안에 옴 | **원형(중심+반경)만** 가능. 시군구 경계 같은 다각형은 ❌ |
 | **내비 경로·다음 회전** (TBT) | ⚠️ | NaviHelper `onTBTInfo`, `onRouteStarted` | `pleos.car.permission.NAVI_ROUTE` (목적지 설정은 `NAVI_ROUTE_SEARCH`) | 경로 시작 때 **도착까지의 회전 목록 전체**가 한 번에 옴 | 목적지가 없으면 안 옴. 안내 중 갱신 주기 ❓. 네트워크 필요 |
 | **내비 현재 위치** | ❌ | NaviHelper `getCurrentLocationInfo` | `NAVI_ROUTE` | 주소("구 동") 포함 | 에뮬레이터에서는 **고정값**이라 쓸 수 없음 |
-| **음성 안내** (TTS) | ✅ | Pleos TextToSpeech SDK, `Mode.ON_DEVICE`, 언어 `ko-KR` | `pleos.car.permission.TTS_SERVICE` (일반) | 문장 재생 후 완료 콜백 | Android 기본 TTS는 에뮬레이터에서 ❌. 언어를 `ko`로만 주면 거부됨 |
+| **음성 안내** (TTS) | ✅ | Pleos TextToSpeech SDK, `Mode.ON_DEVICE`, 언어 `ko-KR` | `pleos.car.permission.TTS_SERVICE` (일반) | 문장 재생 후 완료 콜백, `stop()` | Android 기본 TTS는 에뮬레이터에서 ❌. 언어를 `ko`로만 주면 거부됨. **`USAGE_ASSISTANT`로 읽으면 내비 회전 안내가 막힘** → `USAGE_MEDIA` ([조사](spikes/voice-navi-focus.md)) |
 | **주행 중 화면 제한** | ✅ | (시스템 동작) | - | 기어 D(속도 0 포함)면 앱 화면 위에 "주행 중에는 사용할 수 없습니다"가 덮임. P면 풀림 | 앱이 distraction-optimized가 아니라서. 앱 가드(`DrivingGuard`)도 따로 막음 |
 | **시동 켜짐·꺼짐 감지** | ❓ | (DrivingMode 등 시험 안 함) | - | - | 지금은 기어 P/D로 운행을 구분함 |
 
@@ -83,5 +83,6 @@
 - [차량 신호: 백그라운드 수신·속도·오도미터·비상등·서비스 시작 경로](spikes/vehicle-background-speed.md)
 - [위치: FusedLocation·근접 알림·NaviHelper 위치 비교](spikes/fused-location.md)
 - [내비: NaviHelper 이벤트 콜백](spikes/navi-helper-events.md)
+- [음성: 내비 안내 음성과 겹칠 때](spikes/voice-navi-focus.md)
 - [Vehicle SDK 전 도메인 실행 기록 (팀원 조사, 21개 도메인)](sdk-test-log.md)
 - 측정 스크립트: `scripts/` (`vehicle_probe_sim.py`, `location_route_sim.py`, `navi_drive_sim.py`, `probe_log_summary.py`)

@@ -55,9 +55,9 @@
 - [ ] 9. 각 기능의 checkXXXCapability 결과 (앱 시작 시 로그로 출력)
   - [x] 에뮬레이터: 21개 도메인 전수 조사 (`VehicleSdkSurveyTest`). 미지원은 `onFailed`로 오는데 오류 모양이 두 가지라 클래스로 구분하면 안 됨
   - [ ] 실차에서 같은 테스트로 비교
-- [ ] 10. TextToSpeech 사용 조건과 내비 음성과 겹칠 때의 처리
+- [x] 10. TextToSpeech 사용 조건과 내비 음성과 겹칠 때의 처리 ([조사](docs/spikes/voice-navi-focus.md))
   - [x] 에뮬레이터: Pleos TextToSpeech SDK 3.3.1 `Mode.ON_DEVICE` + `ko-KR`로 재생됨. 권한 `pleos.car.permission.TTS_SERVICE` 필요. Android 표준 TextToSpeech는 엔진(caas SpeechService) 연결 실패
-  - [ ] 내비 안내 음성 중일 때 오디오 포커스 동작 (지연·거절) 확인
+  - [x] 내비 안내 음성 중일 때 오디오 포커스 동작 — `USAGE_ASSISTANT`로 말하면 내비 회전 안내가 **거부돼 빠짐**. `USAGE_MEDIA`로 바꾸고, 내비 안내가 시작되면 멈췄다가 끝난 뒤 다시 읽음. 내비가 말하는 중이면 기다림
 - [ ] 11. 사용자 자산 관리·인앱 구매 API
 - [x] 12. 핸들 각도의 단위·범위·부호(양수가 오른쪽인지)와 갱신 주기 → `TurnConfig.steeringRightPositive` — 에뮬레이터: 도(°), 콘솔 오른쪽(+) → SDK 음수, 변화 시 즉시 + 약 3.1초 주기 재전송. 실차 부호는 미확인
 - [x] 13. 차량 속도를 받는 API (저속 조향 제외 조건) — CarProperty `PERF_VEHICLE_SPEED`(m/s, 약 10Hz), `CAR_SPEED` 런타임 권한 필요. Vehicle SDK 2.3.2에는 없음
@@ -226,4 +226,5 @@
 | 2026-11-08 | 업로드 `supported`는 신호 이름이 아니라 서버 점수 항목(`ScoreItem`: TURN_SIGNAL 등) | 서버가 `Set<ScoreItem>`으로 받음. 신호 이름(`STEERING_ANGLE`)을 보내면 400으로 거부돼 업로드가 멈춤 |
 | 2026-11-08 | 주행 안전 가드는 정차 화면(NavHost)을 그대로 두고 주행 중 화면으로 덮음(터치·접근성 차단). 앱은 distraction-optimized로 표시하지 않음 | P로 돌아오면 보던 화면 복귀(screen-plan 3장). 시스템 차단 + 앱 가드 이중 보호 |
 | 2026-11-08 | 등급은 앱이 점수와 `config.grades`(S95·A85·B70·C50)로 계산. 최근 경기는 기기 기록을 먼저 보여주고 서버 최근 경기로 점수만 갱신 | Room 스키마 변경 없이 등급 표시. 오프라인이어도 홈이 열림 |
+| 2026-11-08 | 음성 안내 용도는 `USAGE_MEDIA`, 내비 안내가 시작되면 멈추고 끝난 뒤 한 번 더 | `USAGE_ASSISTANT`는 내비 회전 안내를 막음(에뮬레이터 실측). 주행 안전 원칙 "내비 음성과 겹치지 않게" |
 | 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |
