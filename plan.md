@@ -102,6 +102,8 @@
   - [x] 재전송 트리거 `TripUploadWorker`(WorkManager): 네트워크 연결 시 실행, 대기열이 남으면 지수 백오프(30초~) 재시도, 최대 10회. 운행 종료·앱 시작 때 예약. 업로드는 한 번에 하나만(Mutex)
   - [ ] HTTP 구현체 (API 클라이언트 결정 후)
 - [ ] `GET /api/trips/{id}/score`: `status`가 `SCORED`, `NO_TURN`, `EXCLUDED_SHORT` 중 무엇인지에 따라 화면 분기
+  - [x] `TripApi.getScore`·`getRecentTrips`(`GET /api/trips?limit=N`), 응답 DTO에 `grade`·`summary`·`plays`·`mission`(모두 선택값), `FakeTripApi` 구현(등급 S95·A85·B70·C50, 득점=켠 회전·실점=안 켠 회전). 서버 요청 8(`plays.direction`)·9(목록 모양)
+  - [ ] HTTP 구현체 (API 클라이언트 결정 후)
 - [ ] `GET /api/missions/today`: 상태(`IN_PROGRESS`/`ACHIEVED`/`FAILED`)와 진행률 표시
   - [x] DTO, `MissionApi`, 서버 규칙(3.6)을 흉내 낸 `FakeMissionApi`, `MissionRepository`
   - [ ] HTTP 구현체 (API 클라이언트 결정 후)
