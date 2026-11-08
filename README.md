@@ -13,7 +13,7 @@
 ## ✅ 해야 할 일 (1차 제출 전)
 
 - [ ] **출시 키 만들기·보관**: 아래 "6. 출시용(release) APK"의 `keytool` 명령으로 키를 만들고 `local.properties`에 4줄을 적습니다. 키 파일과 비밀번호는 저장소에 올리지 말고 따로 보관합니다(잃어버리면 같은 앱으로 업데이트할 수 없음).
-- [ ] 시연 영상: "좌회전 깜빡이 성공 → 우회전 실패 → 운행 종료 → 점수·퀘스트 화면"
+- [ ] 시연 영상: "좌회전 깜빡이 성공 → 우회전 실패 → 운행 종료 → 점수·퀘스트 화면" — `python3 scripts/record_demo.py`로 에뮬레이터 화면을 자동 녹화할 수 있음(약 2분 30초, `automotive/build/demo/blinker_demo.mp4`). 편집·자막은 직접
 - [ ] 공모전 제출 양식 작성
 
 ## 📌 주요 기능
@@ -129,7 +129,8 @@ Android Studio에서는 상단 기기 목록에서 `Pleos_Connect_v2.1.0_API_34`
 
 - 처음 실행하면 온보딩(닉네임·활동 지역)이 나옵니다. 서버 주소를 설정하지 않으면 Fake API로 동작합니다.
 - 기어가 P가 아니면 정차 화면 대신 "기록 중" 화면이 나옵니다. 화면만 보려면 디버그 빌드에서 `adb shell am start -n com.example.blinkerleague/.MainActivity --ez guardBypass true`
-- 실제 서버에 붙이려면 `local.properties`에 `blinker.serverUrl=http://10.0.2.2:8080` (에뮬레이터 → 내 PC)
+- 실제 서버에 붙이려면 `local.properties`에 `blinker.serverUrl=http://10.0.2.2:8080` (에뮬레이터 → 내 PC), 또는 빌드 옵션 `-Pblinker.serverUrl=http://10.0.2.2:8080`
+- **시연 영상 녹화**: `python3 scripts/record_demo.py` — 앱을 `--ei parkEndSec 10`(P단 10초면 운행 종료, 디버그 빌드 전용)으로 띄우고, Virtual Console로 좌회전 성공·우회전 실패 운행을 재생한 뒤 결과·타임라인·퀘스트 화면까지 넘기며 녹화
 
 > Pleos 화면에서 앱은 오른쪽 영역(에뮬레이터 1682×1210dp)에만 그려집니다. Preview는 1280×720과 좁은 폭(720)으로 확인합니다.
 

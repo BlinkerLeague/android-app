@@ -131,6 +131,24 @@ def scenario_trip(car):
     car.c.mark("scenario trip end (P단 3분 뒤 운행 종료)")
 
 
+def scenario_demo(car):
+    """시연 영상용(scripts/record_demo.sh): 좌회전 깜빡이 켬(득점) → 우회전 깜빡이 없음(실점) → 1km 넘게 주행 → P.
+    콘솔 조향 +는 오른쪽. 앱을 --ei parkEndSec 10으로 띄우면 P단 10초 뒤 운행이 끝남"""
+    car.c.mark("scenario demo start")
+    car.gear("Drive"); time.sleep(2)
+    car.speed_to(40); time.sleep(4)
+    car.turn("BlinkLeft"); time.sleep(3)
+    car.steer_to(-120); time.sleep(4)
+    car.steer_to(0); time.sleep(1)
+    car.turn("Off"); time.sleep(8)
+    car.steer_to(120); time.sleep(4)   # 우회전, 깜빡이 없음
+    car.steer_to(0); time.sleep(4)
+    car.speed_to(60); time.sleep(int(os.environ.get("DEMO_CRUISE_SEC", "65")))  # 약 1.1km
+    car.speed_to(0); time.sleep(3)
+    car.gear("Park")
+    car.c.mark("scenario demo end")
+
+
 def scenario_odometer(car):
     """콘솔 오도미터(PERF_ODOMETER, km)를 직접 바꿔 SDK 값·단위 확인"""
     car.c.mark("scenario odometer start")
@@ -159,7 +177,7 @@ def scenario_hazard(car):
 SCENARIOS = {
     "turn": scenario_turn, "speed": scenario_speed, "range": scenario_range,
     "distance": scenario_distance, "hazard": scenario_hazard, "odometer": scenario_odometer,
-    "trip": scenario_trip,
+    "trip": scenario_trip, "demo": scenario_demo,
 }
 
 

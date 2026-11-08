@@ -27,18 +27,29 @@ class ConfigRepository(
 ) {
     private val json = Json { ignoreUnknownKeys = true }
 
-    private val _config = MutableStateFlow(
+    /** 디버그 빌드 시연용 덮어쓰기 ([overrideForDebug]). 서버 값을 받아도 계속 적용 */
+    private var debugOverride: ((DetectionConfig) -> DetectionConfig)? = null
+
+    private var base: DetectionConfig =
         cache.load()?.let { runCatching { json.decodeFromString<ThresholdsResponse>(it) }.getOrNull() }
             ?.let { defaults.mergedWith(it) }
-            ?: defaults,
-    )
+            ?: defaults
+
+    private val _config = MutableStateFlow(base)
     val config: StateFlow<DetectionConfig> = _config.asStateFlow()
+
+    /** 디버그 빌드에서만 부름 (`DebugTools`). 예: 시연 녹화 때 P단 종료 대기를 줄임 */
+    fun overrideForDebug(transform: (DetectionConfig) -> DetectionConfig) {
+        debugOverride = transform
+        _config.value = transform(base)
+    }
 
     /** @return 값이 바뀌었으면 true */
     suspend fun refresh(): Boolean {
         val response = (api?.thresholds() as? ApiResult.Success)?.body ?: return false
-        if (response.version == _config.value.version) return false
-        _config.value = defaults.mergedWith(response)
+        if (response.version == base.version) return false
+        base = defaults.mergedWith(response)
+        _config.value = debugOverride?.invoke(base) ?: base
         cache.save(json.encodeToString(response))
         return true
     }
