@@ -42,7 +42,7 @@
     <string name="mission_open">오늘의 미션</string>
     <string name="mission_back">돌아가기</string>
 
-    <!-- 조사용 내비 이벤트 로그 (디버그) -->
-    <string name="navi_log_channel">내비 이벤트 로그</string>
-    <string name="navi_log_notification">내비 이벤트를 기록하고 있어요 (디버그)</string>
+    <!-- 조사용 프로브 (디버그) -->
+    <string name="probe_channel">조사용 로그</string>
+    <string name="probe_notification">차량 신호·내비 이벤트를 기록하고 있어요 (디버그)</string>
 </resources>

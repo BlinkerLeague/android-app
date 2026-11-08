@@ -18,8 +18,8 @@
 ## MVP 측정 기준 (초기값, 튜닝 예정)
 
 - **운행**: 시동 on 또는 주행 상태 진입 시 시작합니다. 시동 off 또는 P단이 3분 이상 유지되면 종료합니다. 1km 미만 운행은 점수 대상에서 제외합니다.
-- **회전 (핸들 각도)**: 핸들 각도 절댓값이 20°를 넘은 때부터 다시 20° 아래로 내려올 때까지를 한 번의 조향으로 보고, 그 사이 90° 이상 꺾였으면 회전입니다. 부호로 좌·우를 구분합니다(부호 방향은 스파이크로 확인). 유턴은 구분하지 않습니다.
-- **회전 제외**: 기어 P·R, 비상등 켜짐, (속도를 알 때) 회전 내내 5km/h 미만. 3초 이내 연속 회전은 같은 방향이면 합치고 좌우가 섞이면(회전교차로) 제외합니다.
+- **회전 (핸들 각도)**: 핸들 각도 절댓값이 20°를 넘은 때부터 다시 20° 아래로 내려올 때까지를 한 번의 조향으로 보고, 그 사이 90° 이상 꺾였으면 회전입니다. 부호로 좌·우를 구분합니다(에뮬레이터 실측: SDK 음수가 오른쪽 → `steeringRightPositive=false`). 유턴은 구분하지 않습니다.
+- **회전 제외**: 기어 P·R, 비상등 켜짐, (속도를 알 때) 회전 내내 5km/h 미만. ※ 비상등은 TurnSignal로 감지 불가(SDK 값 없음, Light 도메인 API 없음) → 비상등 규칙은 현재 동작하지 않음. 3초 이내 연속 회전은 같은 방향이면 합치고 좌우가 섞이면(회전교차로) 제외합니다.
 - (보조) 진행 방향(heading) 기반 감지 `HeadingTurnDetector`: 10초 안에 60° 이상 변화. 위치에 heading이 있을 때 정확도 보강용으로 남겨둠, 현재 미사용
 - **깜빡이 성공**: 회전 시작 5초 전부터 회전이 끝날 때까지, 같은 방향 방향지시등이 한 번이라도 켜지면 성공입니다.
 - **MVP 점수**: 깜빡이 사용률 × 100입니다. 회전이 없는 운행은 "측정할 회전이 없었어요"로 표시합니다.
@@ -29,9 +29,10 @@
 ### 0. 스파이크 (10.26 ~ 11.1): SDK 체크리스트
 가장 먼저 확인할 항목은 1번과 2번입니다. 이 두 가지가 안 되면 앱이 성립하지 않습니다.
 실제로 실행해 확인한 결과는 [`docs/sdk-test-log.md`](docs/sdk-test-log.md)에 기록합니다.
-- [ ] 1. TurnSignal 상태를 실시간으로 구독할 수 있는지, 좌·우가 구분되는지
+- [x] 1. TurnSignal 상태를 실시간으로 구독할 수 있는지, 좌·우가 구분되는지 — 에뮬레이터: 즉시 옴, OFF/RIGHT/LEFT 구분. 비상등은 TurnSignal 값에 없음 ([조사](docs/spikes/vehicle-background-speed.md))
 - [ ] 2. 앱이 백그라운드에 있을 때도 신호와 위치를 계속 받을 수 있는지
   - [x] NaviHelper 콜백: 일반 백그라운드는 cached로 얼어 못 받음, 포그라운드 서비스면 받음 ([조사 기록](docs/spikes/navi-helper-events.md))
+  - [x] Vehicle SDK·CarProperty도 같음: 일반 백그라운드는 약 10초 뒤 동결 → 콜백 전부 누락, 동결 해제 시 프로세스 종료. 포그라운드 서비스면 모두 즉시 옴 ([조사](docs/spikes/vehicle-background-speed.md))
 - [ ] 3. 주행 중 앱 실행 제한의 범위 (정차·P단 조건)
 - [ ] 4. 위치: 실차는 FusedLocation 미지원(구현 가이드) → NaviHelper `getCurrentLocationInfo`의 필드(속도 포함 여부)와 갱신 주기
   - [x] 에뮬레이터: Pleos FusedLocation SDK 1.1.3으로 현재 위치 조회와 1초 갱신이 됨 (`isSupported()`=true). `adb emu geo fix`로 위치를 바꿀 수 있음. `LocationData`에 속도 필드는 없음. 권한 `pleos.car.permission.FUSED_LOCATION`(dangerous, 런타임 요청 필요)
@@ -41,10 +42,12 @@
   - [x] 에뮬레이터: `Brake.registerBrakePedalStatus` → 눌림 여부 `Boolean`만 옴 (밟은 정도 없음). 권한 `CAR_DRIVE`
 - [ ] 6. Light API로 전조등·오토라이트 상태를 알 수 있는지
   - [x] 에뮬레이터: 하향등·미등·상향등 `LightState`(OFF/ON/DAYTIME_RUNNING) 조회·콜백 됨. **오토라이트 API는 없음**, 안개등 미지원. 권한 `CAR_LIGHTS`
+  - [x] 비상등: Light 도메인에 API 없음, Safety 경고등은 에뮬레이터에서 빈 목록 → 감지 불가 ([조사](docs/spikes/vehicle-background-speed.md))
 - [ ] 7. Safety API가 주는 경고 종류
   - [x] 에뮬레이터: 경고등(`registerTelltales`)은 켜진 것만 목록으로 옴(`TelltaleType`+`OFF/ON/BLINK`). 오일·워셔액 경고는 미지원. 비상등 API 없음
 - [ ] 8. 시동·주행 상태(DrivingMode, P단)를 감지할 수 있는지
   - [x] 에뮬레이터: Vehicle SDK에 **시동 상태 API 없음**(`IgnitionState` enum만 있음). `DrivingMode`는 에코·스포츠 모드이고 미지원. P단은 Gear로 됨
+  - [x] 기어: Vehicle SDK `onSelected`와 CarProperty `GEAR_SELECTION` 모두 즉시 옴. `CURRENT_GEAR`는 안 바뀜
   - [ ] CarProperty `IGNITION_STATE` 읽기 권한·가능 여부
 - [ ] 9. 각 기능의 checkXXXCapability 결과 (앱 시작 시 로그로 출력)
   - [x] 에뮬레이터: 21개 도메인 전수 조사 (`VehicleSdkSurveyTest`). 미지원은 `onFailed`로 오는데 오류 모양이 두 가지라 클래스로 구분하면 안 됨
@@ -53,11 +56,12 @@
   - [x] 에뮬레이터: Pleos TextToSpeech SDK 3.3.1 `Mode.ON_DEVICE` + `ko-KR`로 재생됨. 권한 `pleos.car.permission.TTS_SERVICE` 필요. Android 표준 TextToSpeech는 엔진(caas SpeechService) 연결 실패
   - [ ] 내비 안내 음성 중일 때 오디오 포커스 동작 (지연·거절) 확인
 - [ ] 11. 사용자 자산 관리·인앱 구매 API
-- [ ] 12. 핸들 각도의 단위·범위·부호(양수가 오른쪽인지)와 갱신 주기 → `TurnConfig.steeringRightPositive`
-- [ ] 13. 차량 속도를 받는 API (저속 조향 제외 조건)
+- [x] 12. 핸들 각도의 단위·범위·부호(양수가 오른쪽인지)와 갱신 주기 → `TurnConfig.steeringRightPositive` — 에뮬레이터: 도(°), 콘솔 오른쪽(+) → SDK 음수, 변화 시 즉시 + 약 3.1초 주기 재전송. 실차 부호는 미확인
+- [x] 13. 차량 속도를 받는 API (저속 조향 제외 조건) — CarProperty `PERF_VEHICLE_SPEED`(m/s, 약 10Hz), `CAR_SPEED` 런타임 권한 필요. Vehicle SDK 2.3.2에는 없음
 - [ ] 14. `getTBTInfo` 응답 필드(회전 방향, 남은 거리)와 갱신 주기 (내비 미리 켜기, 2차)
   - [x] 이벤트 콜백 조사: 경로 시작 시 `onTBTInfo`로 회전 목록 전체가 1회 옴. 목적지 없으면 `onCurrentRoadSpeedLimit`(1초)만 옴 ([조사 기록](docs/spikes/navi-helper-events.md))
   - [ ] 안내 중 TBT 갱신 주기: 에뮬레이터 내비가 주입한 GPS로 진행하지 않아 미측정 → 실차 또는 Pleos 문의
+  - [x] `getCurrentLocationInfo()` 폴링: 호출마다 `onCurrentLocationInfo` 옴. 에뮬레이터에선 위치 고정(수정구 시흥동), 속도 필드 없음
 
 ### 1. 프로젝트 기반 정리
 - [x] Compose 설정 추가 (Kotlin 1.9.22에 맞춰 Compose Compiler 1.5.10, Compose BOM)
@@ -81,7 +85,7 @@
 - [x] Room에 운행·이벤트 선저장, 업로드 대기열 구현 (`TripRepository`, 재전송 트리거는 3단계에서)
 - [x] 끝난 운행 → `Trip` 조립 (`TripAssembler`: 회전 감지 + 깜빡이 판정 + 거리)
 - [x] 운행 기록 흐름 `TripRecorder` (`service/`): 공급원 → 운행 구분 → 조립 → 로컬 저장. Android Service와 분리돼 Fake로 시연·테스트 가능
-- [ ] 운행 수집 서비스: `TripRecorder`를 감싸는 백그라운드 수집 (스파이크 2번 결과에 따라 방식 결정)
+- [ ] 운행 수집 서비스: `TripRecorder`를 감싸는 포그라운드 서비스(`specialUse`). 시작은 앱이 보일 때 + `BOOT_COMPLETED` (동결된 백그라운드에서는 시작 불가, 시동 Resume 경로는 미확인)
 
 ### 3. 서버 연동 (서버 feat 브랜치 순서에 맞춰 진행, ~11.8)
 서버는 `driver-register` → `threshold-config` → `trip-upload` → `trip-score` → `daily-mission` 순서로 만들어집니다. 서버 API가 나오기 전까지 앱은 Fake API로 먼저 개발합니다.
@@ -161,5 +165,8 @@
 | 2026-11-01 | 업로드는 기록(`TripRecorder`)에서 하지 않고 결과 화면 진입 시 트리거 (나중에 WorkManager) | 기록과 업로드의 수명이 다름. 기록이 끝나 취소돼도 업로드가 끊기지 않게 |
 | 2026-11-01 | 서버 작업은 앱 팀이 하지 않음. 서버 요청은 `docs/server-requests.md`로 전달 | 서버는 다른 팀 담당 |
 | 2026-11-01 | 음성은 Pleos TextToSpeech SDK(ON_DEVICE)로. 종료 안내는 서버 점수를 기다리지 않고 기기 판정 결과로 말함 | 표준 TTS는 에뮬레이터에서 동작 안 함. 서버 응답이 늦거나 오프라인이어도 종료 안내는 1회 나가야 함 |
+| 2026-11-03 | `TurnConfig.steeringRightPositive` 기본값 false | 에뮬레이터 실측: 콘솔 오른쪽(+) → Vehicle SDK 음수. 실차가 다르면 서버 설정으로 변경 |
+| 2026-11-03 | 비상등 제외 규칙은 남기되 "TurnSignal로 감지 불가"로 표시 | SDK TurnSignal 값·Light 도메인에 비상등 없음. 출처가 생기면 HAZARD 샘플로 연결 |
+| 2026-11-03 | 운행 거리는 `PERF_VEHICLE_SPEED` 적분 | 트립 거리 API는 에뮬레이터 미지원, 오도미터는 속도를 따라 늘지 않아 검증 불가 |
 | 2026-11-01 | 서버는 별도 저장소(BlinkerLeague/server)이고 Java 17 + Spring Boot 3.3 | 이미 만들어져 있음. 서버 plan.md에서 확정한 내용 |
 | 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |

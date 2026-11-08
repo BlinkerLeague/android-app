@@ -16,44 +16,12 @@ Pleos 내비 앱과 Virtual Console에는 위치 시뮬레이션 기능이 없�
 import argparse
 import json
 import math
-import os
 import subprocess
-import threading
 import time
-import uuid
-import urllib.request
 
-ADB = os.environ.get("ADB", os.path.expanduser("~/Library/Android/sdk/platform-tools/adb"))
-CONSOLE = "http://127.0.0.1:8088"
+from vconsole import Console, geo_fix
+
 M_PER_DEG = 111_320.0
-
-
-CLIENT = f"navi-drive-sim-{uuid.uuid4().hex[:8]}"
-
-
-def console(path, method="PUT"):
-    try:
-        urllib.request.urlopen(urllib.request.Request(CONSOLE + path, method=method), timeout=5).read()
-        return True
-    except Exception as e:  # 콘솔이 없어도 GPS 이동은 계속함
-        print(f"Virtual Console 요청 실패 {path}: {e}")
-        return False
-
-
-def heartbeat(stop):
-    """Virtual Console은 브라우저 세션(3초 타임아웃)이 살아 있어야 쓰기를 받음 → 콘솔 페이지처럼 1초마다 세션 신호를 보냄"""
-    while not stop.is_set():
-        try:
-            urllib.request.urlopen(
-                urllib.request.Request(f"{CONSOLE}/browser/session?client={CLIENT}", method="POST"), timeout=3
-            ).read()
-        except Exception:
-            pass
-        stop.wait(1.0)
-
-
-def geo_fix(lat, lng):
-    subprocess.run([ADB, "emu", "geo", "fix", f"{lng:.7f}", f"{lat:.7f}"], check=False, capture_output=True)
 
 
 def distance_m(a, b):
@@ -113,21 +81,18 @@ def main():
         pts = straight(start, args.bearing, step, args.seconds)
     pts = pts[: args.seconds + 1]
 
-    subprocess.run([ADB, "forward", "tcp:8088", "tcp:8088"], check=False, capture_output=True)
-    stop = threading.Event()
-    threading.Thread(target=heartbeat, args=(stop,), daemon=True).start()
-    time.sleep(1.5)
+    console = Console()
     print(time.strftime("%H:%M:%S"), f"주행 시작: {len(pts) - 1}초, {args.speed:g}km/h, {'도로' if args.to else '직진'}")
-    console("/vehicle/gear?gear=Drive")
-    console(f"/vehicle/controls?speed={args.speed:g}&accelerator=20&brake=0")
+    console.put("/vehicle/gear?gear=Drive", "gear=Drive")
+    console.put(f"/vehicle/controls?speed={args.speed:g}&accelerator=20&brake=0&steering=0", f"speed={args.speed:g}")
     for lat, lng in pts:
         tick = time.monotonic()
         geo_fix(lat, lng)
         time.sleep(max(0.0, 1.0 - (time.monotonic() - tick)))
-    console("/vehicle/controls?speed=0&accelerator=0&brake=30")
-    console("/vehicle/gear?gear=Park")
+    console.put("/vehicle/controls?speed=0&accelerator=0&brake=30&steering=0", "speed=0")
+    console.put("/vehicle/gear?gear=Park", "gear=Park")
     time.sleep(1)
-    stop.set()
+    console.close()
     print(time.strftime("%H:%M:%S"), f"주행 끝 (마지막 위치 {pts[-1][0]:.6f}, {pts[-1][1]:.6f})")
 
 
