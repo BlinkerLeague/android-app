@@ -31,7 +31,7 @@
 | **내비 현재 위치** | ❌ | NaviHelper `getCurrentLocationInfo` | `NAVI_ROUTE` | 주소("구 동") 포함 | 에뮬레이터에서는 **고정값**이라 쓸 수 없음 |
 | **음성 안내** (TTS) | ✅ | Pleos TextToSpeech SDK, `Mode.ON_DEVICE`, 언어 `ko-KR` | `pleos.car.permission.TTS_SERVICE` (일반) | 문장 재생 후 완료 콜백, `stop()` | Android 기본 TTS는 에뮬레이터에서 ❌. 언어를 `ko`로만 주면 거부됨. **`USAGE_ASSISTANT`로 읽으면 내비 회전 안내가 막힘** → `USAGE_MEDIA` ([조사](spikes/voice-navi-focus.md)) |
 | **주행 중 화면 제한** | ✅ | (시스템 동작) | - | 기어 D(속도 0 포함)면 앱 화면 위에 "주행 중에는 사용할 수 없습니다"가 덮임. P면 풀림 | 앱이 distraction-optimized가 아니라서. 앱 가드(`DrivingGuard`)도 따로 막음 |
-| **시동 켜짐·꺼짐 감지** | ❓ | (DrivingMode 등 시험 안 함) | - | - | 지금은 기어 P/D로 운행을 구분함 |
+| **시동 켜짐·꺼짐 감지** | ❌ | Vehicle SDK 없음, CarProperty `IGNITION_STATE`는 속성 목록에 없음 | `android.car.permission.CAR_POWERTRAIN` (일반) | - | 기어 P/D로 운행을 구분함. 콘솔 전원 Off도 Android 절전으로 이어지지 않아 Resume 재현 불가 (실차 확인) |
 
 ## 2. 앱이 화면에 없을 때도 신호가 오는가
 
