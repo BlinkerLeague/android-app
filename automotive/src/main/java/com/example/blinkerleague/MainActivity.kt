@@ -29,4 +29,10 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        // 권한은 앱 밖(설정 등)에서도 바뀜. 돌아왔을 때 다시 읽어 화면·신호 공급원에 반영
+        (application as BlinkerLeagueApplication).container.permissions.refresh()
+    }
 }
