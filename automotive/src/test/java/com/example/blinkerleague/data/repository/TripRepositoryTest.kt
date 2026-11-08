@@ -8,6 +8,7 @@ import com.example.blinkerleague.data.remote.ApiResult
 import com.example.blinkerleague.data.remote.FakeTripApi
 import com.example.blinkerleague.data.remote.dto.ScoreStatus
 import com.example.blinkerleague.domain.model.SignalType
+import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.Trip
 import com.example.blinkerleague.domain.model.TripEvent
 import com.example.blinkerleague.domain.model.TurnDirection
@@ -72,6 +73,22 @@ class TripRepositoryTest {
         assertEquals(75, a.score)
         assertEquals(1, a.attemptCount)
         assertEquals(0, repository.observePendingCount().first())
+    }
+
+    @Test
+    fun `최근 운행은 종료 시각 최신순, 서버 최근 경기로 점수 갱신`() = runTest {
+        repository.saveFinishedTrip(trip("old", 0, listOf(true)))
+        repository.saveFinishedTrip(trip("new", 1_000_000, listOf(true, false)))
+        assertEquals(listOf("new", "old"), repository.observeRecentResults(2).first().map { it.tripId })
+        assertEquals(ScoreState.PENDING, repository.observeRecentResults(2).first().first().scoreState)
+
+        // 다른 곳(서버)에 이미 올라가 점수가 난 상태를 흉내: Fake에 직접 올림
+        api.uploadTrip(TripMapper(java.time.ZoneId.of("Asia/Seoul")).toUploadRequest(db.tripDao().trip("new")!!))
+        repository.refreshRecentScores(2)
+
+        val newest = repository.observeRecentResults(2).first().first()
+        assertEquals(ScoreState.SCORED, newest.scoreState)
+        assertEquals(50, newest.score)
     }
 
     @Test

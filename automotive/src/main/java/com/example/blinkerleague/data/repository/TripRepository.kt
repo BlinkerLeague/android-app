@@ -3,6 +3,7 @@ package com.example.blinkerleague.data.repository
 import com.example.blinkerleague.data.local.TripDao
 import com.example.blinkerleague.data.remote.ApiResult
 import com.example.blinkerleague.data.remote.TripApi
+import com.example.blinkerleague.data.remote.dto.ScoreStatus
 import com.example.blinkerleague.domain.model.Trip
 import com.example.blinkerleague.domain.model.TripResult
 import kotlinx.coroutines.flow.Flow
@@ -44,6 +45,23 @@ class TripRepository(
         dao.observeTripWithEvents(tripId).map { it?.let(mapper::toResult) }
 
     fun observePendingCount(): Flow<Int> = dao.observePendingCount()
+
+    /** 홈 "최근 경기". 기기에 저장된 운행을 먼저 보여주고, [refreshRecentScores]가 서버 점수로 갱신함 */
+    fun observeRecentResults(limit: Int): Flow<List<TripResult>> =
+        dao.observeRecent(limit).map { list -> list.map(mapper::toResult) }
+
+    /**
+     * 서버의 최근 경기 목록(`GET /api/trips?limit=N`)으로 기기 기록의 점수를 갱신함.
+     * 서버가 아직 계산 중(`UPLOADED`)이거나 기기에 없는 운행은 건드리지 않음. 실패하면 기기 기록 그대로 둠
+     */
+    suspend fun refreshRecentScores(limit: Int) {
+        val result = api.getRecentTrips(limit) as? ApiResult.Success ?: return
+        for (item in result.body) {
+            if (item.status == ScoreStatus.UPLOADED) continue
+            if (dao.trip(item.tripId) == null) continue
+            dao.markUploaded(item.tripId, item.status, item.score, clock())
+        }
+    }
 
     /** 대기열을 오래된 순서로 올림. 네트워크 오류가 나면 남은 것은 다음 시도로 미룸 */
     suspend fun uploadPending(): UploadSummary = uploadLock.withLock { uploadPendingLocked() }

@@ -151,8 +151,8 @@
 | 1 | 업로드 자동 재전송 (WorkManager) | 신호 | — | 완료 (#25) |
 | 2 | `TripApi.getScore`·`getRecentTrips` + Fake (screen-plan 4.3·4.4 데이터) | 신호 | — | 완료 (#28) |
 | 3 | 속도 권한(`CAR_SPEED`) 상태 Flow: 홈 안내 "속도 권한이 없어…"·온보딩 4단계용 | 신호 | — | 완료: `container.permissions`, `rememberPermissionRequester` |
-| 4 | 주행 안전 가드 `DrivingGuard` + DRV 화면 + `MainActivity` 연결 (7장 1) | 신호(혼자 개발) | 기어·속도 Flow(완료) | 진행 |
-| 5 | NavHost 재구성, SCR-01 홈 (7장 2) | 신호(혼자 개발) | 4 | 미착수 |
+| 4 | 주행 안전 가드 `DrivingGuard` + DRV 화면 + `MainActivity` 연결 (7장 1) | 신호(혼자 개발) | 기어·속도 Flow(완료) | PR #31 |
+| 5 | NavHost 재구성, SCR-01 홈 (7장 2) | 신호(혼자 개발) | 4 | 진행: 시작 화면 `home`, 퀘스트 카드·최근 경기 2건·기록 상태·안내(속도 권한/기록 꺼짐), 시나리오 재생은 디버그 빌드 홈 버튼 |
 | 6 | SCR-02 확장 + SCR-02a (7장 3) | 신호(혼자 개발) | 5, 2번 | 미착수 |
 | 7 | SCR-03 퀘스트 상세 (7장 4) | 신호(혼자 개발) | 5 | 미착수 |
 | 8 | SCR-00 온보딩 (7장 5) | 신호(혼자 개발) | 등록 API Fake, 3번 | 미착수 |
@@ -220,4 +220,5 @@
 | 2026-11-08 | HTTP는 Retrofit + OkHttp. 서버 주소(`blinker.serverUrl`)가 없으면 Fake API. 401이면 `POST /api/auth/refresh`로 한 번 재발급, 그것도 거부되면 토큰 삭제 → 재등록 | kotlinx.serialization을 그대로 씀. 시연은 서버 없이도 되게 |
 | 2026-11-08 | 업로드 `supported`는 신호 이름이 아니라 서버 점수 항목(`ScoreItem`: TURN_SIGNAL 등) | 서버가 `Set<ScoreItem>`으로 받음. 신호 이름(`STEERING_ANGLE`)을 보내면 400으로 거부돼 업로드가 멈춤 |
 | 2026-11-08 | 주행 안전 가드는 정차 화면(NavHost)을 그대로 두고 주행 중 화면으로 덮음(터치·접근성 차단). 앱은 distraction-optimized로 표시하지 않음 | P로 돌아오면 보던 화면 복귀(screen-plan 3장). 시스템 차단 + 앱 가드 이중 보호 |
+| 2026-11-08 | 등급은 앱이 점수와 `config.grades`(S95·A85·B70·C50)로 계산. 최근 경기는 기기 기록을 먼저 보여주고 서버 최근 경기로 점수만 갱신 | Room 스키마 변경 없이 등급 표시. 오프라인이어도 홈이 열림 |
 | 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |
