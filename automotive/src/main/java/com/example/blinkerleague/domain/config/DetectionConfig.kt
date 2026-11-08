@@ -20,8 +20,10 @@ data class DetectionConfig(
 data class TripConfig(
     val minDistanceKm: Double = 1.0,
     val parkEndMinutes: Int = 3,
+    /** 시연 녹화용(디버그 빌드 `--ei parkEndSec N`): 있으면 [parkEndMinutes] 대신 이 초를 씀. 서버 설정에는 없음 */
+    val parkEndSec: Int? = null,
 ) {
-    val parkEndMs: Long get() = parkEndMinutes * 60_000L
+    val parkEndMs: Long get() = parkEndSec?.let { it * 1_000L } ?: (parkEndMinutes * 60_000L)
 }
 
 data class TurnConfig(

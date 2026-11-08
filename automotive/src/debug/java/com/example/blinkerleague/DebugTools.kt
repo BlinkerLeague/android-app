@@ -31,9 +31,16 @@ object DebugTools {
      * - `--es requestPermission speed|location` : 런타임 권한 요청 창 띄우기 (온보딩 화면 전 시험용)
      * - `--ez guardBypass true|false` : 주행 안전 가드 우회 (기어와 상관없이 정차 화면). 시연 녹화용
      * - `--es speak "문장"` : 음성 안내를 바로 재생 (내비 음성과 겹칠 때 포커스 동작 조사, 스파이크 10)
+     * - `--ei parkEndSec N` : P단 N초면 운행 종료 (기본 3분). 시연 녹화용 (`scripts/record_demo.sh`)
      */
     fun onActivityCreated(activity: Activity) {
         val intent = activity.intent
+        val parkEndSec = intent.getIntExtra("parkEndSec", -1)
+        if (parkEndSec > 0) {
+            (activity.application as BlinkerLeagueApplication).container.configRepository.overrideForDebug {
+                it.copy(trip = it.trip.copy(parkEndSec = parkEndSec))
+            }
+        }
         intent.getStringExtra("speak")?.let { text ->
             intent.removeExtra("speak")
             // --ei speakUsage N : AudioAttributes.USAGE_* 값으로 바꿔 시험 (기본: 앱과 같은 값)

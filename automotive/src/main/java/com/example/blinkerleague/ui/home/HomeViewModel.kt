@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -56,6 +59,17 @@ class HomeViewModel(
             showDemoEntry = showDemoEntry,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState(showDemoEntry = showDemoEntry))
+
+    init {
+        // 홈을 보는 중에 운행이 끝나거나 점수가 들어오면(최근 경기 맨 위가 바뀌면) 퀘스트 진행도도 다시 받음
+        viewModelScope.launch {
+            recentTrips
+                .map { trips -> trips.firstOrNull()?.let { it.tripId to it.scoreState } }
+                .distinctUntilChanged()
+                .drop(1)
+                .collect { quest.value = QuestLoad.Loaded(loadQuest()) }
+        }
+    }
 
     /** 화면이 보일 때마다(ON_RESUME) 퀘스트·최근 경기 점수를 다시 받음 */
     fun refresh() {

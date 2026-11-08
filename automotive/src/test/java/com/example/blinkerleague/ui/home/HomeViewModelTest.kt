@@ -93,6 +93,28 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `홈을 보는 중 새 운행이 들어오거나 점수가 바뀌면 퀘스트를 다시 받음`() = runTest(dispatcher) {
+        var loads = 0
+        val vm = HomeViewModel(
+            recentTrips = trips, recordingStatus = status, speedPermission = speed,
+            loadQuest = { loads++; null }, refreshRecent = {}, grades = GradeThreshold.DEFAULT,
+            showDemoEntry = false, clock = { now }, zone = zone,
+        )
+        backgroundScope.launch { vm.uiState.collect {} }
+        runCurrent()
+        assertEquals(0, loads) // 처음 목록은 refresh(ON_RESUME)가 맡음
+
+        val ended = ZonedDateTime.of(2026, 11, 8, 8, 42, 0, 0, zone)
+        trips.value = listOf(trip("new", ended, ScoreState.PENDING, null))
+        runCurrent()
+        assertEquals(1, loads)
+
+        trips.value = listOf(trip("new", ended, ScoreState.SCORED, 67))
+        runCurrent()
+        assertEquals(2, loads)
+    }
+
+    @Test
     fun `속도 권한이 없거나 기록이 꺼지면 안내`() = runTest(dispatcher) {
         val vm = viewModel(null)
         backgroundScope.launch { vm.uiState.collect {} }

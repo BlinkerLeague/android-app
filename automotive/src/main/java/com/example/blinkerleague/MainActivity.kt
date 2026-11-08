@@ -24,10 +24,11 @@ import kotlinx.coroutines.flow.map
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // 조사·시연용(디버그 빌드만): 실행 인텐트의 엑스트라 처리. 릴리스에서는 아무것도 안 함.
+        // 기준값 덮어쓰기(parkEndSec)가 운행 수집보다 먼저 적용되게 서비스 시작 전에 부름
+        DebugTools.onActivityCreated(this)
         // 앱 화면이 보일 때가 포그라운드 서비스를 시작할 수 있는 확실한 시점 (이미 돌고 있으면 그대로 둠)
         TripCollectionService.start(this, reason = "activity")
-        // 조사용(디버그 빌드만): 실행 인텐트의 조사 엑스트라 처리. 릴리스에서는 아무것도 안 함
-        DebugTools.onActivityCreated(this)
         val container = (application as BlinkerLeagueApplication).container
         val guardFactory = viewModelFactory {
             initializer {
