@@ -13,11 +13,15 @@ import com.example.blinkerleague.data.repository.TripRepository
 import com.example.blinkerleague.data.vehicle.PleosVehicleSignalSource
 import com.example.blinkerleague.data.vehicle.VehicleSignalSource
 import com.example.blinkerleague.domain.config.DetectionConfig
+import com.example.blinkerleague.service.RecordingStatus
 import com.example.blinkerleague.service.TripVoiceGuide
 import com.example.blinkerleague.voice.PleosTtsAnnouncer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import java.time.ZoneId
 import java.util.UUID
@@ -64,6 +68,15 @@ class AppContainer(context: Context) {
 
     /** 조사용 프로브 (Logcat VehicleTest·SpeedTest·NaviTest). 디버그 빌드에서 adb로만 시작함 */
     val debugProbes = DebugProbes(context)
+
+    private val _recordingStatus = MutableStateFlow(RecordingStatus.OFF)
+
+    /** 운행 수집 서비스 상태 (화면의 "기록이 꺼져 있어요" 표시용) */
+    val recordingStatus: StateFlow<RecordingStatus> = _recordingStatus.asStateFlow()
+
+    fun setRecordingStatus(status: RecordingStatus) {
+        _recordingStatus.value = status
+    }
 
     fun newId(): String = UUID.randomUUID().toString()
 }

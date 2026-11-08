@@ -334,6 +334,8 @@ adb shell am broadcast -n com.example.blinkerleague/.service.ProbeStartReceiver 
 # MY_PACKAGE_REPLACED: force-stop 하지 않은 상태에서 다시 설치
 ./gradlew :automotive:installDebug
 # BOOT_COMPLETED: 에뮬레이터 재부팅
+#   (2026-11-08부터 부팅·앱 교체 브로드캐스트는 조사용 ProbeStartReceiver가 아니라 실제 BootReceiver가 받아
+#    운행 수집 서비스를 시작함 → 확인은 adb logcat | grep "TripCollection: 시작 요청")
 adb reboot
 # 결과
 adb logcat -d -s VehicleTest:I | grep "\[Probe\]"
