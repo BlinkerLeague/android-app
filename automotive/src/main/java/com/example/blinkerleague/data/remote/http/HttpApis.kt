@@ -1,19 +1,21 @@
 package com.example.blinkerleague.data.remote.http
 
 import com.example.blinkerleague.data.remote.ApiResult
+import com.example.blinkerleague.data.remote.ConfigApi
 import com.example.blinkerleague.data.remote.DriverApi
 import com.example.blinkerleague.data.remote.MissionApi
 import com.example.blinkerleague.data.remote.TripApi
 import com.example.blinkerleague.data.remote.dto.RecentTripDto
 import com.example.blinkerleague.data.remote.dto.RegisterDriverRequest
 import com.example.blinkerleague.data.remote.dto.RegisterDriverResponse
+import com.example.blinkerleague.data.remote.dto.ThresholdsResponse
 import com.example.blinkerleague.data.remote.dto.TodayMissionResponse
 import com.example.blinkerleague.data.remote.dto.TripScoreResponse
 import com.example.blinkerleague.data.remote.dto.TripUploadRequest
+import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerializationException
 import retrofit2.HttpException
-import java.io.IOException
 
 /** 응답 본문을 읽을 수 없음 (형식 불일치). 다시 보내도 같으므로 재전송 대상이 아님 */
 const val UNREADABLE_RESPONSE = -1
@@ -43,6 +45,10 @@ class HttpTripApi(private val service: BlinkerService) : TripApi {
 
 class HttpMissionApi(private val service: BlinkerService) : MissionApi {
     override suspend fun todayMission(): ApiResult<TodayMissionResponse> = apiCall { service.todayMission() }
+}
+
+class HttpConfigApi(private val service: BlinkerService) : ConfigApi {
+    override suspend fun thresholds(): ApiResult<ThresholdsResponse> = apiCall { service.thresholds() }
 }
 
 class HttpDriverApi(private val service: BlinkerService) : DriverApi {

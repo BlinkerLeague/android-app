@@ -5,7 +5,8 @@ package com.example.blinkerleague.domain.config
  * 서버 값을 받지 못하면 [DEFAULT]를 사용함.
  */
 data class DetectionConfig(
-    val version: Int = 0,
+    /** 서버 기준값 버전. 0은 앱 기본값 */
+    val version: Long = 0,
     val trip: TripConfig = TripConfig(),
     val turn: TurnConfig = TurnConfig(),
     val guard: GuardConfig = GuardConfig(),

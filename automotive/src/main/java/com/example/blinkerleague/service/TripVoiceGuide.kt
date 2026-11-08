@@ -18,7 +18,8 @@ class TripVoiceGuide(
     private val announcer: VoiceAnnouncer,
     private val todayMission: suspend () -> TodayMission?,
     private val tripResult: suspend (tripId: String) -> TripResult?,
-    private val tripConfig: TripConfig,
+    /** 운행이 끝날 때의 기준값 (서버에서 바뀔 수 있음) */
+    private val tripConfig: () -> TripConfig,
     private val scope: CoroutineScope,
 ) {
     private val startAnnounced = mutableSetOf<String>()
@@ -32,7 +33,7 @@ class TripVoiceGuide(
             is RecorderState.Finished -> if (endAnnounced.add(state.tripId)) {
                 scope.launch {
                     val result = tripResult(state.tripId) ?: return@launch
-                    announcer.speak(VoiceScript.tripEnd(result, tripConfig.minDistanceKm))
+                    announcer.speak(VoiceScript.tripEnd(result, tripConfig().minDistanceKm))
                 }
             }
             RecorderState.Idle -> Unit

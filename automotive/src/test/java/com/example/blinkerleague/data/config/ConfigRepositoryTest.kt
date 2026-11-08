@@ -1,0 +1,85 @@
+package com.example.blinkerleague.data.config
+
+import com.example.blinkerleague.data.remote.ApiResult
+import com.example.blinkerleague.data.remote.ConfigApi
+import com.example.blinkerleague.data.remote.dto.ThresholdsResponse
+import com.example.blinkerleague.domain.config.DetectionConfig
+import com.example.blinkerleague.domain.config.GradeThreshold
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class ConfigRepositoryTest {
+
+    /** 서버 저장소 default-thresholds.json + version (ThresholdController 응답). 핸들 각도 항목은 아직 없음 */
+    private val serverJson = """
+        {"version":1,
+         "trip":{"minDistanceKm":3.0,"parkEndMinutes":3},
+         "turn":{"minSpeedKmh":5,"windowSec":10,"minAngleDeg":60,"uTurnAngleDeg":150,"signalLeadSec":5},
+         "harsh":{"deltaKmhPerSec":10},"safetyWarning":{"mergeWindowSec":10},
+         "weights":{"TURN_SIGNAL":0.4,"SMOOTH_DRIVING":0.3,"SAFETY_WARNING":0.2,"NIGHT_HEADLIGHT":0.1},
+         "point":{"tripMaxKm":50,"dailyCap":150},
+         "grades":[{"grade":"S","minScore":95},{"grade":"A","minScore":85},{"grade":"B","minScore":70},{"grade":"C","minScore":50}],
+         "tips":{"TURN_SIGNAL":"회전 5초 전에 깜빡이를 켜 보세요."}}
+    """.trimIndent()
+
+    private val json = Json { ignoreUnknownKeys = true }
+
+    private class MemoryCache(var value: String? = null) : ConfigCache {
+        override fun load() = value
+        override fun save(json: String) {
+            value = json
+        }
+    }
+
+    private class FakeConfigApi(var result: ApiResult<ThresholdsResponse>) : ConfigApi {
+        var calls = 0
+        override suspend fun thresholds(): ApiResult<ThresholdsResponse> {
+            calls++
+            return result
+        }
+    }
+
+    private val response = json.decodeFromString<ThresholdsResponse>(serverJson)
+
+    @Test
+    fun `서버 응답 형식을 읽고, 서버가 주는 항목만 덮어씀 - 핸들 각도는 기본값 유지`() {
+        val merged = DetectionConfig.DEFAULT.mergedWith(response)
+        assertEquals(1L, merged.version)
+        assertEquals(3.0, merged.trip.minDistanceKm, 0.0)
+        assertEquals(5, merged.turn.signalLeadSec)
+        assertEquals(DetectionConfig.DEFAULT.turn.steeringEnterDeg, merged.turn.steeringEnterDeg)
+        assertEquals(DetectionConfig.DEFAULT.turn.steeringRightPositive, merged.turn.steeringRightPositive)
+        assertEquals(GradeThreshold.DEFAULT, merged.grades)
+        assertEquals(DetectionConfig.DEFAULT.guard, merged.guard)
+    }
+
+    @Test
+    fun `version이 바뀐 경우에만 갱신하고 저장, 다시 켜면 저장 값으로 시작`() = runTest {
+        val cache = MemoryCache()
+        val api = FakeConfigApi(ApiResult.Success(response))
+        val repository = ConfigRepository(api, cache)
+        assertEquals(0L, repository.config.value.version)
+
+        assertTrue(repository.refresh())
+        assertEquals(3.0, repository.config.value.trip.minDistanceKm, 0.0)
+        assertFalse(repository.refresh()) // 같은 version
+
+        val restarted = ConfigRepository(FakeConfigApi(ApiResult.NetworkError(Exception())), cache)
+        assertEquals(1L, restarted.config.value.version)
+        assertFalse(restarted.refresh())
+        assertEquals(3.0, restarted.config.value.trip.minDistanceKm, 0.0)
+    }
+
+    @Test
+    fun `받지 못하거나 저장 값이 깨졌거나 Fake 모드면 기본값`() = runTest {
+        assertEquals(DetectionConfig.DEFAULT, ConfigRepository(null, MemoryCache()).config.value)
+        assertEquals(DetectionConfig.DEFAULT, ConfigRepository(null, MemoryCache("{broken")).config.value)
+        val offline = ConfigRepository(FakeConfigApi(ApiResult.HttpError(500)), MemoryCache())
+        assertFalse(offline.refresh())
+        assertEquals(DetectionConfig.DEFAULT, offline.config.value)
+    }
+}

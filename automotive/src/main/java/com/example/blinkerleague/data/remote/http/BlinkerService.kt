@@ -3,6 +3,7 @@ package com.example.blinkerleague.data.remote.http
 import com.example.blinkerleague.data.remote.dto.RecentTripDto
 import com.example.blinkerleague.data.remote.dto.RegisterDriverRequest
 import com.example.blinkerleague.data.remote.dto.RegisterDriverResponse
+import com.example.blinkerleague.data.remote.dto.ThresholdsResponse
 import com.example.blinkerleague.data.remote.dto.TodayMissionResponse
 import com.example.blinkerleague.data.remote.dto.TripScoreResponse
 import com.example.blinkerleague.data.remote.dto.TripUploadRequest
@@ -25,6 +26,9 @@ interface BlinkerService {
 
     @GET("api/trips")
     suspend fun recentTrips(@Query("limit") limit: Int): List<RecentTripDto>
+
+    @GET("api/config/thresholds")
+    suspend fun thresholds(): ThresholdsResponse
 
     @GET("api/missions/today")
     suspend fun todayMission(): TodayMissionResponse
