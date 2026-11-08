@@ -60,6 +60,33 @@
     <string name="mission_open">오늘의 미션</string>
     <string name="mission_back">돌아가기</string>
 
+    <!-- 온보딩 (SCR-00) -->
+    <string name="onboarding_title">깜빡이리그</string>
+    <string name="onboarding_nickname">닉네임 (리그에는 닉네임만 보여요)</string>
+    <string name="onboarding_nickname_hint">2~12자</string>
+    <string name="onboarding_nickname_length">닉네임은 2~12자로 입력해 주세요</string>
+    <string name="onboarding_nickname_taken">이미 쓰는 닉네임이에요</string>
+    <string name="onboarding_region">활동 지역</string>
+    <string name="onboarding_pick_region">활동 지역을 골라 주세요</string>
+    <string name="onboarding_capabilities">내 차량 측정 가능 항목</string>
+    <string name="onboarding_capabilities_checking">차량을 확인하고 있어요</string>
+    <string name="onboarding_cap_turn_signal">방향지시등</string>
+    <string name="onboarding_cap_steering">핸들 각도</string>
+    <string name="onboarding_cap_gear">기어</string>
+    <string name="onboarding_cap_speed">속도</string>
+    <string name="onboarding_cap_supported">측정</string>
+    <string name="onboarding_cap_unsupported">미지원 · 점수 제외</string>
+    <string name="onboarding_cap_no_permission">권한 필요</string>
+    <string name="onboarding_speed_title">속도 권한</string>
+    <string name="onboarding_speed_body">천천히 움직일 때의 회전을 걸러내고 운행 거리를 재려고 차량 속도를 써요. 시스템 창에는 \"위치 정보\"로 표시돼요.</string>
+    <string name="onboarding_speed_request">속도 권한 허용하기</string>
+    <string name="onboarding_speed_granted">허용됨</string>
+    <string name="onboarding_speed_denied">허용하지 않아도 리그에 입장할 수 있어요. 판정 정확도가 조금 낮아져요</string>
+    <string name="onboarding_submit">리그 입장</string>
+    <string name="onboarding_submitting">등록하고 있어요</string>
+    <string name="onboarding_error_offline">연결되지 않아 등록하지 못했어요. 연결 후 다시 시도해 주세요</string>
+    <string name="onboarding_error_failed">등록하지 못했어요. 다시 시도해 주세요</string>
+
     <!-- 홈 (SCR-01) -->
     <string name="home_quest_label">오늘의 퀘스트</string>
     <string name="home_quest_loading">퀘스트를 불러오고 있어요</string>

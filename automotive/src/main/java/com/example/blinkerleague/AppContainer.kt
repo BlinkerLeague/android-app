@@ -1,7 +1,6 @@
 package com.example.blinkerleague
 
 import android.content.Context
-import com.example.blinkerleague.data.auth.InMemoryTokenStore
 import com.example.blinkerleague.data.auth.PrefsTokenStore
 import com.example.blinkerleague.data.auth.TokenStore
 import com.example.blinkerleague.data.local.AppDatabase
@@ -70,7 +69,8 @@ class AppContainer(context: Context) {
     /** 서버 주소가 있으면 실제 서버, 없으면 서버 규칙을 흉내 내는 Fake (앱을 끄면 초기화됨) */
     val usesServer: Boolean = BuildConfig.SERVER_URL.isNotBlank()
 
-    private val tokens: TokenStore = if (usesServer) PrefsTokenStore(context) else InMemoryTokenStore()
+    // Fake 모드도 등록 정보를 저장해 앱을 다시 켜도 온보딩이 반복되지 않게 함 (파일은 서버 모드와 분리)
+    private val tokens: TokenStore = PrefsTokenStore(context, fileName = if (usesServer) "auth" else "auth_fake")
 
     private val tripApi: TripApi
     private val missionApi: MissionApi
