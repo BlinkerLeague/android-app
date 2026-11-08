@@ -42,7 +42,7 @@ class FakeMissionApiTest {
     }
 
     private fun mission(status: MissionStatus, turns: Int, success: Int) =
-        TodayMission("회전 깜빡이 완벽", status, turns, success, 3)
+        TodayMission("회전 깜빡이 완벽", status, turns, success, 3, rewardPoint = 20)
 
     @Test
     fun `운행이 없으면 진행 중, 0회`() = runTest {

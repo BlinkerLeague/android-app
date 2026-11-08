@@ -90,6 +90,18 @@
     <string name="drv_vehicle_unknown_body">기어를 P에 두면 화면을 볼 수 있어요</string>
     <string name="drv_checking">차량 상태를 확인하고 있어요</string>
 
+    <!-- 퀘스트 상세 (SCR-03) -->
+    <string name="quest_label">오늘의 퀘스트 · 일간</string>
+    <string name="quest_condition_turns">회전 %1$d회 이상</string>
+    <string name="quest_condition_rate">깜빡이 사용률 %1$d%%</string>
+    <string name="quest_progress_count">%1$d / %2$d</string>
+    <string name="quest_progress_rate">%1$d%%</string>
+    <string name="quest_status_failed">미달성</string>
+    <string name="quest_reward_label">달성 보상</string>
+    <string name="quest_reward">+%1$dP</string>
+    <string name="quest_retry">다음 경기에서 재도전</string>
+    <string name="quest_done">확인</string>
+
     <!-- 운행 수집 서비스 알림 (점수·결과는 알림으로 보여주지 않음) -->
     <string name="collection_channel">운행 기록</string>
     <string name="collection_notification">깜빡이리그 · 기록 중</string>

@@ -1,4 +1,4 @@
-package com.example.blinkerleague.ui.missions
+package com.example.blinkerleague.ui.quest
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

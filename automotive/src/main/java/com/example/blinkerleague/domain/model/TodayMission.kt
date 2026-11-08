@@ -9,4 +9,28 @@ data class TodayMission(
     val turns: Int,
     val successTurns: Int,
     val requiredTurns: Int,
+    /** 달성 보상 포인트 (지급은 P1 포인트 원장). 서버가 안 주면 null */
+    val rewardPoint: Int? = null,
+    /** 조건별 진행도 (SCR-03). 서버가 안 주면 회전 수·사용률로 만듦 */
+    val conditions: List<MissionCondition> = MissionCondition.derive(turns, successTurns, requiredTurns),
 )
+
+enum class ConditionType {
+    /** 회전 N회 이상 */
+    TURN_COUNT,
+
+    /** 깜빡이 사용률(%) */
+    SIGNAL_RATE,
+}
+
+data class MissionCondition(val type: ConditionType, val current: Int, val target: Int) {
+    val met: Boolean get() = current >= target
+
+    companion object {
+        /** 서버 `conditions`가 없을 때: 회전 수와 사용률(회전이 없으면 0%) */
+        fun derive(turns: Int, successTurns: Int, requiredTurns: Int): List<MissionCondition> = listOf(
+            MissionCondition(ConditionType.TURN_COUNT, turns, requiredTurns),
+            MissionCondition(ConditionType.SIGNAL_RATE, if (turns == 0) 0 else successTurns * 100 / turns, 100),
+        )
+    }
+}

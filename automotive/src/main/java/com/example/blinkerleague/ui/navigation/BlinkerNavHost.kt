@@ -8,7 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.blinkerleague.ui.demo.DemoScreen
 import com.example.blinkerleague.ui.home.HomeScreen
-import com.example.blinkerleague.ui.missions.MissionsScreen
+import com.example.blinkerleague.ui.quest.QuestScreen
 import com.example.blinkerleague.ui.result.PlaysScreen
 import com.example.blinkerleague.ui.result.ResultScreen
 
@@ -42,7 +42,7 @@ fun BlinkerNavHost() {
             )
         }
         composable(Routes.QUEST) {
-            MissionsScreen(onBack = { navController.popBackStack() })
+            QuestScreen(onBack = { navController.popBackStack() })
         }
         composable(
             route = Routes.RESULT,
