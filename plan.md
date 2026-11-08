@@ -28,22 +28,32 @@
 
 ### 0. 스파이크 (10.26 ~ 11.1): SDK 체크리스트
 가장 먼저 확인할 항목은 1번과 2번입니다. 이 두 가지가 안 되면 앱이 성립하지 않습니다.
+실제로 실행해 확인한 결과는 [`docs/sdk-test-log.md`](docs/sdk-test-log.md)에 기록합니다.
 - [x] 1. TurnSignal 상태를 실시간으로 구독할 수 있는지, 좌·우가 구분되는지 — 에뮬레이터: 즉시 옴, OFF/RIGHT/LEFT 구분. 비상등은 TurnSignal 값에 없음 ([조사](docs/spikes/vehicle-background-speed.md))
 - [ ] 2. 앱이 백그라운드에 있을 때도 신호와 위치를 계속 받을 수 있는지
   - [x] NaviHelper 콜백: 일반 백그라운드는 cached로 얼어 못 받음, 포그라운드 서비스면 받음 ([조사 기록](docs/spikes/navi-helper-events.md))
   - [x] Vehicle SDK·CarProperty도 같음: 일반 백그라운드는 약 10초 뒤 동결 → 콜백 전부 누락, 동결 해제 시 프로세스 종료. 포그라운드 서비스면 모두 즉시 옴 ([조사](docs/spikes/vehicle-background-speed.md))
 - [ ] 3. 주행 중 앱 실행 제한의 범위 (정차·P단 조건)
 - [ ] 4. 위치: 실차는 FusedLocation 미지원(구현 가이드) → NaviHelper `getCurrentLocationInfo`의 필드(속도 포함 여부)와 갱신 주기
+  - [x] 에뮬레이터: Pleos FusedLocation SDK 1.1.3으로 현재 위치 조회와 1초 갱신이 됨 (`isSupported()`=true). `adb emu geo fix`로 위치를 바꿀 수 있음. `LocationData`에 속도 필드는 없음. 권한 `pleos.car.permission.FUSED_LOCATION`(dangerous, 런타임 요청 필요)
   - [x] Pleos FusedLocation SDK 1.1.3: 에뮬레이터에서 주입 좌표를 1초마다 따라옴(지연 중앙 12ms), 고도 반영, heading 항상 0, 속도·주소 없음. 권한 `FUSED_LOCATION`은 dangerous. 근접 알림은 원형(중심+반경). NaviHelper 위치는 고정값 ([조사](docs/spikes/fused-location.md))
+  - [ ] 실차에서 FusedLocation `isSupported()` 결과 (false이면 NaviHelper)
+  - [ ] NaviHelper `getCurrentLocationInfo`의 필드와 갱신 주기
   - [ ] 실차 지원 여부(구현 가이드의 "FusedLocation 미지원"이 무엇을 말하는지), 실차 heading·갱신 주기
 - [ ] 5. Brake API가 페달 상태를 주는지
+  - [x] 에뮬레이터: `Brake.registerBrakePedalStatus` → 눌림 여부 `Boolean`만 옴 (밟은 정도 없음). 권한 `CAR_DRIVE`
 - [ ] 6. Light API로 전조등·오토라이트 상태를 알 수 있는지
+  - [x] 에뮬레이터: 하향등·미등·상향등 `LightState`(OFF/ON/DAYTIME_RUNNING) 조회·콜백 됨. **오토라이트 API는 없음**, 안개등 미지원. 권한 `CAR_LIGHTS`
   - [x] 비상등: Light 도메인에 API 없음, Safety 경고등은 에뮬레이터에서 빈 목록 → 감지 불가 ([조사](docs/spikes/vehicle-background-speed.md))
 - [ ] 7. Safety API가 주는 경고 종류
+  - [x] 에뮬레이터: 경고등(`registerTelltales`)은 켜진 것만 목록으로 옴(`TelltaleType`+`OFF/ON/BLINK`). 오일·워셔액 경고는 미지원. 비상등 API 없음
 - [ ] 8. 시동·주행 상태(DrivingMode, P단)를 감지할 수 있는지
+  - [x] 에뮬레이터: Vehicle SDK에 **시동 상태 API 없음**(`IgnitionState` enum만 있음). `DrivingMode`는 에코·스포츠 모드이고 미지원. P단은 Gear로 됨
   - [x] 기어: Vehicle SDK `onSelected`와 CarProperty `GEAR_SELECTION` 모두 즉시 옴. `CURRENT_GEAR`는 안 바뀜
-  - [ ] 시동 on/off
+  - [ ] CarProperty `IGNITION_STATE` 읽기 권한·가능 여부
 - [ ] 9. 각 기능의 checkXXXCapability 결과 (앱 시작 시 로그로 출력)
+  - [x] 에뮬레이터: 21개 도메인 전수 조사 (`VehicleSdkSurveyTest`). 미지원은 `onFailed`로 오는데 오류 모양이 두 가지라 클래스로 구분하면 안 됨
+  - [ ] 실차에서 같은 테스트로 비교
 - [ ] 10. TextToSpeech 사용 조건과 내비 음성과 겹칠 때의 처리
   - [x] 에뮬레이터: Pleos TextToSpeech SDK 3.3.1 `Mode.ON_DEVICE` + `ko-KR`로 재생됨. 권한 `pleos.car.permission.TTS_SERVICE` 필요. Android 표준 TextToSpeech는 엔진(caas SpeechService) 연결 실패
   - [ ] 내비 안내 음성 중일 때 오디오 포커스 동작 (지연·거절) 확인
@@ -92,6 +102,7 @@
   - [ ] HTTP 구현체 (API 클라이언트 결정 후)
 
 ### 4. 화면과 음성 (11.9 ~ 11.12)
+- 화면 구현 계획: [`docs/screen-plan.md`](docs/screen-plan.md) (주행 안전 가드 → 홈 → 결과·타임라인 → 퀘스트 → 온보딩 순)
 - [x] 테마: 다크 배경 #101317, 카드 #1B2027, 강조색 #5AA2FF, 폰트 Noto Sans KR (목업 기준)
 - [ ] 정차 후 운행 결과 화면: 회전 기록 목록(제때 켬 / 안 켬), 오늘 미션 진행률, 적립 포인트
   - [x] 점수·상태 안내(점수 계산 중 / 회전 없음 / 1km 미만), 깜빡이 사용 횟수, 회전 기록 목록 (`ui/summary`)
@@ -129,6 +140,12 @@
   - 미션: 기획서 MVP는 1종(회전 깜빡이 완벽)인데, 목업에는 "회전 5번 제때", "내비 안내 회전 미리 켜기", "브레이크 부드럽게 정지" 3종이 있음
   - "내비 안내 회전 미리 켜기 · 보너스"는 기획서에 없음. 내비 안내 지점 정보를 받을 수 있는지도 확인 필요
 - [ ] **게임 요소 확장 아이디어**: 목적지까지 달려서 점수가 가장 높은 사람이 그 도로(땅)를 차지하는 방식. 리그(FR-13)와 어떻게 합칠지, 2차 범위에 넣을지 결정
+- [ ] **점수 항목 추가 후보 (2차 검토)**: SDK 조사로 찾은 데이터. 근거는 `docs/sdk-test-log.md` "점수화에 쓸 수 있는 다른 SDK 데이터"
+  - 과속 비율 (NaviHelper `onCurrentRoadSpeedLimit` + CarProperty 속도), 단속 카메라·구간단속 준수 (`CameraAlert.isOverSpeed`), 어린이보호구역 감속 (`CautionPoint SCHOOL_ZONE`)
+    → 에뮬레이터에서는 값이 안 옴(제한속도 항상 0). 실차 확인 필요
+  - 출발 전 안전벨트 착용 (Vehicle `Seat.registerSeatBeltBuckledState`) → 조회는 됨, 변경 콜백은 실차 확인 필요
+  - **확장안 전체: [`docs/scoring-criteria.md`](docs/scoring-criteria.md)** (11개 항목, 법규 기준, 가중치 초안, 새 이벤트 형식). 팀 확정 후 `server-requests.md`로 전달
+  - 기존 규칙과 충돌: 오토라이트 API가 없어 서버 4.1의 "오토라이트면 100점"·`autoLight` 필드는 쓸 수 없음. 비상등 API가 없어 "비상등 켜진 회전 제외"도 불가
 - [ ] **API 클라이언트**: Retrofit + kotlinx.serialization 또는 Ktor
 - [ ] **DI**: Hilt 또는 수동 DI (MVP 일정을 생각하면 수동 DI도 고려)
 - [ ] **정적 분석**: ktlint·detekt 사용 여부
@@ -155,3 +172,4 @@
 | 2026-11-03 | 운행 거리는 `PERF_VEHICLE_SPEED` 적분 | 트립 거리 API는 에뮬레이터 미지원, 오도미터는 속도를 따라 늘지 않아 검증 불가 |
 | 2026-11-04 | 위치 출처는 Pleos FusedLocation SDK (NaviHelper 위치 아님) | 에뮬레이터에서 FusedLocation은 주입 좌표를 따라오고 NaviHelper 위치는 고정. 실차 지원은 Pleos 확인 필요 |
 | 2026-11-01 | 서버는 별도 저장소(BlinkerLeague/server)이고 Java 17 + Spring Boot 3.3 | 이미 만들어져 있음. 서버 plan.md에서 확정한 내용 |
+| 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |
