@@ -1,15 +1,22 @@
 # BlinkerLeague
 
-> <!-- TODO: 프로젝트를 한 줄로 소개해주세요. 예) 방향지시등 사용 습관을 게임처럼 즐기며 개선하는 Android Automotive 앱 -->
+> 회전할 때 깜빡이를 제때 켰는지 운행마다 판정해 경기처럼 점수·퀘스트로 돌려주는 Android Automotive 앱 (깜빡이리그, Pleos 공모전 출품작)
 
-<!-- TODO: 스크린샷 또는 GIF 추가 -->
-<!-- ![screenshot](docs/screenshot.png) -->
+| 홈 | 경기 결과 | 플레이 타임라인 |
+| --- | --- | --- |
+| ![홈](docs/screenshots/home.png) | ![경기 결과](docs/screenshots/result.png) | ![플레이 타임라인](docs/screenshots/plays.png) |
+| **퀘스트** | **온보딩** | |
+| ![퀘스트](docs/screenshots/quest.png) | ![온보딩](docs/screenshots/onboarding.png) | |
+
+> Pleos Connect 에뮬레이터의 앱 영역(1682×1210dp) 캡처
 
 ## 📌 주요 기능
 
-- <!-- TODO: 기능 1 -->
-- <!-- TODO: 기능 2 -->
-- <!-- TODO: 기능 3 -->
+- **운행 자동 기록**: 기어가 D·R·N이 되면 운행을 시작하고, P단 3분이면 끝냅니다. 앱이 화면에 없어도 포그라운드 서비스로 기록합니다.
+- **회전·깜빡이 판정**: 핸들 각도로 회전을 찾고, 회전 시작 5초 전부터 같은 방향 깜빡이를 켰는지 판정합니다. 지원하지 않는 신호는 0점이 아니라 측정에서 제외합니다.
+- **경기 결과와 퀘스트**: 정차 후 평점·등급, 득점(켠 회전)·실점(안 켠 회전), 플레이 타임라인, 오늘의 퀘스트 진행도를 보여줍니다.
+- **주행 안전**: 주행 중에는 점수 화면을 띄우지 않고 "기록 중" 화면만 보여줍니다. 음성은 시동 때 퀘스트 안내, 운행 종료 때 결과 한마디만 합니다.
+- **오프라인 우선**: 판정은 기기에서 하고 결과를 먼저 저장합니다. 서버 업로드는 연결되면 자동으로 다시 보냅니다. 원시 위치 좌표는 서버로 보내지 않습니다.
 
 ## 🛠 기술 스택
 
@@ -18,8 +25,10 @@
 | Language | Kotlin 1.9.22 |
 | Platform | Android Automotive OS (minSdk 28 / targetSdk 34) |
 | Build | Gradle (Kotlin DSL), AGP 8.2.2 |
-| Vehicle SDK | Pleos Playground Vehicle SDK 2.3.2 |
-| Architecture | <!-- TODO: 예) MVVM --> |
+| Vehicle SDK | Pleos Playground Vehicle SDK 2.3.2, TextToSpeech 3.3.1, FusedLocation 1.1.3, CarPropertyManager(속도) |
+| Architecture | MVVM + Jetpack Compose, 수동 DI(`AppContainer`) |
+| Data | Room(운행·이벤트 선저장), WorkManager(업로드 재전송), Retrofit + OkHttp + kotlinx.serialization |
+| Test | JUnit4, kotlinx-coroutines-test, Robolectric, MockWebServer |
 
 ## 🚀 시작하기
 
@@ -108,25 +117,61 @@ Android Studio에서는 상단 기기 목록에서 `Pleos_Connect_v2.1.0_API_34`
 
 | 방법 | 용도 | 에뮬레이터 필요 |
 | --- | --- | --- |
-| **Compose Preview** | 화면 디자인만 빠르게 확인. `DemoScreen.kt`, `MissionsScreen.kt`, `MissionCard.kt` 등을 열고 Split/Design 탭 | ✗ |
-| **데모 화면 (시나리오 재생)** | 앱 첫 화면(시나리오 재생)에서 "좌회전 + 깜빡이" 같은 시나리오를 고르면 가짜 신호로 운행을 재생하고 결과 화면으로 넘어감. 미션 화면은 첫 화면의 버튼으로 이동 | ✓ |
-| **Virtual Console** | 기어·속도·방향지시등 등 차량 신호를 브라우저에서 직접 바꿔 가며 확인 | ✓ |
+| **Compose Preview** | 화면 디자인만 빠르게 확인. `HomeScreen.kt`, `ResultScreen.kt`, `PlaysScreen.kt`, `QuestScreen.kt`, `OnboardingScreen.kt`, `DrivingScreen.kt`를 열고 Split/Design 탭 | ✗ |
+| **시나리오 재생 (디버그 빌드)** | 홈 아래 "시나리오 재생" → "시연: 좌회전 성공 → 우회전 실패" 10배속 → 몇 초 뒤 경기 결과(득점 1 · 실점 1) | ✓ |
+| **Virtual Console** | 기어·속도·방향지시등·핸들 각도를 브라우저에서 바꿔 가며 실제 신호로 확인 (기어 D면 "기록 중" 화면) | ✓ |
 
-> Pleos 화면에서 앱은 오른쪽 영역에만 그려집니다. Preview 크기(960×720)는 이 영역 기준입니다.
+- 처음 실행하면 온보딩(닉네임·활동 지역)이 나옵니다. 서버 주소를 설정하지 않으면 Fake API로 동작합니다.
+- 기어가 P가 아니면 정차 화면 대신 "기록 중" 화면이 나옵니다. 화면만 보려면 디버그 빌드에서 `adb shell am start -n com.example.blinkerleague/.MainActivity --ez guardBypass true`
+- 실제 서버에 붙이려면 `local.properties`에 `blinker.serverUrl=http://10.0.2.2:8080` (에뮬레이터 → 내 PC)
+
+> Pleos 화면에서 앱은 오른쪽 영역(에뮬레이터 1682×1210dp)에만 그려집니다. Preview는 1280×720과 좁은 폭(720)으로 확인합니다.
+
+### 6. 출시용(release) APK
+
+```bash
+./gradlew :automotive:assembleRelease   # automotive/build/outputs/apk/release/
+```
+
+- 서명 키는 저장소에 넣지 않습니다. `local.properties`에 아래 4줄이 있으면 그 키로 서명하고, 없으면 서명하지 않은 APK가 나옵니다.
+
+  ```properties
+  blinker.release.storeFile=/절대/경로/blinkerleague-release.jks
+  blinker.release.storePassword=…
+  blinker.release.keyAlias=blinkerleague
+  blinker.release.keyPassword=…
+  ```
+- 키 만들기: `keytool -genkeypair -v -keystore blinkerleague-release.jks -alias blinkerleague -keyalg RSA -keysize 2048 -validity 10000`
+- 릴리스에는 조사용 코드·권한(`src/debug`)과 시나리오 재생 버튼이 들어가지 않습니다.
 
 ## 📁 프로젝트 구조
 
 ```
-BlinkerLeague
-├── automotive/                     # Automotive 앱 모듈
-│   └── src/main/java/com/example/blinkerleague/
-│       └── MainActivity.kt
-├── gradle/
-├── build.gradle.kts
-└── settings.gradle.kts
+automotive/src/
+├── main/java/com/example/blinkerleague/
+│   ├── data/
+│   │   ├── vehicle/     # Vehicle SDK·CarProperty 래퍼 (방향지시등·핸들 각도·기어·속도 → Flow), Fake 공급원
+│   │   ├── location/    # Pleos FusedLocation 래퍼
+│   │   ├── permission/  # 런타임 권한(속도·위치) 상태
+│   │   ├── local/       # Room: 운행·이벤트 선저장, 업로드 대기열
+│   │   ├── remote/      # API 인터페이스·DTO, Fake API, http/(Retrofit)
+│   │   ├── auth/        # 등록 토큰 보관
+│   │   ├── sync/        # WorkManager 업로드 재전송
+│   │   ├── scenario/    # 시연·테스트용 신호 시나리오
+│   │   └── repository/
+│   ├── domain/
+│   │   ├── model/       # Trip, TurnRecord, CapabilityReport 등 (Android 의존성 없음)
+│   │   ├── detection/   # 운행 구분·회전 감지·깜빡이 판정·주행 안전 가드 (순수 함수)
+│   │   ├── config/      # 기준값 (서버 설정으로 교체 가능)
+│   │   └── region/      # 시군구 목록
+│   ├── service/         # 운행 수집 포그라운드 서비스, 음성 안내 흐름
+│   ├── voice/           # Pleos TextToSpeech 래퍼
+│   └── ui/              # driving(주행 중), home, result(+plays), quest, onboarding, demo, theme, navigation
+├── debug/               # 조사용 코드·권한 (릴리스 APK에 포함 안 됨)
+└── release/             # DebugTools 빈 구현
 ```
 
-<!-- TODO: 패키지 구조가 잡히면 업데이트 -->
+- 작업 계획·결정 기록: [`plan.md`](plan.md), 화면 기준: [`docs/screen-plan.md`](docs/screen-plan.md), 플랫폼 확인표: [`docs/platform-capabilities.md`](docs/platform-capabilities.md)
 
 ## 🌿 브랜치 전략
 
@@ -177,4 +222,4 @@ fix: 앱 재시작 시 점수가 초기화되는 문제 수정
   - 레이아웃: `activity_main.xml`, `fragment_home.xml`, `item_score.xml`
   - 아이콘·이미지: `ic_blinker.xml`, `img_background.webp`
   - 문자열 ID: `화면_용도` (예: `home_title`)
-- <!-- TODO: ktlint / detekt 사용 여부 -->
+- 정적 분석: ktlint·detekt는 아직 쓰지 않습니다(plan.md "결정 필요"). Android lint(`./gradlew :automotive:lintDebug`) 오류 0을 유지합니다.

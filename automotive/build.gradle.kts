@@ -31,8 +31,25 @@ android {
         buildConfigField("String", "SERVER_URL", "\"$serverUrl\"")
     }
 
+    // 출시용 서명: 키는 저장소에 넣지 않고 local.properties(blinker.release.*)에서 읽음. 없으면 서명 없이 빌드
+    val releaseProps = Properties().apply {
+        rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+    }
+    val releaseStoreFile = releaseProps.getProperty("blinker.release.storeFile")
+    signingConfigs {
+        if (releaseStoreFile != null) {
+            create("release") {
+                storeFile = file(releaseStoreFile)
+                storePassword = releaseProps.getProperty("blinker.release.storePassword")
+                keyAlias = releaseProps.getProperty("blinker.release.keyAlias")
+                keyPassword = releaseProps.getProperty("blinker.release.keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (releaseStoreFile != null) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
