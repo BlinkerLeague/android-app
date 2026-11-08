@@ -4,6 +4,7 @@ import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.model.LocationSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
+import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.Trip
 import com.example.blinkerleague.domain.model.TripEvent
@@ -15,10 +16,12 @@ data class TripRecording(
     val signals: List<SignalSample>,
     val vehicleStates: List<VehicleStateSample>,
     val locations: List<LocationSample>,
+    /** 차량 속도. 거리(적분)와 저속 회전 제외에 씀. 없으면 위치로 계산함 */
+    val speeds: List<SpeedSample> = emptyList(),
 )
 
 /**
- * 끝난 운행의 시계열을 모아 [Trip]으로 만듦: 핸들 각도로 회전 감지 → 깜빡이 판정 → 이벤트, 거리 계산.
+ * 끝난 운행의 시계열을 모아 [Trip]으로 만듦: 핸들 각도로 회전 감지 → 깜빡이 판정 → 이벤트, 거리 계산(속도 적분 우선).
  *
  * - 방향지시등(TURN_SIGNAL)과 핸들 각도(STEERING_ANGLE)가 모두 지원돼야 회전 이벤트를 만듦 (아니면 서버에서 항목 제외)
  * - 핸들 각도·위치는 운행 구간 안의 것만 씀
@@ -48,6 +51,7 @@ class TripAssembler(
                 vehicleStates = recording.vehicleStates,
                 signals = recording.signals,
                 locations = locations,
+                speeds = recording.speeds,
             )
             judge.judge(turns, recording.signals).map {
                 TripEvent.TurnEvent(
@@ -66,7 +70,11 @@ class TripAssembler(
             id = tripId,
             startedAtMs = startedAtMs,
             endedAtMs = endedAtMs,
-            distanceKm = TripDistance.km(locations),
+            distanceKm = if (recording.speeds.isNotEmpty()) {
+                TripDistance.kmFromSpeeds(recording.speeds, startedAtMs, endedAtMs)
+            } else {
+                TripDistance.km(locations)
+            },
             supported = supported,
             events = turnEvents,
         )

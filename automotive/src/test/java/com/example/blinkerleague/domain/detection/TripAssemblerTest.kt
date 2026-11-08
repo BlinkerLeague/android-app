@@ -3,6 +3,7 @@ package com.example.blinkerleague.domain.detection
 import com.example.blinkerleague.data.scenario.Scenarios
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.model.SignalType
+import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.TripEvent
 import com.example.blinkerleague.domain.model.TurnDirection
 import org.junit.Assert.assertEquals
@@ -33,6 +34,23 @@ class TripAssemblerTest {
         val turns = trip.events.filterIsInstance<TripEvent.TurnEvent>()
         assertEquals(listOf(TurnDirection.LEFT to true, TurnDirection.RIGHT to false), turns.map { it.direction to it.signalOn })
         assertTrue(trip.distanceKm > 1.0)
+    }
+
+    @Test
+    fun `속도가 있으면 거리는 속도 적분, 없으면 위치로 계산`() {
+        val withSpeeds = assembler.assemble(
+            tripId = "t", startedAtMs = 0, endedAtMs = 60_000,
+            recording = TripRecording(emptyList(), emptyList(), emptyList(), demo.locations, listOf(SpeedSample(0, 60f))),
+            supported = all,
+        )
+        assertEquals(1.0, withSpeeds.distanceKm, 1e-9)
+
+        val withoutSpeeds = assembler.assemble(
+            tripId = "t", startedAtMs = 0, endedAtMs = 60_000,
+            recording = TripRecording(emptyList(), emptyList(), emptyList(), demo.locations),
+            supported = all,
+        )
+        assertEquals(TripDistance.km(demo.locations.filter { it.timestampMs <= 60_000 }), withoutSpeeds.distanceKm, 1e-9)
     }
 
     @Test
