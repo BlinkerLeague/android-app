@@ -32,7 +32,7 @@ class TripVoiceGuideTest {
         announcer = announcer,
         todayMission = { mission },
         tripResult = { id -> result.takeIf { id == "t1" } },
-        tripConfig = TripConfig(),
+        tripConfig = { TripConfig() },
         scope = this,
     )
 

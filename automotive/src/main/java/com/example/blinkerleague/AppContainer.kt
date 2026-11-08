@@ -3,6 +3,8 @@ package com.example.blinkerleague
 import android.content.Context
 import com.example.blinkerleague.data.auth.PrefsTokenStore
 import com.example.blinkerleague.data.auth.TokenStore
+import com.example.blinkerleague.data.config.ConfigRepository
+import com.example.blinkerleague.data.config.PrefsConfigCache
 import com.example.blinkerleague.data.local.AppDatabase
 import com.example.blinkerleague.data.location.LocationSource
 import com.example.blinkerleague.data.location.PleosLocationSource
@@ -15,6 +17,7 @@ import com.example.blinkerleague.data.remote.FakeTripApi
 import com.example.blinkerleague.data.remote.MissionApi
 import com.example.blinkerleague.data.remote.TripApi
 import com.example.blinkerleague.data.remote.http.HttpClientFactory
+import com.example.blinkerleague.data.remote.http.HttpConfigApi
 import com.example.blinkerleague.data.remote.http.HttpDriverApi
 import com.example.blinkerleague.data.remote.http.HttpMissionApi
 import com.example.blinkerleague.data.remote.http.HttpTripApi
@@ -29,6 +32,8 @@ import com.example.blinkerleague.domain.model.PermissionStatus
 import com.example.blinkerleague.service.RecordingStatus
 import com.example.blinkerleague.service.TripVoiceGuide
 import com.example.blinkerleague.voice.PleosTtsAnnouncer
+import java.time.ZoneId
+import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -37,14 +42,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import java.time.ZoneId
-import java.util.UUID
 
 /**
  * 앱 전체에서 하나만 쓰는 객체 모음 (수동 DI). DI 방식(Hilt/수동)이 정해지기 전까지 임시로 씀.
  */
 class AppContainer(context: Context) {
-    val config: DetectionConfig = DetectionConfig.DEFAULT
 
     private val database = AppDatabase.create(context)
 
@@ -90,6 +92,15 @@ class AppContainer(context: Context) {
         }
     }
 
+    /** 측정 기준값. 서버 모드면 앱 시작 때 받아 갱신 (version이 바뀐 경우만), 못 받으면 저장 값 → 기본값 */
+    val configRepository = ConfigRepository(
+        api = if (usesServer) HttpConfigApi(HttpClientFactory.create(BuildConfig.SERVER_URL, tokens)) else null,
+        cache = PrefsConfigCache(context),
+    )
+
+    /** 지금 기준값. 운행 기록·화면은 시작할 때 이 값을 읽음 */
+    val config: DetectionConfig get() = configRepository.config.value
+
     /** 운전자 등록과 등록 여부 (온보딩) */
     val driverRepository = DriverRepository(driverApi, tokens)
 
@@ -109,7 +120,7 @@ class AppContainer(context: Context) {
         announcer = PleosTtsAnnouncer(context),
         todayMission = missionRepository::todayMission,
         tripResult = { tripId -> tripRepository.observeResult(tripId).first() },
-        tripConfig = config.trip,
+        tripConfig = { config.trip },
         scope = applicationScope,
     )
 
