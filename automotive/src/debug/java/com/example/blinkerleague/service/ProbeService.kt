@@ -7,6 +7,7 @@ import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.IBinder
+import androidx.core.app.ServiceCompat
 import com.example.blinkerleague.DebugTools
 import com.example.blinkerleague.R
 import com.example.blinkerleague.data.debug.DebugProbes
@@ -42,7 +43,7 @@ class ProbeService : Service() {
             .setSmallIcon(R.mipmap.ic_launcher)
             .setOngoing(true)
             .build()
-        runCatching { startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE) }
+        runCatching { ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE) }
             .onSuccess { probes.event("startForeground", "ok") }
             .onFailure { probes.event("startForeground", "failed: $it") }
     }

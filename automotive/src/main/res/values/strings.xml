@@ -75,7 +75,7 @@
     <string name="onboarding_cap_gear">기어</string>
     <string name="onboarding_cap_speed">속도</string>
     <string name="onboarding_cap_supported">측정</string>
-    <string name="onboarding_cap_unsupported">미지원 · 점수 제외</string>
+    <string name="onboarding_cap_unsupported">이 차량 미지원 · 점수 제외</string>
     <string name="onboarding_cap_no_permission">권한 필요</string>
     <string name="onboarding_speed_title">속도 권한</string>
     <string name="onboarding_speed_body">천천히 움직일 때의 회전을 걸러내고 운행 거리를 재려고 차량 속도를 써요. 시스템 창에는 \"위치 정보\"로 표시돼요.</string>

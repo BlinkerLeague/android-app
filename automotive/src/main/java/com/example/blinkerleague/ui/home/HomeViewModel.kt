@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -68,7 +67,7 @@ class HomeViewModel(
 
     private fun toRow(result: TripResult): RecentTripRow {
         val at = Instant.ofEpochMilli(result.endedAtMs).atZone(zone)
-        val today = LocalDate.ofInstant(Instant.ofEpochMilli(clock()), zone)
+        val today = Instant.ofEpochMilli(clock()).atZone(zone).toLocalDate() // LocalDate.ofInstant는 API 34부터
         val day = when (at.toLocalDate()) {
             today -> TripDay.TODAY
             today.minusDays(1) -> TripDay.YESTERDAY

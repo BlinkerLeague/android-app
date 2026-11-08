@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.IBinder
 import android.util.Log
+import androidx.core.app.ServiceCompat
 import com.example.blinkerleague.AppContainer
 import com.example.blinkerleague.BlinkerLeagueApplication
 import com.example.blinkerleague.R
@@ -50,7 +51,8 @@ class TripCollectionService : Service() {
             .setSmallIcon(R.mipmap.ic_launcher)
             .setOngoing(true)
             .build()
-        startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        // 서비스 종류 인자는 API 29부터. 하위 버전 호환은 ServiceCompat이 처리 (minSdk 28)
+        ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
