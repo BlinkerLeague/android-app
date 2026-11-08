@@ -7,6 +7,8 @@ import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import com.example.blinkerleague.data.permission.RuntimePermission
+import com.example.blinkerleague.voice.PleosTtsAnnouncer
+import kotlinx.coroutines.launch
 import com.example.blinkerleague.data.debug.DebugProbes
 
 /**
@@ -28,9 +30,17 @@ object DebugTools {
      * - `--el fgsDelayMs 5000` : 앱이 백그라운드로 간 뒤 앱 스스로 포그라운드 서비스 시작을 시도
      * - `--es requestPermission speed|location` : 런타임 권한 요청 창 띄우기 (온보딩 화면 전 시험용)
      * - `--ez guardBypass true|false` : 주행 안전 가드 우회 (기어와 상관없이 정차 화면). 시연 녹화용
+     * - `--es speak "문장"` : 음성 안내를 바로 재생 (내비 음성과 겹칠 때 포커스 동작 조사, 스파이크 10)
      */
     fun onActivityCreated(activity: Activity) {
         val intent = activity.intent
+        intent.getStringExtra("speak")?.let { text ->
+            intent.removeExtra("speak")
+            // --ei speakUsage N : AudioAttributes.USAGE_* 값으로 바꿔 시험 (기본: 앱과 같은 값)
+            val usage = intent.getIntExtra("speakUsage", -1)
+            val announcer = if (usage >= 0) PleosTtsAnnouncer(activity.applicationContext, usage) else PleosTtsAnnouncer(activity.applicationContext)
+            (activity.application as BlinkerLeagueApplication).container.applicationScope.launch { announcer.speak(text) }
+        }
         if (intent.hasExtra("guardBypass")) {
             (activity.application as BlinkerLeagueApplication).container.setGuardBypass(intent.getBooleanExtra("guardBypass", false))
         }
