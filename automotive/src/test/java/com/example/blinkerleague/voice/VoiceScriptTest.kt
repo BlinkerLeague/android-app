@@ -22,15 +22,19 @@ class VoiceScriptTest {
     @Test
     fun `시동 안내 - 미션 상태별 문구`() {
         assertEquals(
-            "오늘의 미션, 회전 깜빡이 완벽. 회전 세 번 모두 깜빡이를 미리 켜 보세요.",
+            "오늘의 미션, 회전 깜빡이 완벽. 이번 운행에서 회전 세 번 모두 깜빡이를 미리 켜 보세요.",
             VoiceScript.tripStart(mission(MissionStatus.IN_PROGRESS, 0)),
         )
+        // 미션은 운행 1건 안에서 판정(서버 D25) → 지난 운행 진행도와 상관없이 이번 운행 기준
         assertEquals(
-            "오늘의 미션, 회전 깜빡이 완벽. 회전 한 번 남았어요. 깜빡이를 미리 켜 주세요.",
+            "오늘의 미션, 회전 깜빡이 완벽. 이번 운행에서 회전 세 번 모두 깜빡이를 미리 켜 보세요.",
             VoiceScript.tripStart(mission(MissionStatus.IN_PROGRESS, 2)),
         )
         assertEquals("오늘의 미션은 이미 달성했어요. 오늘도 깜빡이 잊지 마세요.", VoiceScript.tripStart(mission(MissionStatus.ACHIEVED, 3)))
-        assertEquals("오늘도 회전할 때 깜빡이를 미리 켜 주세요.", VoiceScript.tripStart(mission(MissionStatus.FAILED, 1)))
+        assertEquals(
+            "오늘의 미션, 회전 깜빡이 완벽. 이번 운행에서 회전 세 번 모두 깜빡이를 미리 켜 보세요.",
+            VoiceScript.tripStart(mission(MissionStatus.FAILED, 1)),
+        )
         assertEquals("회전할 때 깜빡이를 미리 켜 주세요.", VoiceScript.tripStart(null))
     }
 

@@ -50,24 +50,41 @@ class FakeMissionApiTest {
     }
 
     @Test
-    fun `여러 운행의 회전을 합산 - 3회 모두 성공하면 달성`() = runTest {
+    fun `운행 1건 안에서 판정 - 여러 운행을 합산하지 않음`() = runTest {
         upload("2026-11-03T08:00:00+09:00", true, true)
         assertEquals(mission(MissionStatus.IN_PROGRESS, 2, 2), repository.todayMission())
 
-        upload("2026-11-03T09:00:00+09:00", true)
+        upload("2026-11-03T09:00:00+09:00", true) // 합하면 3회지만 라운드마다 따로 셈
+        assertEquals(mission(MissionStatus.IN_PROGRESS, 1, 1), repository.todayMission()) // 가장 최근 라운드
+
+        upload("2026-11-03T09:30:00+09:00", true, true, true)
         assertEquals(mission(MissionStatus.ACHIEVED, 3, 3), repository.todayMission())
     }
 
     @Test
-    fun `실패 회전이 하나라도 있으면 그날은 실패`() = runTest {
+    fun `실패한 라운드가 있어도 그날은 진행 중, 달성한 뒤 실패해도 달성 유지`() = runTest {
         upload("2026-11-03T08:00:00+09:00", true, false, true, true)
-        assertEquals(mission(MissionStatus.FAILED, 4, 3), repository.todayMission())
+        assertEquals(mission(MissionStatus.IN_PROGRESS, 4, 3), repository.todayMission())
+
+        upload("2026-11-03T08:30:00+09:00", true, true, true)
+        upload("2026-11-03T09:00:00+09:00", false)
+        assertEquals(mission(MissionStatus.ACHIEVED, 3, 3), repository.todayMission()) // 달성한 라운드 진행도
     }
 
     @Test
-    fun `1km 미만 운행과 다른 날 운행은 집계하지 않음`() = runTest {
+    fun `오늘 운행이 없으면 마지막 미션 날의 최종 상태 - 못 채웠으면 실패`() = runTest {
+        upload("2026-11-02T18:00:00+09:00", true, false)
+        val yesterday = repository.todayMission()!!
+        assertEquals(MissionStatus.FAILED, yesterday.status)
+        assertEquals(2, yesterday.turns)
+
+        upload("2026-11-03T08:00:00+09:00", true)
+        assertEquals(mission(MissionStatus.IN_PROGRESS, 1, 1), repository.todayMission())
+    }
+
+    @Test
+    fun `짧은 운행은 집계하지 않고, 날짜는 종료 시각 기준`() = runTest {
         upload("2026-11-03T08:00:00+09:00", false, distanceKm = 0.5)
-        upload("2026-11-02T23:59:00+09:00", false)
         upload("2026-11-03T00:00:00+09:00", true)
         assertEquals(mission(MissionStatus.IN_PROGRESS, 1, 1), repository.todayMission())
     }
