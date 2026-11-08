@@ -13,6 +13,18 @@ data class TodayMissionResponse(
     /** `IN_PROGRESS`, `ACHIEVED`, `FAILED` */
     val status: String,
     val progress: MissionProgressDto,
+    /** 달성 보상 포인트 (SCR-03). 서버가 안 주면 null */
+    val rewardPoint: Int? = null,
+    /** 조건별 진행도 (SCR-01 진행 링, SCR-03) */
+    val conditions: List<MissionConditionDto> = emptyList(),
+)
+
+@Serializable
+data class MissionConditionDto(
+    /** `TURN_COUNT`, `SIGNAL_RATE` */
+    val type: String,
+    val current: Int,
+    val target: Int,
 )
 
 @Serializable

@@ -1,13 +1,25 @@
 package com.example.blinkerleague
 
 import android.content.Context
+import com.example.blinkerleague.data.auth.InMemoryTokenStore
+import com.example.blinkerleague.data.auth.PrefsTokenStore
+import com.example.blinkerleague.data.auth.TokenStore
 import com.example.blinkerleague.data.local.AppDatabase
 import com.example.blinkerleague.data.location.LocationSource
 import com.example.blinkerleague.data.location.PleosLocationSource
 import com.example.blinkerleague.data.permission.PermissionRepository
 import com.example.blinkerleague.data.permission.RuntimePermission
+import com.example.blinkerleague.data.remote.DriverApi
+import com.example.blinkerleague.data.remote.FakeDriverApi
 import com.example.blinkerleague.data.remote.FakeMissionApi
 import com.example.blinkerleague.data.remote.FakeTripApi
+import com.example.blinkerleague.data.remote.MissionApi
+import com.example.blinkerleague.data.remote.TripApi
+import com.example.blinkerleague.data.remote.http.HttpClientFactory
+import com.example.blinkerleague.data.remote.http.HttpDriverApi
+import com.example.blinkerleague.data.remote.http.HttpMissionApi
+import com.example.blinkerleague.data.remote.http.HttpTripApi
+import com.example.blinkerleague.data.repository.DriverRepository
 import com.example.blinkerleague.data.repository.MissionRepository
 import com.example.blinkerleague.data.repository.TripMapper
 import com.example.blinkerleague.data.repository.TripRepository
@@ -55,9 +67,31 @@ class AppContainer(context: Context) {
         PleosLocationSource(context, locationGranted = granted(RuntimePermission.LOCATION))
     }
 
-    // HTTP 구현체는 API 클라이언트 결정 후 교체. 그 전까지 서버 규칙을 흉내 내는 Fake를 씀 (앱을 끄면 초기화됨)
-    private val tripApi = FakeTripApi()
-    private val missionApi = FakeMissionApi(tripApi, System::currentTimeMillis, zone)
+    /** 서버 주소가 있으면 실제 서버, 없으면 서버 규칙을 흉내 내는 Fake (앱을 끄면 초기화됨) */
+    val usesServer: Boolean = BuildConfig.SERVER_URL.isNotBlank()
+
+    private val tokens: TokenStore = if (usesServer) PrefsTokenStore(context) else InMemoryTokenStore()
+
+    private val tripApi: TripApi
+    private val missionApi: MissionApi
+    private val driverApi: DriverApi
+
+    init {
+        if (usesServer) {
+            val service = HttpClientFactory.create(BuildConfig.SERVER_URL, tokens)
+            tripApi = HttpTripApi(service)
+            missionApi = HttpMissionApi(service)
+            driverApi = HttpDriverApi(service)
+        } else {
+            val fakeTrips = FakeTripApi()
+            tripApi = fakeTrips
+            missionApi = FakeMissionApi(fakeTrips, System::currentTimeMillis, zone)
+            driverApi = FakeDriverApi()
+        }
+    }
+
+    /** 운전자 등록과 등록 여부 (온보딩) */
+    val driverRepository = DriverRepository(driverApi, tokens)
 
     val tripRepository = TripRepository(
         dao = database.tripDao(),

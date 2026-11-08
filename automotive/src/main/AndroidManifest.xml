@@ -10,6 +10,9 @@
       승인되지 않은 권한을 선언하면 심사를 통과할 수 없음. 조사용 권한은 src/debug/AndroidManifest.xml에 있음.
     -->
 
+    <!-- 서버 API (운행 업로드·점수·미션·등록) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!-- 음성 안내: Pleos TextToSpeech SDK가 요구하는 권한 (SDK의 TTS_PERMISSION 상수) -->
     <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
     <!-- 위치: Pleos FusedLocation SDK (@RequiresPermission). 기기 prot=dangerous → 런타임 허용 필요 -->
