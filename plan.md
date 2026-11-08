@@ -159,6 +159,7 @@
 | 7 | SCR-03 퀘스트 상세 (7장 4) | 신호(혼자 개발) | 5 | 진행: `ui/quest`, 조건별 진행도(서버 `conditions`, 없으면 회전 수·사용률로), 보상 "+20P"(P1 표시), 재도전 버튼 |
 | 8 | SCR-00 온보딩 (7장 5) | 신호(혼자 개발) | 등록 API Fake, 3번 | 진행: 닉네임·지역(서울 25개 구)·측정 가능 항목·속도 권한·리그 입장. 등록 전이면 시작 화면이 온보딩 |
 | 9 | HTTP 구현체 (`TripApi`·`MissionApi`·등록) | 신호 | — | 완료: Retrofit, 토큰 재발급, `DriverRepository`. 서버 주소 설정 시 사용 |
+| 9b | 마무리 (7장 6): 예외 문구 점검, 실제 앱 폭 측정(1682×1210dp), 시연 리허설, lint 오류 0 | 신호(혼자 개발) | 4~8 | 진행: 시연 시나리오 → 결과 "C · 평점 50 · 득점 1 · 실점 1", 플레이 카드 2장 확인 |
 | 10 | 시연 영상, release APK, README, 제출 양식 (5장) | 함께 | 4~8 | 11.13~ |
 
 - 권한 사용법(화면 쪽): 상태는 `container.permissions.status(RuntimePermission.SPEED)`(`GRANTED`/`DENIED`/`NOT_REQUESTED`), 요청은 `rememberPermissionRequester(container.permissions, RuntimePermission.SPEED)`. 허용되면 운행 수집이 재시작 없이 속도를 받기 시작함

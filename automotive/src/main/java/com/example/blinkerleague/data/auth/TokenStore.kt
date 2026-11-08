@@ -1,5 +1,6 @@
 package com.example.blinkerleague.data.auth
 
+import android.annotation.SuppressLint
 import android.content.Context
 import com.example.blinkerleague.data.remote.dto.RegisterDriverResponse
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,8 +25,10 @@ interface TokenStore {
 
 /**
  * 앱 전용 SharedPreferences에 저장 (MODE_PRIVATE).
+ * 토큰은 저장이 끝난 뒤 다음 요청·화면 이동이 일어나야 하므로 apply가 아니라 commit을 씀.
  * @param fileName 서버 모드와 Fake 모드는 다른 파일을 씀 (Fake 토큰을 실제 서버에 보내지 않게)
  */
+@SuppressLint("ApplySharedPref")
 class PrefsTokenStore(context: Context, fileName: String = "auth") : TokenStore {
     private val prefs = context.applicationContext.getSharedPreferences(fileName, Context.MODE_PRIVATE)
     private val _registered = MutableStateFlow(prefs.getString(KEY_REFRESH, null) != null)

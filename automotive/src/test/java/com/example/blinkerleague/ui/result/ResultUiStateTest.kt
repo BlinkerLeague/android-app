@@ -55,6 +55,13 @@ class ResultUiStateTest {
     }
 
     @Test
+    fun `짧은 이동·업로드 거부는 집계 중이 아님`() {
+        assertEquals(MetricValue.Excluded, metric(result(ScoreState.EXCLUDED_SHORT, null, emptyList()).toResultUiState(null, GradeThreshold.DEFAULT)))
+        assertEquals(MetricValue.Excluded, metric(result(ScoreState.EXCLUDED_SHORT, null).toResultUiState(null, GradeThreshold.DEFAULT)))
+        assertEquals(MetricValue.NotScored, metric(result(ScoreState.REJECTED, null).toResultUiState(null, GradeThreshold.DEFAULT)))
+    }
+
+    @Test
     fun `회전 없음과 미지원은 0점이 아니라 제외로`() {
         val noTurn = result(ScoreState.NO_TURN, null, signals = emptyList()).toResultUiState(null, GradeThreshold.DEFAULT)
         assertEquals(MetricValue.NoTurn, metric(noTurn))
