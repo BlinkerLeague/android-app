@@ -54,10 +54,10 @@
     <string name="mission_progress">회전 %1$d / %2$d · 모두 제때 켜기</string>
     <string name="mission_status_in_progress">진행 중</string>
     <string name="mission_status_achieved">달성</string>
-    <string name="mission_status_failed">내일 다시 도전</string>
-    <string name="mission_hint_in_progress">회전할 때마다 깜빡이를 미리 켜 주세요</string>
+    <string name="mission_status_failed">지난 퀘스트 미달성</string>
+    <string name="mission_hint_in_progress">한 번의 운행에서 회전 세 번 모두 깜빡이를 켜면 달성이에요</string>
     <string name="mission_hint_achieved">오늘 미션을 달성했어요</string>
-    <string name="mission_hint_failed">놓친 회전이 있었어요. 내일 다시 도전해요</string>
+    <string name="mission_hint_failed">지난 퀘스트는 달성하지 못했어요. 오늘 운행에서 다시 도전해요</string>
     <string name="mission_unavailable">미션을 불러오지 못했어요</string>
     <string name="mission_open">오늘의 미션</string>
     <string name="mission_back">돌아가기</string>

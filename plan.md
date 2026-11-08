@@ -94,20 +94,24 @@
 - [ ] 시동 Resume 때 서비스를 다시 깨우는 경로 (Pleos 문의) — 에뮬레이터 전원 Off/On으로는 절전이 일어나지 않아 확인 불가(11.08)
 
 ### 3. 서버 연동 (서버 feat 브랜치 순서에 맞춰 진행, ~11.8)
+
+**로컬 서버 연동 확인 (11.08)**: 서버 develop(`12885b2`)을 내 PC에서 띄우고 앱을 `-Pblinker.serverUrl=http://10.0.2.2:8080`으로 빌드해 확인. 온보딩 등록 → 운행(3.56km, 회전 3번 중 2번 켬) → 업로드 → 서버 점수 "C · 평점 67 · 득점 2 · 실점 1", 최근 경기, 오늘 미션(`IN_PROGRESS`, 3/3·66%), 기준값 v1(`minDistanceKm` 3.0) 모두 앱 화면과 일치
+
 서버는 `driver-register` → `threshold-config` → `trip-upload` → `trip-score` → `daily-mission` 순서로 만들어집니다. 서버 API가 나오기 전까지 앱은 Fake API로 먼저 개발합니다.
-- [ ] `POST /api/drivers`: 최초 실행 시 닉네임과 지역 코드(시군구 5자리)를 등록하고, 받은 토큰을 로컬에 저장. 이후 요청은 Bearer 헤더로 보냄
+- [x] `POST /api/drivers`: 최초 실행 시 닉네임과 지역 코드(시군구 5자리)를 등록하고, 받은 토큰을 로컬에 저장. 이후 요청은 Bearer 헤더로 보냄
   - [x] `DriverRepository.register`(결과: 등록됨/닉네임 중복/입력 오류/오프라인), 토큰은 `PrefsTokenStore`(SharedPreferences), `registered` Flow로 온보딩·홈 분기. Access 만료 시 자동 재발급
   - [x] 온보딩 화면 연결 (`ui/onboarding`). Fake 모드도 등록 정보를 저장(`auth_fake`)해 재시작 시 온보딩이 반복되지 않음
   - [ ] 지역 목록: 지금은 서울 25개 구만. 나머지 시·도는 법정동 코드 파일로 채움 (코드를 추측해 넣지 않음)
 - [x] `GET /api/config/thresholds`: 앱 시작 시 내려받음. `version`이 바뀌었을 때만 갱신하고, 받지 못하면 로컬 기본값 사용 — `ConfigRepository`(저장 값 → 기본값), 서버가 주는 항목만 덮어씀(핸들 각도는 서버 요청 1·7 전까지 기본값), 다음 운행부터 적용. Fake 모드는 받지 않음
-- [ ] `POST /api/trips`: 운행이 끝나면 업로드하고, 실패하면 재전송 (WorkManager 검토). 응답에 담긴 점수를 바로 화면에 씀
+- [x] `POST /api/trips`: 운행이 끝나면 업로드하고, 실패하면 재전송 (WorkManager 검토). 응답에 담긴 점수를 바로 화면에 씀
   - [x] DTO, `TripApi` 인터페이스, 서버 규칙을 흉내 낸 `FakeTripApi`, 대기열 업로드 로직
   - [x] 재전송 트리거 `TripUploadWorker`(WorkManager): 네트워크 연결 시 실행, 대기열이 남으면 지수 백오프(30초~) 재시도, 최대 10회. 운행 종료·앱 시작 때 예약. 업로드는 한 번에 하나만(Mutex)
   - [x] HTTP 구현체 (`data/remote/http`, Retrofit)
-- [ ] `GET /api/trips/{id}/score`: `status`가 `SCORED`, `NO_TURN`, `EXCLUDED_SHORT` 중 무엇인지에 따라 화면 분기
+- [x] `GET /api/trips/{id}/score`: `status`가 `SCORED`, `NO_TURN`, `EXCLUDED_SHORT` 중 무엇인지에 따라 화면 분기
   - [x] `TripApi.getScore`·`getRecentTrips`(`GET /api/trips?limit=N`), 응답 DTO에 `grade`·`summary`·`plays`·`mission`(모두 선택값), `FakeTripApi` 구현(등급 S95·A85·B70·C50, 득점=켠 회전·실점=안 켠 회전). 서버 요청 8(`plays.direction`)·9(목록 모양)
   - [x] HTTP 구현체 (`data/remote/http`, Retrofit)
-- [ ] `GET /api/missions/today`: 상태(`IN_PROGRESS`/`ACHIEVED`/`FAILED`)와 진행률 표시
+- [x] `GET /api/missions/today`: 상태(`IN_PROGRESS`/`ACHIEVED`/`FAILED`)와 진행률 표시
+  - [x] 서버 미션 규칙 변경(D25, 11.08) 반영: 운행 1건 = 1라운드, 그날 한 라운드라도 채우면 달성, 실패 라운드가 있어도 그날은 진행 중, 지난 날 미달성은 FAILED. FakeMissionApi·시동 음성("이번 운행에서 회전 세 번…")·화면 문구 수정
   - [x] DTO, `MissionApi`, 서버 규칙(3.6)을 흉내 낸 `FakeMissionApi`, `MissionRepository`
   - [x] HTTP 구현체 (`data/remote/http`, Retrofit)
 
@@ -227,4 +231,5 @@
 | 2026-11-08 | 주행 안전 가드는 정차 화면(NavHost)을 그대로 두고 주행 중 화면으로 덮음(터치·접근성 차단). 앱은 distraction-optimized로 표시하지 않음 | P로 돌아오면 보던 화면 복귀(screen-plan 3장). 시스템 차단 + 앱 가드 이중 보호 |
 | 2026-11-08 | 등급은 앱이 점수와 `config.grades`(S95·A85·B70·C50)로 계산. 최근 경기는 기기 기록을 먼저 보여주고 서버 최근 경기로 점수만 갱신 | Room 스키마 변경 없이 등급 표시. 오프라인이어도 홈이 열림 |
 | 2026-11-08 | 음성 안내 용도는 `USAGE_MEDIA`, 내비 안내가 시작되면 멈추고 끝난 뒤 한 번 더 | `USAGE_ASSISTANT`는 내비 회전 안내를 막음(에뮬레이터 실측). 주행 안전 원칙 "내비 음성과 겹치지 않게" |
+| 2026-11-08 | 미션은 서버 라운드 판정(D25)을 따름. 시동 음성은 "N번 남았어요" 대신 이번 운행 기준 | 하루 합산이 아니라 운행 1건 안에서 판정하므로 지난 운행 진행도는 이번 운행과 무관 |
 | 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |

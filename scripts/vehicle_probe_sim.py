@@ -21,6 +21,7 @@ Virtual Console로 기어·속도·방향지시등·비상등·조향각을 바�
   오도미터 /vehicle/odometer?traveled_distance_km=<km>  (콘솔은 속도로 오도미터를 늘리지 않음)
 """
 import sys
+import os
 import time
 
 from vconsole import Console
@@ -122,7 +123,9 @@ def scenario_trip(car):
         if mode:
             car.turn("Off")
         time.sleep(8)
-    car.speed_to(60); time.sleep(70)  # 60km/h × 70초 ≈ 1.2km
+    # 60km/h × 70초 ≈ 1.2km. 서버 짧은 운행 기준(3km)을 넘기려면 TRIP_CRUISE_SEC=180
+    cruise = int(os.environ.get("TRIP_CRUISE_SEC", "70"))
+    car.speed_to(60); time.sleep(cruise)
     car.speed_to(0); time.sleep(3)
     car.gear("Park")
     car.c.mark("scenario trip end (P단 3분 뒤 운행 종료)")
