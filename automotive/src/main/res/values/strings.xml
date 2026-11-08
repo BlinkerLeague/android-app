@@ -30,6 +30,8 @@
     <string name="result_metric_pending">집계 중</string>
     <string name="result_metric_no_turn">회전 없음</string>
     <string name="result_metric_unsupported">이 차량 미지원</string>
+    <string name="result_metric_excluded">경기 제외</string>
+    <string name="result_metric_not_scored">점수 없음</string>
     <string name="result_metric_coming_soon">준비 중</string>
     <string name="result_open_plays">플레이 보기</string>
     <string name="result_quest">퀘스트 · %1$s</string>

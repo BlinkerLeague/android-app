@@ -46,6 +46,12 @@ sealed interface MetricValue {
     /** 측정할 회전이 없었음 */
     data object NoTurn : MetricValue
 
+    /** 짧은 이동이라 경기에서 제외됨 */
+    data object Excluded : MetricValue
+
+    /** 업로드가 거부돼 점수가 없음 */
+    data object NotScored : MetricValue
+
     /** 이 차량 미지원 (0점이 아니라 제외) */
     data object Unsupported : MetricValue
 
@@ -79,8 +85,10 @@ internal fun TripResult.toResultUiState(mission: TodayMission?, grades: List<Gra
     val canMeasureTurns = SignalType.TURN_SIGNAL in supported && SignalType.STEERING_ANGLE in supported
     val turnValue: MetricValue = when {
         !canMeasureTurns -> MetricValue.Unsupported
+        scoreState == ScoreState.EXCLUDED_SHORT -> MetricValue.Excluded
+        scoreState == ScoreState.REJECTED -> MetricValue.NotScored
         scoreState == ScoreState.SCORED && score != null -> MetricValue.Score(score)
-        scoreState == ScoreState.NO_TURN || (turns.isEmpty() && scoreState != ScoreState.EXCLUDED_SHORT) -> MetricValue.NoTurn
+        scoreState == ScoreState.NO_TURN || turns.isEmpty() -> MetricValue.NoTurn
         else -> MetricValue.Pending
     }
     return ResultUiState.Loaded(

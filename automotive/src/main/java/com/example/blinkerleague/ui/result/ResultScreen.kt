@@ -211,6 +211,8 @@ private fun MetricLine(row: MetricRow) {
                         MetricValue.Pending -> R.string.result_metric_pending
                         MetricValue.NoTurn -> R.string.result_metric_no_turn
                         MetricValue.Unsupported -> R.string.result_metric_unsupported
+                        MetricValue.Excluded -> R.string.result_metric_excluded
+                        MetricValue.NotScored -> R.string.result_metric_not_scored
                         else -> R.string.result_metric_coming_soon
                     },
                 ),
