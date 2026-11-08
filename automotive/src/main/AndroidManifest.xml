@@ -5,30 +5,24 @@
         android:name="android.hardware.type.automotive"
         android:required="true" />
 
+    <!--
+      릴리스에 들어가는 권한은 실제 기능에 쓰는 것만 둠. Pleos 심사: Vehicle SDK 권한은 App Market 사전 승인이 필요하고,
+      승인되지 않은 권한을 선언하면 심사를 통과할 수 없음. 조사용 권한은 src/debug/AndroidManifest.xml에 있음.
+    -->
+
     <!-- 음성 안내: Pleos TextToSpeech SDK가 요구하는 권한 (SDK의 TTS_PERMISSION 상수) -->
     <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
-    <!-- 위치: Pleos FusedLocation SDK. protectionLevel dangerous → 런타임 요청 필요 -->
+    <!-- 위치: Pleos FusedLocation SDK (@RequiresPermission). 기기 prot=dangerous → 런타임 허용 필요 -->
     <uses-permission android:name="pleos.car.permission.FUSED_LOCATION" />
-
-    <!-- 내비 정보 조회(get*Info, 이벤트 리스너). 경로 요청(NAVI_ROUTE_SEARCH)은 쓰지 않음 -->
-    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
-    <!-- 차량 위치 (FusedLocation SDK @RequiresPermission). 기기 prot=dangerous → 런타임 허용 필요 -->
-    <uses-permission android:name="pleos.car.permission.FUSED_LOCATION" />
-    <!-- 조사용: 목적지 설정·취소(requestRoute, cancelRoute) -->
-    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
 
     <!-- 차량 신호 (Pleos Vehicle SDK @RequiresPermission): TurnSignal=CAR_LIGHTS, SteeringWheel 각도·Gear=CAR_DRIVE -->
     <uses-permission android:name="pleos.car.permission.CAR_LIGHTS" />
     <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
-    <!-- 조사용: 경고등(telltale). get은 CAR_SAFETY, register는 PRIVATE_CAR_SAFETY (SDK @RequiresPermission) -->
-    <uses-permission android:name="pleos.car.permission.CAR_SAFETY" />
-    <uses-permission android:name="pleos.car.permission.PRIVATE_CAR_SAFETY" />
 
-    <!-- 조사용 android.car 속성: 속도(dangerous, 런타임 허용 필요), 기어(normal) -->
+    <!-- 차량 속도: CarProperty PERF_VEHICLE_SPEED. dangerous → 런타임 허용 필요 -->
     <uses-permission android:name="android.car.permission.CAR_SPEED" />
-    <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
 
-    <!-- 운행 수집 포그라운드 서비스(specialUse)와 부팅 시 시작. 조사용 프로브 서비스도 같이 씀 -->
+    <!-- 운행 수집 포그라운드 서비스(specialUse)와 부팅·앱 업데이트 시 시작 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -51,17 +45,6 @@
             </intent-filter>
         </activity>
 
-        <!-- 조사용(디버그 빌드에서만 동작): 부팅·앱 교체 시 포그라운드 서비스 시작 가능 여부 -->
-        <!-- exported는 adb(shell)에서 PROBE_TRIGGER를 보내기 위함. DUMP 권한은 shell만 가지므로 다른 앱은 보낼 수 없음 -->
-        <receiver
-            android:name=".service.ProbeStartReceiver"
-            android:exported="true"
-            android:permission="android.permission.DUMP">
-            <intent-filter>
-                <action android:name="com.example.blinkerleague.PROBE_TRIGGER" />
-            </intent-filter>
-        </receiver>
-
         <!-- 운행 수집: 앱 화면이 보일 때(MainActivity)와 부팅·앱 업데이트 직후(BootReceiver)에 시작 -->
         <receiver
             android:name=".service.BootReceiver"
@@ -79,17 +62,6 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="운행 중 차량 신호(방향지시등·핸들 각도·기어·속도)를 받아 회전 시 깜빡이 사용을 판정함. 앱이 화면에 없어도 운행 전체를 기록해야 해서 포그라운드 서비스로 실행" />
-        </service>
-
-        <service
-            android:name=".service.ProbeService"
-            android:exported="true"
-            android:foregroundServiceType="specialUse"
-            android:permission="android.permission.DUMP">
-            <!-- exported는 adb(shell)에서 목적지 요청을 보내기 위함. DUMP 권한은 shell만 가지므로 다른 앱은 호출 못 함 -->
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="차량 신호·내비 이벤트 조사용 로그 (디버그 빌드 전용)" />
         </service>
 
     </application>

@@ -54,7 +54,7 @@ Pleos Connect 에뮬레이터에서 아래 항목을 확인한 기록입니다. 
 
 **앱 쪽: 조사용 프로브 (디버그 빌드 전용)**
 - `VehicleProbe` → Logcat `VehicleTest`, `CarPropertyProbe` → `SpeedTest`, `NaviEventLogger` → `NaviTest`
-- 로그 한 줄 형식(`data/debug/ProbeLog.kt`):
+- 로그 한 줄 형식(`src/debug/…/data/debug/ProbeLog.kt`, 디버그 빌드 전용):
   `시각 +경과초 dt=같은이름직전간격 #누적 [출처] 이름 값`
   - 출처: Vehicle / CarProperty / Navi
   - 값은 리플렉션으로 필드를 모두 펼쳐서 찍음

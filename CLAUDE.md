@@ -77,6 +77,9 @@ com.example.blinkerleague
 
 - SDK API 이름이나 시그니처는 **추측하지 않음.** 문서나 SDK 클래스(Android Studio에서 decompiled 보기)로 확인한 뒤 사용함.
 - 차량 속성 접근 권한은 `AndroidManifest.xml`에 선언함 (`pleos.car.permission.*`).
+- **권한은 실제로 쓰는 것만 `src/main`에 선언함.** Pleos 심사는 승인되지 않은 Vehicle SDK 권한을 선언하면 탈락시킴.
+  SDK 조사용 코드(프로브, `ProbeService`)와 권한은 `automotive/src/debug`에만 둠 (릴리스 APK에 들어가지 않음).
+  main 코드는 debug 코드를 직접 참조하지 않고 `DebugTools`(debug: 실제 구현, release: 빈 구현)로만 부름.
 
 ## 작업 방식
 

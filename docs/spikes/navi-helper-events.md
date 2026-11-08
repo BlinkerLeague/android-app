@@ -11,7 +11,7 @@ Pleos Connect 에뮬레이터에서 NaviHelper 이벤트 콜백이 언제, 얼�
 | 내비 앱 | `ai.umos.maps.android.navigation.app` 3.3.2-rc5-hotfix.3 |
 | 권한 | `pleos.car.permission.NAVI_ROUTE`, `NAVI_ROUTE_SEARCH`(목적지 설정용) |
 
-- 콜백 26개를 모두 재정의해 Logcat `NaviTest` 태그로 남깁니다(`data/navi/NaviEventLogger.kt`). 문서 목록은 25개이고, `onRouteEnded()`는 SDK 3.0.5 클래스에만 있습니다.
+- 콜백 26개를 모두 재정의해 Logcat `NaviTest` 태그로 남깁니다(`src/debug/…/data/navi/NaviEventLogger.kt`, 디버그 빌드 전용). 문서 목록은 25개이고, `onRouteEnded()`는 SDK 3.0.5 클래스에만 있습니다.
 - 로그 한 줄에는 시각, 시작 후 경과 초, 같은 콜백의 직전 호출과의 간격(`dt`), 누적 횟수, 콜백 이름, 인자의 모든 필드(공개 getter를 리플렉션으로 펼침)가 들어갑니다.
 
 ## 측정 방법

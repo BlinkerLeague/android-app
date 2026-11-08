@@ -59,8 +59,9 @@ dependencies {
     implementation("ai.pleos.playground:Vehicle:2.3.2")
     // 음성 안내. 에뮬레이터 caas 4.2.10 ≥ SDK 최소 요구 4.1.29
     implementation("ai.pleos.playground:TextToSpeech:3.3.1")
-    // 내비 정보(TBT, 현재 위치 등). 에뮬레이터 navi 서비스 3.0.4 ≥ SDK 최소 요구 2.0.1
-    implementation("ai.pleos.playground:NaviHelper:3.0.5")
+    // 내비 정보(TBT, 현재 위치 등). 지금은 조사 코드(src/debug)에서만 써서 디버그 빌드에만 넣음.
+    // 에뮬레이터 navi 서비스 3.0.4 ≥ SDK 최소 요구 2.0.1
+    debugImplementation("ai.pleos.playground:NaviHelper:3.0.5")
     // 차량 위치 (문서 기준 버전). 실차 지원 여부는 확인 필요 (구현 가이드에는 미지원으로 적혀 있음).
     // 에뮬레이터 fused location 서비스 1.0.0 ≥ SDK 최소 요구 0.5.0
     implementation("ai.pleos.playground:FusedLocation:1.1.3")
