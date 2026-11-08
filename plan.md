@@ -31,6 +31,7 @@
 실제로 실행해 확인한 결과는 [`docs/sdk-test-log.md`](docs/sdk-test-log.md)에 기록합니다.
 - [ ] 1. TurnSignal 상태를 실시간으로 구독할 수 있는지, 좌·우가 구분되는지
 - [ ] 2. 앱이 백그라운드에 있을 때도 신호와 위치를 계속 받을 수 있는지
+  - [x] NaviHelper 콜백: 일반 백그라운드는 cached로 얼어 못 받음, 포그라운드 서비스면 받음 ([조사 기록](docs/spikes/navi-helper-events.md))
 - [ ] 3. 주행 중 앱 실행 제한의 범위 (정차·P단 조건)
 - [ ] 4. 위치: 실차는 FusedLocation 미지원(구현 가이드) → NaviHelper `getCurrentLocationInfo`의 필드(속도 포함 여부)와 갱신 주기
   - [x] 에뮬레이터: Pleos FusedLocation SDK 1.1.3으로 현재 위치 조회와 1초 갱신이 됨 (`isSupported()`=true). `adb emu geo fix`로 위치를 바꿀 수 있음. `LocationData`에 속도 필드는 없음. 권한 `pleos.car.permission.FUSED_LOCATION`(dangerous, 런타임 요청 필요)
@@ -55,6 +56,8 @@
 - [ ] 12. 핸들 각도의 단위·범위·부호(양수가 오른쪽인지)와 갱신 주기 → `TurnConfig.steeringRightPositive`
 - [ ] 13. 차량 속도를 받는 API (저속 조향 제외 조건)
 - [ ] 14. `getTBTInfo` 응답 필드(회전 방향, 남은 거리)와 갱신 주기 (내비 미리 켜기, 2차)
+  - [x] 이벤트 콜백 조사: 경로 시작 시 `onTBTInfo`로 회전 목록 전체가 1회 옴. 목적지 없으면 `onCurrentRoadSpeedLimit`(1초)만 옴 ([조사 기록](docs/spikes/navi-helper-events.md))
+  - [ ] 안내 중 TBT 갱신 주기: 에뮬레이터 내비가 주입한 GPS로 진행하지 않아 미측정 → 실차 또는 Pleos 문의
 
 ### 1. 프로젝트 기반 정리
 - [x] Compose 설정 추가 (Kotlin 1.9.22에 맞춰 Compose Compiler 1.5.10, Compose BOM)
