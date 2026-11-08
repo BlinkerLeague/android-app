@@ -11,23 +11,41 @@
     <string name="demo_running_waiting">시동을 기다리고 있어요</string>
     <string name="demo_stop">중지</string>
 
-    <!-- 정차 후 운행 결과 -->
-    <string name="summary_title">운행 결과</string>
-    <string name="summary_score">%1$d점</string>
-    <string name="summary_pending">점수를 계산하고 있어요</string>
-    <string name="summary_no_turn">측정할 회전이 없었어요</string>
-    <string name="summary_excluded_short">1km 미만 운행이라 점수에서 빠져요</string>
-    <string name="summary_rejected">결과를 올리지 못했어요</string>
-    <string name="summary_not_found">운행 기록을 찾지 못했어요</string>
-    <string name="summary_turn_ratio">깜빡이 %1$d / %2$d</string>
-    <string name="summary_distance">%1$.1f km</string>
-    <string name="summary_turns_title">회전 기록</string>
-    <string name="summary_turns_empty">회전 기록이 없어요</string>
-    <string name="summary_turn_left">좌회전</string>
-    <string name="summary_turn_right">우회전</string>
-    <string name="summary_signal_on">제때 켬</string>
-    <string name="summary_signal_off">안 켬</string>
-    <string name="summary_done">확인</string>
+    <!-- 경기 결과 (SCR-02) -->
+    <string name="result_header">경기 종료 · %1$.1f km</string>
+    <string name="result_score">평점 %1$d</string>
+    <string name="result_goals">득점 %1$d · 실점 %2$d</string>
+    <string name="result_pending">결과 집계 중</string>
+    <string name="result_pending_body">연결되면 자동으로 전송돼요</string>
+    <string name="result_no_turn">측정할 회전이 없었어요</string>
+    <string name="result_no_turn_body">이번 경기는 평점 없이 기록돼요</string>
+    <string name="result_excluded_short">짧은 이동은 경기에서 제외돼요</string>
+    <string name="result_rejected">결과를 올리지 못했어요</string>
+    <string name="result_not_found">경기 기록을 찾지 못했어요</string>
+    <string name="result_metrics_title">항목별 점수</string>
+    <string name="result_metric_turn_signal">깜빡이 사용</string>
+    <string name="result_metric_smooth">부드러운 가감속</string>
+    <string name="result_metric_safety">안전 경고</string>
+    <string name="result_metric_headlight">야간 전조등</string>
+    <string name="result_metric_pending">집계 중</string>
+    <string name="result_metric_no_turn">회전 없음</string>
+    <string name="result_metric_unsupported">이 차량 미지원</string>
+    <string name="result_metric_coming_soon">준비 중</string>
+    <string name="result_open_plays">플레이 보기</string>
+    <string name="result_quest">퀘스트 · %1$s</string>
+    <string name="result_done">확인</string>
+
+    <!-- 플레이 타임라인 (SCR-02a) -->
+    <string name="plays_header">%1$s ~ %2$s · %3$.1f km · 플레이 %4$d</string>
+    <string name="plays_left_goal">좌회전 득점</string>
+    <string name="plays_left_conceded">좌회전 실점</string>
+    <string name="plays_right_goal">우회전 득점</string>
+    <string name="plays_right_conceded">우회전 실점</string>
+    <string name="plays_signal_on">깜빡이 켬</string>
+    <string name="plays_signal_off">깜빡이 안 켬</string>
+    <string name="plays_empty">측정한 회전이 없어요</string>
+    <string name="plays_hint">좌우로 넘겨 전체 플레이 보기</string>
+    <string name="plays_back">돌아가기</string>
 
     <!-- 오늘의 미션 -->
     <string name="mission_label">오늘의 미션</string>

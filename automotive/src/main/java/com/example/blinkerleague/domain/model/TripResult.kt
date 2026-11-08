@@ -24,6 +24,8 @@ data class TripResult(
     val scoreState: ScoreState,
     val score: Int?,
     val turns: List<TurnRecord>,
+    /** 이 운행에서 지원된 신호 (미지원 항목은 "이 차량 미지원"으로 표시) */
+    val supported: Set<SignalType> = emptySet(),
 )
 
 data class TurnRecord(

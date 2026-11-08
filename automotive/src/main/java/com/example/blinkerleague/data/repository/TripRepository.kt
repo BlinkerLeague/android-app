@@ -1,6 +1,7 @@
 package com.example.blinkerleague.data.repository
 
 import com.example.blinkerleague.data.local.TripDao
+import com.example.blinkerleague.data.local.UploadState
 import com.example.blinkerleague.data.remote.ApiResult
 import com.example.blinkerleague.data.remote.TripApi
 import com.example.blinkerleague.data.remote.dto.ScoreStatus
@@ -45,6 +46,19 @@ class TripRepository(
         dao.observeTripWithEvents(tripId).map { it?.let(mapper::toResult) }
 
     fun observePendingCount(): Flow<Int> = dao.observePendingCount()
+
+    /**
+     * 결과 화면용: 서버에 올라갔지만 점수가 아직 없으면(`UPLOADED`) `GET /api/trips/{id}/score`로 다시 받음.
+     * 업로드 전·이미 점수가 있는 운행은 그대로 둠. 실패하면 조용히 넘어감
+     */
+    suspend fun refreshScore(tripId: String) {
+        val stored = dao.trip(tripId) ?: return
+        if (stored.trip.uploadState != UploadState.UPLOADED) return
+        if (stored.trip.scoreStatus != null && stored.trip.scoreStatus != ScoreStatus.UPLOADED) return
+        val result = api.getScore(tripId) as? ApiResult.Success ?: return
+        if (result.body.status == ScoreStatus.UPLOADED) return
+        dao.markUploaded(tripId, result.body.status, result.body.score, clock())
+    }
 
     /** 홈 "최근 경기". 기기에 저장된 운행을 먼저 보여주고, [refreshRecentScores]가 서버 점수로 갱신함 */
     fun observeRecentResults(limit: Int): Flow<List<TripResult>> =
