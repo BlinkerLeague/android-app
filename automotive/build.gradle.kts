@@ -61,6 +61,8 @@ dependencies {
     implementation("ai.pleos.playground:TextToSpeech:3.3.1")
     // 내비 정보(TBT, 현재 위치 등). 에뮬레이터 navi 서비스 3.0.4 ≥ SDK 최소 요구 2.0.1
     implementation("ai.pleos.playground:NaviHelper:3.0.5")
+    // 위치. 실차 지원 여부는 확인 필요 (구현 가이드에는 미지원으로 적혀 있음)
+    implementation("ai.pleos.playground:FusedLocation:1.1.3")
 
     // Compose
     val composeBom = platform("androidx.compose:compose-bom:2024.02.00")
