@@ -42,6 +42,27 @@
     <string name="mission_open">오늘의 미션</string>
     <string name="mission_back">돌아가기</string>
 
+    <!-- 홈 (SCR-01) -->
+    <string name="home_quest_label">오늘의 퀘스트</string>
+    <string name="home_quest_loading">퀘스트를 불러오고 있어요</string>
+    <string name="home_recent_title">최근 경기</string>
+    <string name="home_recent_empty">아직 경기가 없어요\n운행을 마치면 여기에 보여요</string>
+    <string name="home_day_today">오늘 %1$s</string>
+    <string name="home_day_yesterday">어제 %1$s</string>
+    <string name="home_day_other">%1$s %2$s</string>
+    <string name="home_score">평점 %1$d</string>
+    <string name="home_score_grade">평점 %1$d · %2$s</string>
+    <string name="home_state_pending">결과 집계 중</string>
+    <string name="home_state_no_turn">측정할 회전이 없었어요</string>
+    <string name="home_state_excluded_short">짧은 이동은 경기에서 제외돼요</string>
+    <string name="home_state_rejected">결과를 올리지 못했어요</string>
+    <string name="home_notice_no_speed">속도 권한이 없어 판정 정확도가 제한돼요</string>
+    <string name="home_notice_recording_off">기록이 꺼져 있어요 · 앱을 열면 다시 시작돼요</string>
+    <string name="home_status_waiting">운행을 기다리고 있어요</string>
+    <string name="home_status_recording">운행을 기록하고 있어요</string>
+    <string name="home_status_off">기록이 꺼져 있어요</string>
+    <string name="home_demo">시나리오 재생</string>
+
     <!-- 주행 중 화면 (점수·숫자 없음) -->
     <string name="drv_recording">기록 중</string>
     <string name="drv_recording_body">정차하면 결과를 볼 수 있어요</string>

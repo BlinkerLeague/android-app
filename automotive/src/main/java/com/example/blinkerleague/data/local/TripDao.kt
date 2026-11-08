@@ -35,6 +35,11 @@ interface TripDao {
     @Query("SELECT * FROM trip WHERE tripId = :tripId")
     fun observeTripWithEvents(tripId: String): Flow<TripWithEvents?>
 
+    /** 최근 운행 (홈 "최근 경기"). 종료 시각 최신순 */
+    @Transaction
+    @Query("SELECT * FROM trip ORDER BY endedAtMs DESC LIMIT :limit")
+    fun observeRecent(limit: Int): Flow<List<TripWithEvents>>
+
     @Query("SELECT COUNT(*) FROM trip WHERE uploadState = 'PENDING'")
     fun observePendingCount(): Flow<Int>
 

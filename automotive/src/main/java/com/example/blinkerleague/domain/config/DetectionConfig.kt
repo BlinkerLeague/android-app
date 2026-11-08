@@ -9,6 +9,7 @@ data class DetectionConfig(
     val trip: TripConfig = TripConfig(),
     val turn: TurnConfig = TurnConfig(),
     val guard: GuardConfig = GuardConfig(),
+    val grades: List<GradeThreshold> = GradeThreshold.DEFAULT,
 ) {
     companion object {
         val DEFAULT = DetectionConfig()
@@ -60,4 +61,17 @@ data class GuardConfig(
     val gearTimeoutSec: Int = 3,
 ) {
     val gearTimeoutMs: Long get() = gearTimeoutSec * 1_000L
+}
+
+/**
+ * 점수 → 등급 기준 (서버 plan.md 3.3 `grades`와 같은 값). 높은 기준부터 비교해 처음 만족하는 등급.
+ * 50점 미만은 등급 없음 (screen-plan 9장: 등급 칸 비움)
+ */
+data class GradeThreshold(val grade: String, val minScore: Int) {
+    companion object {
+        val DEFAULT = listOf(GradeThreshold("S", 95), GradeThreshold("A", 85), GradeThreshold("B", 70), GradeThreshold("C", 50))
+
+        fun gradeOf(score: Int?, thresholds: List<GradeThreshold>): String? =
+            score?.let { s -> thresholds.sortedByDescending { it.minScore }.firstOrNull { s >= it.minScore }?.grade }
+    }
 }

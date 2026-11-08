@@ -1,0 +1,97 @@
+package com.example.blinkerleague.ui.home
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.model.PermissionStatus
+import com.example.blinkerleague.domain.model.TodayMission
+import com.example.blinkerleague.domain.model.TripResult
+import com.example.blinkerleague.service.RecordingStatus
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+
+/**
+ * 홈 (SCR-01, screen-plan 4.3). 운행 결과가 생겨도 자동으로 결과 화면으로 가지 않고, 최근 경기에서 들어감.
+ *
+ * @param recentTrips 기기 기록의 최근 운행 (최신순)
+ * @param refreshRecent 서버 점수로 최근 운행 갱신 (실패해도 조용히 넘어감)
+ */
+class HomeViewModel(
+    recentTrips: Flow<List<TripResult>>,
+    recordingStatus: Flow<RecordingStatus>,
+    speedPermission: Flow<PermissionStatus>,
+    private val loadQuest: suspend () -> TodayMission?,
+    private val refreshRecent: suspend () -> Unit,
+    private val grades: List<GradeThreshold>,
+    private val showDemoEntry: Boolean,
+    private val clock: () -> Long,
+    private val zone: ZoneId,
+) : ViewModel() {
+
+    private val quest = MutableStateFlow<QuestLoad>(QuestLoad.Loading)
+
+    val uiState: StateFlow<HomeUiState> = combine(
+        quest,
+        recentTrips,
+        recordingStatus,
+        speedPermission,
+    ) { quest, trips, status, speed ->
+        HomeUiState(
+            quest = (quest as? QuestLoad.Loaded)?.mission,
+            questLoading = quest == QuestLoad.Loading,
+            recentTrips = trips.map(::toRow),
+            recordingStatus = status,
+            notices = buildList {
+                if (speed != PermissionStatus.GRANTED) add(HomeNotice.NO_SPEED_PERMISSION)
+                if (status == RecordingStatus.OFF) add(HomeNotice.RECORDING_OFF)
+            },
+            showDemoEntry = showDemoEntry,
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState(showDemoEntry = showDemoEntry))
+
+    /** 화면이 보일 때마다(ON_RESUME) 퀘스트·최근 경기 점수를 다시 받음 */
+    fun refresh() {
+        viewModelScope.launch {
+            quest.value = QuestLoad.Loaded(loadQuest())
+        }
+        viewModelScope.launch { refreshRecent() }
+    }
+
+    private fun toRow(result: TripResult): RecentTripRow {
+        val at = Instant.ofEpochMilli(result.endedAtMs).atZone(zone)
+        val today = LocalDate.ofInstant(Instant.ofEpochMilli(clock()), zone)
+        val day = when (at.toLocalDate()) {
+            today -> TripDay.TODAY
+            today.minusDays(1) -> TripDay.YESTERDAY
+            else -> TripDay.OTHER
+        }
+        return RecentTripRow(
+            tripId = result.tripId,
+            day = day,
+            date = at.format(DATE),
+            time = at.format(TIME),
+            scoreState = result.scoreState,
+            score = result.score,
+            grade = GradeThreshold.gradeOf(result.score, grades),
+        )
+    }
+
+    private sealed interface QuestLoad {
+        data object Loading : QuestLoad
+        data class Loaded(val mission: TodayMission?) : QuestLoad
+    }
+
+    private companion object {
+        val TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+        val DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("MM.dd")
+    }
+}
