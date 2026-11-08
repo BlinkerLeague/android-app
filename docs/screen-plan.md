@@ -7,8 +7,6 @@
 - UI 목업: https://claude.ai/artifact/EjjhjWCfMLr6d3aFThibn9#artboard-defebb575c72
 - 화면 기획서 (와이어프레임·화면별 요소): https://claude.ai/artifact/NJXo7DREtjKZKT2N6SvgkZ
 
-> **11.08 목업 개정**: SCR-00a 위치 정보 동의가 생기고 디자인 토큰(강조 `#FBB024`, 득점 초록·실점 빨강)이 바뀌었습니다. 이 문서와 다른 부분(M1~M11)은 `plan.md` "목업 개정 반영"에 정리했습니다.
-
 `plan.md` 4장(화면과 음성, 11.9 ~ 11.12)을 구현 단위로 푼 문서입니다. 진행 상황 체크는 `plan.md`에서 합니다.
 
 ## 1. 범위
