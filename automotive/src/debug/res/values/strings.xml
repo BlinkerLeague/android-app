@@ -1,0 +1,5 @@
+<resources>
+    <!-- 조사용 프로브 (디버그 빌드 전용) -->
+    <string name="probe_channel">조사용 로그</string>
+    <string name="probe_notification">차량 신호·내비 이벤트를 기록하고 있어요 (디버그)</string>
+</resources>

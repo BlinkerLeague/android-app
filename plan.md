@@ -72,6 +72,7 @@
 - [x] 의존성 추가: Room 2.6.1(KSP), kotlinx.serialization, Robolectric(테스트)
 - [ ] 의존성 추가: Retrofit 또는 Ktor, play-services-location (해당 단계에서 추가)
 - [ ] (선택) Version Catalog(`gradle/libs.versions.toml`) 도입
+- [x] 조사용 코드·권한을 디버그 빌드 전용(`src/debug`)으로 분리. 릴리스 APK에는 실제 기능 권한(TTS_SERVICE, FUSED_LOCATION, CAR_LIGHTS, CAR_DRIVE, CAR_SPEED, 포그라운드 서비스·부팅)만 들어감. NaviHelper SDK는 `debugImplementation`
 - [x] `MainActivity`를 Compose로 교체하고 Door 샘플 코드 제거
 - [x] Manifest 정리: `appCategory="audio"`와 `CAR_DOORS` 권한 제거 (필요한 권한은 스파이크 결과에 따라 추가)
 - [x] 패키지 구조 생성: `domain/model·config·detection`, `data/vehicle·location·scenario`. 나머지(`local`, `remote`, `service`, `voice`)는 해당 단계에서 만듦
@@ -174,5 +175,6 @@
 | 2026-11-03 | 운행 거리는 `PERF_VEHICLE_SPEED` 적분 | 트립 거리 API는 에뮬레이터 미지원, 오도미터는 속도를 따라 늘지 않아 검증 불가 |
 | 2026-11-04 | 위치 출처는 Pleos FusedLocation SDK (NaviHelper 위치 아님) | 에뮬레이터에서 FusedLocation은 주입 좌표를 따라오고 NaviHelper 위치는 고정. 실차 지원은 Pleos 확인 필요 |
 | 2026-11-08 | 운행 구분은 기어 기준(시동은 알 수 있을 때만), 공급원에 속도 Flow 추가, 지원 여부는 `CapabilityReport`로 노출 | Pleos SDK에 시동 상태 API 없음(스파이크 8). 화면 계획(`docs/screen-plan.md`)이 기어·속도 Flow와 CapabilityReport를 신호 쪽에 요청 |
+| 2026-11-08 | 조사 코드·권한은 `src/debug`, main은 `DebugTools`로만 부름 | Pleos 심사: 승인되지 않은 권한 선언 시 탈락. 릴리스 APK에 조사용 권한·클래스가 들어가지 않게 |
 | 2026-11-01 | 서버는 별도 저장소(BlinkerLeague/server)이고 Java 17 + Spring Boot 3.3 | 이미 만들어져 있음. 서버 plan.md에서 확정한 내용 |
 | 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |

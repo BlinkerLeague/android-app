@@ -4,7 +4,6 @@ import android.content.Context
 import com.example.blinkerleague.data.local.AppDatabase
 import com.example.blinkerleague.data.location.LocationSource
 import com.example.blinkerleague.data.location.PleosLocationSource
-import com.example.blinkerleague.data.debug.DebugProbes
 import com.example.blinkerleague.data.remote.FakeMissionApi
 import com.example.blinkerleague.data.remote.FakeTripApi
 import com.example.blinkerleague.data.repository.MissionRepository
@@ -65,9 +64,6 @@ class AppContainer(context: Context) {
         tripConfig = config.trip,
         scope = applicationScope,
     )
-
-    /** 조사용 프로브 (Logcat VehicleTest·SpeedTest·NaviTest). 디버그 빌드에서 adb로만 시작함 */
-    val debugProbes = DebugProbes(context)
 
     private val _recordingStatus = MutableStateFlow(RecordingStatus.OFF)
 

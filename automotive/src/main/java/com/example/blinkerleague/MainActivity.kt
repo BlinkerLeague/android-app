@@ -1,16 +1,12 @@
 package com.example.blinkerleague
 
-import android.content.pm.ApplicationInfo
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.example.blinkerleague.data.debug.DebugProbes
 import com.example.blinkerleague.service.TripCollectionService
 import com.example.blinkerleague.ui.navigation.BlinkerNavHost
 import com.example.blinkerleague.ui.theme.BlinkerLeagueTheme
@@ -20,32 +16,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // 앱 화면이 보일 때가 포그라운드 서비스를 시작할 수 있는 확실한 시점 (이미 돌고 있으면 그대로 둠)
         TripCollectionService.start(this, reason = "activity")
-        // 조사용(디버그): adb shell am start -n …/.MainActivity --es probe vehicle,speed
-        // 서비스 없이 앱 프로세스에서 프로브를 등록함 (포그라운드/일반 백그라운드 실험)
-        val debuggable = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
-        val probes = (application as BlinkerLeagueApplication).container.debugProbes
-        val probe = intent.getStringExtra("probe")
-        if (probe != null && debuggable) {
-            probes.start(DebugProbes.parseTargets(probe), via = "activity", naviPollMs = intent.getLongExtra("naviPollMs", 0L))
-            // 근접 알림: --ed proxLat … --ed proxLng … --ef proxRadius 100
-            if (intent.hasExtra("proxLat")) {
-                probes.location.addProximityAlert(
-                    intent.getDoubleExtra("proxLat", Double.NaN),
-                    intent.getDoubleExtra("proxLng", Double.NaN),
-                    intent.getFloatExtra("proxRadius", 100f),
-                )
-            }
-        }
-        // 조사용: --el fgsDelayMs 5000 → 앱이 백그라운드로 간 뒤 앱 스스로 포그라운드 서비스 시작을 시도
-        val fgsDelayMs = intent.getLongExtra("fgsDelayMs", -1L)
-        if (fgsDelayMs >= 0 && debuggable) {
-            intent.removeExtra("fgsDelayMs") // 작업 복귀 시 같은 인텐트로 다시 실행되지 않게
-            probes.event("fgsDelay", "scheduled ${fgsDelayMs}ms")
-            Handler(Looper.getMainLooper()).postDelayed(
-                { probes.tryStartService(applicationContext, via = "app-delayed-${fgsDelayMs}ms") },
-                fgsDelayMs,
-            )
-        }
+        // 조사용(디버그 빌드만): 실행 인텐트의 조사 엑스트라 처리. 릴리스에서는 아무것도 안 함
+        DebugTools.onActivityCreated(this)
         setContent {
             BlinkerLeagueTheme {
                 Surface(

@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
-import com.example.blinkerleague.BlinkerLeagueApplication
+import com.example.blinkerleague.DebugTools
 
 /**
  * 조사용(디버그 빌드만): 브로드캐스트에서 포그라운드 서비스를 시작할 수 있는지 확인함.
@@ -17,7 +17,7 @@ import com.example.blinkerleague.BlinkerLeagueApplication
 class ProbeStartReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE == 0) return
-        val probes = (context.applicationContext as BlinkerLeagueApplication).container.debugProbes
+        val probes = DebugTools.probes(context)
         probes.event("receiver", intent.action ?: "null")
         probes.tryStartService(context, via = "receiver:${intent.action?.substringAfterLast('.')}")
     }

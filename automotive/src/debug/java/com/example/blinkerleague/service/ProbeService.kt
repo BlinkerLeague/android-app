@@ -7,7 +7,7 @@ import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.IBinder
-import com.example.blinkerleague.BlinkerLeagueApplication
+import com.example.blinkerleague.DebugTools
 import com.example.blinkerleague.R
 import com.example.blinkerleague.data.debug.DebugProbes
 
@@ -29,7 +29,7 @@ import com.example.blinkerleague.data.debug.DebugProbes
  */
 class ProbeService : Service() {
 
-    private val probes: DebugProbes by lazy { (application as BlinkerLeagueApplication).container.debugProbes }
+    private val probes: DebugProbes by lazy { DebugTools.probes(this) }
 
     override fun onCreate() {
         super.onCreate()
