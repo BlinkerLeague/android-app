@@ -122,5 +122,14 @@ class AppContainer(context: Context) {
         _recordingStatus.value = status
     }
 
+    private val _guardBypass = MutableStateFlow(false)
+
+    /** 주행 안전 가드 우회 (디버그 빌드 시연용, `DebugTools`에서만 켬). 릴리스에서는 항상 false */
+    val guardBypass: StateFlow<Boolean> = _guardBypass.asStateFlow()
+
+    internal fun setGuardBypass(enabled: Boolean) {
+        _guardBypass.value = enabled
+    }
+
     fun newId(): String = UUID.randomUUID().toString()
 }

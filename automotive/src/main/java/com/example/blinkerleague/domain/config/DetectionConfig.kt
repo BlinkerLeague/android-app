@@ -8,6 +8,7 @@ data class DetectionConfig(
     val version: Int = 0,
     val trip: TripConfig = TripConfig(),
     val turn: TurnConfig = TurnConfig(),
+    val guard: GuardConfig = GuardConfig(),
 ) {
     companion object {
         val DEFAULT = DetectionConfig()
@@ -49,4 +50,14 @@ data class TurnConfig(
     val windowMs: Long get() = windowSec * 1_000L
     val signalLeadMs: Long get() = signalLeadSec * 1_000L
     val mergeGapMs: Long get() = mergeGapSec * 1_000L
+}
+
+/** 주행 안전 가드 기준 (docs/screen-plan.md 3장) */
+data class GuardConfig(
+    /** 기어 P에서 이 속도 이하면 정차로 봄. 센서 잡음 때문에 0이 아니라 약간의 여유를 둠 */
+    val parkedMaxSpeedKmh: Float = 1f,
+    /** 앱 시작 후 이 시간 안에 기어 값을 못 받으면 "차량 상태를 확인할 수 없어요" */
+    val gearTimeoutSec: Int = 3,
+) {
+    val gearTimeoutMs: Long get() = gearTimeoutSec * 1_000L
 }
