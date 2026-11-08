@@ -11,12 +11,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.example.blinkerleague.data.debug.DebugProbes
+import com.example.blinkerleague.service.TripCollectionService
 import com.example.blinkerleague.ui.navigation.BlinkerNavHost
 import com.example.blinkerleague.ui.theme.BlinkerLeagueTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // 앱 화면이 보일 때가 포그라운드 서비스를 시작할 수 있는 확실한 시점 (이미 돌고 있으면 그대로 둠)
+        TripCollectionService.start(this, reason = "activity")
         // 조사용(디버그): adb shell am start -n …/.MainActivity --es probe vehicle,speed
         // 서비스 없이 앱 프로세스에서 프로브를 등록함 (포그라운드/일반 백그라운드 실험)
         val debuggable = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0

@@ -88,7 +88,8 @@
 - [x] Room에 운행·이벤트 선저장, 업로드 대기열 구현 (`TripRepository`, 재전송 트리거는 3단계에서)
 - [x] 끝난 운행 → `Trip` 조립 (`TripAssembler`: 회전 감지 + 깜빡이 판정 + 거리)
 - [x] 운행 기록 흐름 `TripRecorder` (`service/`): 공급원 → 운행 구분 → 조립 → 로컬 저장. Android Service와 분리돼 Fake로 시연·테스트 가능
-- [ ] 운행 수집 서비스: `TripRecorder`를 감싸는 포그라운드 서비스(`specialUse`). 시작은 앱이 보일 때 + `BOOT_COMPLETED` (동결된 백그라운드에서는 시작 불가, 시동 Resume 경로는 미확인)
+- [x] 운행 수집 서비스 `TripCollectionService`: 실제 공급원으로 `TripRecorder`를 도는 포그라운드 서비스(`specialUse`). 앱 화면이 보일 때 + 부팅·앱 업데이트(`BootReceiver`)에 시작. 운행 상태를 음성 안내로 넘기고 운행이 끝나면 업로드. 기록 상태(`AppContainer.recordingStatus`: OFF/WAITING/RECORDING)를 화면에 노출. 에뮬레이터에서 내비를 앞에 둔 채 한 운행 끝까지 확인(`scripts/vehicle_probe_sim.py trip`)
+- [ ] 시동 Resume 때 서비스를 다시 깨우는 경로 (Pleos 문의)
 
 ### 3. 서버 연동 (서버 feat 브랜치 순서에 맞춰 진행, ~11.8)
 서버는 `driver-register` → `threshold-config` → `trip-upload` → `trip-score` → `daily-mission` 순서로 만들어집니다. 서버 API가 나오기 전까지 앱은 Fake API로 먼저 개발합니다.

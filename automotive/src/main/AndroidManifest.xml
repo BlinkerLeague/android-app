@@ -28,7 +28,7 @@
     <uses-permission android:name="android.car.permission.CAR_SPEED" />
     <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
 
-    <!-- 조사용 프로브 서비스(디버그) -->
+    <!-- 운행 수집 포그라운드 서비스(specialUse)와 부팅 시 시작. 조사용 프로브 서비스도 같이 씀 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -58,11 +58,28 @@
             android:exported="true"
             android:permission="android.permission.DUMP">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="com.example.blinkerleague.PROBE_TRIGGER" />
             </intent-filter>
         </receiver>
+
+        <!-- 운행 수집: 앱 화면이 보일 때(MainActivity)와 부팅·앱 업데이트 직후(BootReceiver)에 시작 -->
+        <receiver
+            android:name=".service.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".service.TripCollectionService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="운행 중 차량 신호(방향지시등·핸들 각도·기어·속도)를 받아 회전 시 깜빡이 사용을 판정함. 앱이 화면에 없어도 운행 전체를 기록해야 해서 포그라운드 서비스로 실행" />
+        </service>
 
         <service
             android:name=".service.ProbeService"

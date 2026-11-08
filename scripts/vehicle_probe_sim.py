@@ -10,6 +10,7 @@ Virtual Console로 기어·속도·방향지시등·비상등·조향각을 바�
   python3 scripts/vehicle_probe_sim.py distance  # 트립 거리: 60km/h 60초 + 120km/h 30초 (약 2km)
   python3 scripts/vehicle_probe_sim.py hazard    # 비상등·깜빡이 조합 (경고등 확인용)
   python3 scripts/vehicle_probe_sim.py odometer  # 콘솔 오도미터 값을 직접 12.5 → 100 → 0 km로
+  python3 scripts/vehicle_probe_sim.py trip      # 운행 수집 서비스 확인: 회전 3번(성공 2·실패 1) + 1km 넘게 주행 → P
   python3 scripts/vehicle_probe_sim.py turn speed   # 여러 개를 이어서
 
 콘솔 엔드포인트 (콘솔 웹 화면의 요청과 /vehicle/catalog로 확인, 모두 PUT):
@@ -106,6 +107,27 @@ def scenario_distance(car):
     car.c.mark("scenario distance end")
 
 
+def scenario_trip(car):
+    """운행 수집 서비스 확인용 한 운행: 우회전 성공 → 좌회전 성공 → 우회전 깜빡이 없음 → 1km 넘게 주행 → P.
+    회전 사이를 8초 이상 띄워 연속 회전으로 묶이지 않게 함. 콘솔 조향 +는 오른쪽(SDK에서는 음수).
+    P단 3분이 지나야 운행이 끝나므로, 끝난 뒤 3분 넘게 기다려야 저장·음성 안내를 볼 수 있음"""
+    car.c.mark("scenario trip start")
+    car.gear("Drive"); time.sleep(2)
+    car.speed_to(40); time.sleep(5)
+    for mode, angle in (("BlinkRight", 120), ("BlinkLeft", -120), (None, 120)):
+        if mode:
+            car.turn(mode); time.sleep(3)
+        car.steer_to(angle); time.sleep(4)
+        car.steer_to(0); time.sleep(1)
+        if mode:
+            car.turn("Off")
+        time.sleep(8)
+    car.speed_to(60); time.sleep(70)  # 60km/h × 70초 ≈ 1.2km
+    car.speed_to(0); time.sleep(3)
+    car.gear("Park")
+    car.c.mark("scenario trip end (P단 3분 뒤 운행 종료)")
+
+
 def scenario_odometer(car):
     """콘솔 오도미터(PERF_ODOMETER, km)를 직접 바꿔 SDK 값·단위 확인"""
     car.c.mark("scenario odometer start")
@@ -134,6 +156,7 @@ def scenario_hazard(car):
 SCENARIOS = {
     "turn": scenario_turn, "speed": scenario_speed, "range": scenario_range,
     "distance": scenario_distance, "hazard": scenario_hazard, "odometer": scenario_odometer,
+    "trip": scenario_trip,
 }
 
 
