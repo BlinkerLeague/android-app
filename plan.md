@@ -97,7 +97,8 @@
 서버는 `driver-register` → `threshold-config` → `trip-upload` → `trip-score` → `daily-mission` 순서로 만들어집니다. 서버 API가 나오기 전까지 앱은 Fake API로 먼저 개발합니다.
 - [ ] `POST /api/drivers`: 최초 실행 시 닉네임과 지역 코드(시군구 5자리)를 등록하고, 받은 토큰을 로컬에 저장. 이후 요청은 Bearer 헤더로 보냄
   - [x] `DriverRepository.register`(결과: 등록됨/닉네임 중복/입력 오류/오프라인), 토큰은 `PrefsTokenStore`(SharedPreferences), `registered` Flow로 온보딩·홈 분기. Access 만료 시 자동 재발급
-  - [ ] 온보딩 화면 연결 (화면 담당)
+  - [x] 온보딩 화면 연결 (`ui/onboarding`). Fake 모드도 등록 정보를 저장(`auth_fake`)해 재시작 시 온보딩이 반복되지 않음
+  - [ ] 지역 목록: 지금은 서울 25개 구만. 나머지 시·도는 법정동 코드 파일로 채움 (코드를 추측해 넣지 않음)
 - [ ] `GET /api/config/thresholds`: 앱 시작 시 내려받음. `version`이 바뀌었을 때만 갱신하고, 받지 못하면 로컬 기본값 사용
 - [ ] `POST /api/trips`: 운행이 끝나면 업로드하고, 실패하면 재전송 (WorkManager 검토). 응답에 담긴 점수를 바로 화면에 씀
   - [x] DTO, `TripApi` 인터페이스, 서버 규칙을 흉내 낸 `FakeTripApi`, 대기열 업로드 로직
@@ -156,7 +157,7 @@
 | 5 | NavHost 재구성, SCR-01 홈 (7장 2) | 신호(혼자 개발) | 4 | 진행: 시작 화면 `home`, 퀘스트 카드·최근 경기 2건·기록 상태·안내(속도 권한/기록 꺼짐), 시나리오 재생은 디버그 빌드 홈 버튼 |
 | 6 | SCR-02 확장 + SCR-02a (7장 3) | 신호(혼자 개발) | 5, 2번 | 진행: `ui/result`(등급·평점·득점실점·항목 행·퀘스트·플레이 보기), 타임라인 카드. "깜빡이 켠 시점(N초 전)"은 데이터가 없어 켬/안 켬만 |
 | 7 | SCR-03 퀘스트 상세 (7장 4) | 신호(혼자 개발) | 5 | 진행: `ui/quest`, 조건별 진행도(서버 `conditions`, 없으면 회전 수·사용률로), 보상 "+20P"(P1 표시), 재도전 버튼 |
-| 8 | SCR-00 온보딩 (7장 5) | 신호(혼자 개발) | 등록 API Fake, 3번 | 미착수 |
+| 8 | SCR-00 온보딩 (7장 5) | 신호(혼자 개발) | 등록 API Fake, 3번 | 진행: 닉네임·지역(서울 25개 구)·측정 가능 항목·속도 권한·리그 입장. 등록 전이면 시작 화면이 온보딩 |
 | 9 | HTTP 구현체 (`TripApi`·`MissionApi`·등록) | 신호 | — | 완료: Retrofit, 토큰 재발급, `DriverRepository`. 서버 주소 설정 시 사용 |
 | 10 | 시연 영상, release APK, README, 제출 양식 (5장) | 함께 | 4~8 | 11.13~ |
 

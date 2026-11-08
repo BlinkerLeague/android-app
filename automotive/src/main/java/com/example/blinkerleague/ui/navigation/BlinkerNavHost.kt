@@ -1,6 +1,12 @@
 package com.example.blinkerleague.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.blinkerleague.BlinkerLeagueApplication
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -8,12 +14,14 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.blinkerleague.ui.demo.DemoScreen
 import com.example.blinkerleague.ui.home.HomeScreen
+import com.example.blinkerleague.ui.onboarding.OnboardingScreen
 import com.example.blinkerleague.ui.quest.QuestScreen
 import com.example.blinkerleague.ui.result.PlaysScreen
 import com.example.blinkerleague.ui.result.ResultScreen
 
-/** 화면 경로 (screen-plan 4.1). 온보딩은 해당 단계에서 */
+/** 화면 경로 (screen-plan 4.1) */
 private object Routes {
+    const val ONBOARDING = "onboarding"
     const val HOME = "home"
     const val DEMO = "demo"
     const val QUEST = "quest"
@@ -26,7 +34,23 @@ private object Routes {
 @Composable
 fun BlinkerNavHost() {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = Routes.HOME) {
+    val driver = (LocalContext.current.applicationContext as BlinkerLeagueApplication).container.driverRepository
+    val registered by driver.registered.collectAsStateWithLifecycle()
+    // 시작 화면: 등록 전이면 온보딩, 등록돼 있으면 홈 (처음 한 번만 정함)
+    val start = remember { if (driver.registered.value) Routes.HOME else Routes.ONBOARDING }
+    // 토큰이 거부돼 등록이 풀리면(재발급 실패) 온보딩으로 돌아감
+    LaunchedEffect(registered) {
+        val current = navController.currentDestination?.route
+        if (!registered && current != null && current != Routes.ONBOARDING) {
+            navController.navigate(Routes.ONBOARDING) { popUpTo(0) }
+        }
+    }
+    NavHost(navController = navController, startDestination = start) {
+        composable(Routes.ONBOARDING) {
+            OnboardingScreen(onRegistered = {
+                navController.navigate(Routes.HOME) { popUpTo(Routes.ONBOARDING) { inclusive = true } }
+            })
+        }
         composable(Routes.HOME) {
             HomeScreen(
                 onOpenQuest = { navController.navigate(Routes.QUEST) },

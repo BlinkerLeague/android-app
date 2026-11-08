@@ -22,9 +22,12 @@ interface TokenStore {
     fun clear()
 }
 
-/** 앱 전용 SharedPreferences에 저장 (MODE_PRIVATE) */
-class PrefsTokenStore(context: Context) : TokenStore {
-    private val prefs = context.applicationContext.getSharedPreferences("auth", Context.MODE_PRIVATE)
+/**
+ * 앱 전용 SharedPreferences에 저장 (MODE_PRIVATE).
+ * @param fileName 서버 모드와 Fake 모드는 다른 파일을 씀 (Fake 토큰을 실제 서버에 보내지 않게)
+ */
+class PrefsTokenStore(context: Context, fileName: String = "auth") : TokenStore {
+    private val prefs = context.applicationContext.getSharedPreferences(fileName, Context.MODE_PRIVATE)
     private val _registered = MutableStateFlow(prefs.getString(KEY_REFRESH, null) != null)
 
     override val accessToken: String? get() = prefs.getString(KEY_ACCESS, null)
