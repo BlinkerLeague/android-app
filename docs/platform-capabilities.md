@@ -71,6 +71,8 @@
 
 ## 5. 아직 확인 못 한 것 (실차·Pleos 문의 필요)
 
+> Pleos에 보낼 질문은 [`pleos-inquiries.md`](pleos-inquiries.md)에 정리했습니다.
+
 - 실차의 조향각 부호, 위치 heading, 각 신호의 갱신 주기
 - 시동 Resume 때 앱을 깨우는 방법
 - 실차에서 트립 거리·오도미터가 속도를 따라 늘어나는지
