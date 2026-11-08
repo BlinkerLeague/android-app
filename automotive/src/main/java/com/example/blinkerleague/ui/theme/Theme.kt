@@ -10,6 +10,8 @@ private val BlinkerColorScheme = darkColorScheme(
     background = Background,
     onBackground = TextPrimary,
     surface = Surface,
+    surfaceVariant = InputSurface,
+    error = Lose,
     onSurface = TextPrimary,
     onSurfaceVariant = TextSecondary,
     outline = OutlineStrong,
@@ -22,6 +24,7 @@ fun BlinkerLeagueTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = BlinkerColorScheme,
         typography = BlinkerTypography,
+        shapes = BlinkerShapes,
         content = content,
     )
 }
