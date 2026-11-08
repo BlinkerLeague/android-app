@@ -95,6 +95,7 @@ class TripMapper(
             scoreState = scoreState,
             score = trip.score,
             turns = turns,
+            supported = trip.supported.split(",").mapNotNull { name -> SignalType.entries.firstOrNull { it.name == name } }.toSet(),
         )
     }
 

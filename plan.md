@@ -117,6 +117,7 @@
   - [x] 점수·상태 안내(점수 계산 중 / 회전 없음 / 1km 미만), 깜빡이 사용 횟수, 회전 기록 목록 (`ui/summary`)
   - [x] 오늘 미션 진행률 (업로드 후 미션 조회)
   - [ ] 적립 포인트 (포인트 원장 P1)
+  - [x] 11.08 SCR-02로 교체(`ui/summary` → `ui/result`): 상태별 표시, 항목별 점수(P1은 "준비 중", 미지원은 "이 차량 미지원"), SCR-02a 타임라인(`result/{tripId}/plays`)
 - [x] 시나리오 재생 화면 (`ui/demo`): Fake 신호로 운행을 1·5·10배속 재생 → 결과 화면. 시연·화면 테스트용
 - [x] 미션 화면 (MVP에서는 오늘의 미션 1종만, `ui/missions`)
 - [x] 정차·P단 상태에서만 화면 진입 허용 — `DrivingGuard`(순수 함수) + `DrivingGuardViewModel` + 주행 중 화면(`ui/driving`), `MainActivity` 최상위에서 덮음. 디버그 우회 `--ez guardBypass true`
@@ -153,7 +154,7 @@
 | 3 | 속도 권한(`CAR_SPEED`) 상태 Flow: 홈 안내 "속도 권한이 없어…"·온보딩 4단계용 | 신호 | — | 완료: `container.permissions`, `rememberPermissionRequester` |
 | 4 | 주행 안전 가드 `DrivingGuard` + DRV 화면 + `MainActivity` 연결 (7장 1) | 신호(혼자 개발) | 기어·속도 Flow(완료) | PR #31 |
 | 5 | NavHost 재구성, SCR-01 홈 (7장 2) | 신호(혼자 개발) | 4 | 진행: 시작 화면 `home`, 퀘스트 카드·최근 경기 2건·기록 상태·안내(속도 권한/기록 꺼짐), 시나리오 재생은 디버그 빌드 홈 버튼 |
-| 6 | SCR-02 확장 + SCR-02a (7장 3) | 신호(혼자 개발) | 5, 2번 | 미착수 |
+| 6 | SCR-02 확장 + SCR-02a (7장 3) | 신호(혼자 개발) | 5, 2번 | 진행: `ui/result`(등급·평점·득점실점·항목 행·퀘스트·플레이 보기), 타임라인 카드. "깜빡이 켠 시점(N초 전)"은 데이터가 없어 켬/안 켬만 |
 | 7 | SCR-03 퀘스트 상세 (7장 4) | 신호(혼자 개발) | 5 | 미착수 |
 | 8 | SCR-00 온보딩 (7장 5) | 신호(혼자 개발) | 등록 API Fake, 3번 | 미착수 |
 | 9 | HTTP 구현체 (`TripApi`·`MissionApi`·등록) | 신호 | — | 완료: Retrofit, 토큰 재발급, `DriverRepository`. 서버 주소 설정 시 사용 |

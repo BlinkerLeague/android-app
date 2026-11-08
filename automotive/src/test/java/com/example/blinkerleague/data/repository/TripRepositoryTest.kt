@@ -92,6 +92,17 @@ class TripRepositoryTest {
     }
 
     @Test
+    fun `결과 화면 점수 갱신 - 업로드 전에는 조회하지 않음, 받은 점수는 그대로 둠`() = runTest {
+        repository.saveFinishedTrip(trip("a", 0, listOf(true, true)))
+        repository.refreshScore("a") // 업로드 전: 아무 일 없음
+        assertEquals(ScoreState.PENDING, repository.observeResult("a").first()!!.scoreState)
+
+        repository.uploadPending()
+        repository.refreshScore("a")
+        assertEquals(100, repository.observeResult("a").first()!!.score)
+    }
+
+    @Test
     fun `업로드를 동시에 두 번 불러도 같은 운행은 한 번만 보냄`() = runTest {
         repository.saveFinishedTrip(trip("a", 0, listOf(true)))
         repository.saveFinishedTrip(trip("b", 1_000_000, listOf(false)))
