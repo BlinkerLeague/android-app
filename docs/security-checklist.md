@@ -53,11 +53,12 @@
 | 필수 | 하드코딩 금지 | ✅ | 토큰·비밀 키를 코드에 넣지 않음. 서명 키 정보는 `local.properties`(저장소 밖) |
 | 권장 | 서버 주소 | ⏳ | 빌드 설정(`blinker.serverUrl`)으로 주입. 운영 도메인이 정해지면 그 값으로 릴리스 빌드 |
 | 권장 | 네이티브 라이브러리 | ➖ | 앱 자체 네이티브 코드 없음 |
-| 권장 | SDK·라이브러리 점검 | ⏳ | 제출 전 의존성 버전·알려진 취약점 확인 (Retrofit 2.11, OkHttp 4.12 등) |
+| 권장 | SDK·라이브러리 점검 | ✅ | 2026-11-09: 릴리스에 들어가는 라이브러리 148개를 GitHub 보안 권고 DB와 대조 → **권고 0건** (`scripts/check_dependency_advisories.sh`, 제출 직전에 다시 실행). Pleos SDK는 공개 DB에 없어 Pleos 배포 최신 버전 사용으로 관리 |
 | 필수 | 배포용 인증서 | ⏳ | 출시 키로 서명 (README "해야 할 일") |
 | 필수 | 디버깅 비활성화 | ✅ | 릴리스 `debuggable` 꺼짐, WebView 없음, 조사용 코드·디버그 옵션(`DebugTools`)은 릴리스에서 빈 구현 |
 
 ## 남은 일
 - ⚠️ 운행 기록(Room)을 민감정보로 보고 암호화할지 결정
 - ⚠️ CarPropertyManager(속도) 사용 허용 여부 — Pleos 답변
-- ⏳ 운영 서버 도메인(HTTPS)으로 릴리스 빌드, 출시 키 서명, 의존성 점검
+- ⏳ 운영 서버 도메인(HTTPS)으로 릴리스 빌드, 출시 키 서명
+- ⏳ 제출 직전 `scripts/check_dependency_advisories.sh` 다시 실행
