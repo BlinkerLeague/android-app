@@ -102,6 +102,7 @@
 - [x] `POST /api/drivers`: 최초 실행 시 닉네임과 지역 코드(시군구 5자리)를 등록하고, 받은 토큰을 로컬에 저장. 이후 요청은 Bearer 헤더로 보냄
   - [x] `DriverRepository.register`(결과: 등록됨/닉네임 중복/입력 오류/오프라인), 토큰은 `PrefsTokenStore`(SharedPreferences), `registered` Flow로 온보딩·홈 분기. Access 만료 시 자동 재발급
   - [x] 로컬 서버로 토큰 재발급 확인(11.09): 만료된 Access로 401 → `POST /api/auth/refresh` → 새 토큰 저장·재요청 성공. Refresh까지 거부되면 토큰을 지우고 온보딩으로 돌아감
+  - [x] 토큰을 Android Keystore(AES-256-GCM) 키로 암호화해 저장(서버 plan.md 7장 "Keystore 등 안전한 저장소"). 예전 평문 토큰은 처음 열 때 암호화, 복호화 실패면 재등록
   - [x] 온보딩 화면 연결 (`ui/onboarding`). Fake 모드도 등록 정보를 저장(`auth_fake`)해 재시작 시 온보딩이 반복되지 않음
   - [ ] 지역 목록: 지금은 서울 25개 구만. 나머지 시·도는 법정동 코드 파일로 채움 (코드를 추측해 넣지 않음)
 - [x] `GET /api/config/thresholds`: 앱 시작 시 내려받음. `version`이 바뀌었을 때만 갱신하고, 받지 못하면 로컬 기본값 사용 — `ConfigRepository`(저장 값 → 기본값), 서버가 주는 항목만 덮어씀(핸들 각도는 서버 요청 1·7 전까지 기본값), 다음 운행부터 적용. Fake 모드는 받지 않음
@@ -237,4 +238,5 @@
 | 2026-11-08 | 음성 안내 용도는 `USAGE_MEDIA`, 내비 안내가 시작되면 멈추고 끝난 뒤 한 번 더 | `USAGE_ASSISTANT`는 내비 회전 안내를 막음(에뮬레이터 실측). 주행 안전 원칙 "내비 음성과 겹치지 않게" |
 | 2026-11-08 | 미션은 서버 라운드 판정(D25)을 따름. 시동 음성은 "N번 남았어요" 대신 이번 운행 기준 | 하루 합산이 아니라 운행 1건 안에서 판정하므로 지난 운행 진행도는 이번 운행과 무관 |
 | 2026-11-09 | 짧은 운행 기준은 **1km** (사용자 결정). 서버 기준값 1.0 요청(서버 요청 10번) | 기획서 MVP 기준. 서버 D10(3km)은 서버 11.09 정리에서 앱 요청 10번 결정 대기·1.0 제안으로 바뀜. 시연 시나리오는 3km 넘게 두어 서버 값과 상관없이 점수가 나옴 |
+| 2026-11-09 | 토큰은 Keystore 키로 암호화해 SharedPreferences에 저장 (`KeystoreTokenCipher`) | 서버 인증 결정(D2) 전제. androidx security-crypto는 지원 종료라 쓰지 않고 Keystore를 직접 씀 |
 | 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |
