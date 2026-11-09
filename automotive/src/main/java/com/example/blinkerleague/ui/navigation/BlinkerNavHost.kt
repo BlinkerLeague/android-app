@@ -35,6 +35,7 @@ import com.example.blinkerleague.R
 import com.example.blinkerleague.ui.achievements.AchievementsScreen
 import com.example.blinkerleague.ui.demo.DemoScreen
 import com.example.blinkerleague.ui.home.HomeScreen
+import com.example.blinkerleague.ui.league.LeagueScreen
 import com.example.blinkerleague.ui.onboarding.OnboardingScreen
 import com.example.blinkerleague.ui.quest.QuestScreen
 import com.example.blinkerleague.ui.report.WeeklyReportScreen
@@ -52,6 +53,7 @@ private object Routes {
     const val ACHIEVEMENTS = "achievements"
     const val REPORT = "report"
     const val SETTINGS = "settings"
+    const val LEAGUE = "league"
     const val DEMO = "demo"
     const val QUEST = "quest"
     const val RESULT = "result/{tripId}"
@@ -94,6 +96,7 @@ fun BlinkerNavHost() {
                 }
                 composable(Routes.ACHIEVEMENTS) { AchievementsScreen(onOpenReport = { navController.navigate(Routes.REPORT) }) }
                 composable(Routes.REPORT) { WeeklyReportScreen(onBack = { navController.popBackStack() }) }
+                composable(Routes.LEAGUE) { LeagueScreen() }
                 composable(Routes.WALLET) { WalletScreen() }
                 composable(Routes.SETTINGS) { SettingsScreen() }
                 // 시나리오 재생: 디버그 빌드 홈에서만 들어옴. 재생이 끝나면 결과로 이동(예외, screen-plan 4.1)
@@ -139,16 +142,17 @@ fun BlinkerNavHost() {
                 }
             }
         }
-        // 하단 탭: 맨 위 화면(홈·업적·지갑·설정)에서만 보임. 상세 화면·온보딩·시나리오 재생에는 없음
+        // 하단 탭: 맨 위 화면(홈·리그·업적·지갑·설정)에서만 보임. 상세 화면·온보딩·시나리오 재생에는 없음
         if (currentRoute in TABS.map { it.route }) BottomTabs(navController, currentRoute)
     }
 }
 
 private data class Tab(val route: String, val label: Int)
 
-/** 2차 하단 탭 (목업 하단 바의 홈·리그·업적·지갑·설정 중 지금 있는 것만) */
+/** 2차 하단 탭 (목업 하단 바: 홈·리그·업적·지갑·설정) */
 private val TABS = listOf(
     Tab(Routes.HOME, R.string.tab_home),
+    Tab(Routes.LEAGUE, R.string.tab_league),
     Tab(Routes.ACHIEVEMENTS, R.string.tab_achievements),
     Tab(Routes.WALLET, R.string.tab_wallet),
     Tab(Routes.SETTINGS, R.string.tab_settings),

@@ -1,6 +1,7 @@
 package com.example.blinkerleague.data.remote.http
 
 import com.example.blinkerleague.data.remote.dto.BadgeDto
+import com.example.blinkerleague.data.remote.dto.LeagueResponse
 import com.example.blinkerleague.data.remote.dto.PointsResponse
 import com.example.blinkerleague.data.remote.dto.RecentTripDto
 import com.example.blinkerleague.data.remote.dto.RegisterDriverRequest
@@ -45,6 +46,9 @@ interface BlinkerService {
 
     @GET("api/reports/weekly")
     suspend fun weeklyReport(@Query("week") week: String?): WeeklyReportResponse
+
+    @GET("api/leagues/current")
+    suspend fun currentLeague(): LeagueResponse
 
     @GET("api/missions/today")
     suspend fun todayMission(): TodayMissionResponse
