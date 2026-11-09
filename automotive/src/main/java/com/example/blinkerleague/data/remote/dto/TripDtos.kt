@@ -2,6 +2,7 @@ package com.example.blinkerleague.data.remote.dto
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 
 // POST /api/trips 형식. 서버 plan.md 3.4·3.5 기준. 시각은 ISO-8601 오프셋 형식(예: 2026-11-03T08:12:00+09:00)
 // 원시 위치 좌표 필드는 두지 않음
@@ -99,12 +100,22 @@ object PlayResult {
     const val CONCEDED = "CONCEDED"
 }
 
+/**
+ * 항목별 점수. 서버는 측정하지 못한 항목도 담아 보냄(`status` UNSUPPORTED·NOT_APPLICABLE 등, `value`·`score`·`weight`는 null).
+ * 전에는 세 값이 null 불가라 이런 응답을 읽지 못해 업로드가 REJECTED로 멈췄음 → 모두 선택값
+ */
 @Serializable
 data class MetricDto(
     val metric: String,
-    val value: Double,
-    val score: Int,
-    val weight: Double,
+    /** `SCORED`, `UNSUPPORTED`, `NOT_APPLICABLE` 등 */
+    val status: String? = null,
+    /** 측정하지 못한 이유 (예: `SIGNAL_NOT_SUPPORTED`) */
+    val reason: String? = null,
+    val value: Double? = null,
+    val score: Int? = null,
+    val weight: Double? = null,
+    /** 판정 근거 수치 (예: 깜빡이 `turns`, `onTime`, `late`, `missed`). 항목마다 다름 */
+    val detail: JsonObject? = null,
 )
 
 @Serializable

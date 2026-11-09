@@ -104,6 +104,7 @@
   - [x] `DriverRepository.register`(결과: 등록됨/닉네임 중복/입력 오류/오프라인), 토큰은 `PrefsTokenStore`(SharedPreferences), `registered` Flow로 온보딩·홈 분기. Access 만료 시 자동 재발급
   - [x] 로컬 서버로 토큰 재발급 확인(11.09): 만료된 Access로 401 → `POST /api/auth/refresh` → 새 토큰 저장·재요청 성공. Refresh까지 거부되면 토큰을 지우고 온보딩으로 돌아감
   - [x] 토큰을 Android Keystore(AES-256-GCM) 키로 암호화해 저장(서버 plan.md 7장 "Keystore 등 안전한 저장소"). 예전 평문 토큰은 처음 열 때 암호화, 복호화 실패면 재등록
+  - [x] (11.09 버그) 서버가 측정하지 못한 항목을 `metrics`에 null 값으로 담기 시작해 앱이 업로드 응답을 못 읽고 운행을 REJECTED로 멈추던 문제 수정. `MetricDto` 값 선택값·`status`/`reason`/`detail` 추가, JSON `coerceInputValues`. 로컬 서버로 업로드 성공 확인
   - [x] 온보딩 화면 연결 (`ui/onboarding`). Fake 모드도 등록 정보를 저장(`auth_fake`)해 재시작 시 온보딩이 반복되지 않음
   - [ ] 지역 목록: 지금은 서울 25개 구만. 나머지 시·도는 법정동 코드 파일로 채움 (코드를 추측해 넣지 않음)
 - [x] `GET /api/config/thresholds`: 앱 시작 시 내려받음. `version`이 바뀌었을 때만 갱신하고, 받지 못하면 로컬 기본값 사용 — `ConfigRepository`(저장 값 → 기본값), 서버가 주는 항목만 덮어씀(핸들 각도는 서버 요청 1·7 전까지 기본값), 다음 운행부터 적용. Fake 모드는 받지 않음

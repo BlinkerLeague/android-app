@@ -12,10 +12,12 @@ import com.example.blinkerleague.data.remote.dto.TripUploadRequest
 import com.example.blinkerleague.data.remote.dto.TurnCountDto
 import com.example.blinkerleague.data.remote.dto.TurnPayload
 import com.example.blinkerleague.domain.config.TripConfig
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromJsonElement
 import java.time.OffsetDateTime
 import kotlin.math.roundToInt
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.put
 
 /**
  * 서버가 나오기 전 개발·시연용 API. 서버 plan.md 3.4·3.5의 규칙을 흉내 냄:
@@ -85,7 +87,22 @@ class FakeTripApi(
         return base.copy(
             score = score,
             grade = grades.firstOrNull { (_, min) -> score >= min }?.first,
-            metrics = listOf(MetricDto("TURN_SIGNAL", ratio, score, 1.0)),
+            metrics = listOf(
+                MetricDto(
+                    metric = "TURN_SIGNAL",
+                    status = "SCORED",
+                    value = ratio,
+                    score = score,
+                    weight = 1.0,
+                    // 서버 detail 형식 (onTime·late·missed). 앱은 켬/안 켬만 보내므로 late는 0
+                    detail = buildJsonObject {
+                        put("turns", turns.size)
+                        put("onTime", success)
+                        put("late", 0)
+                        put("missed", turns.size - success)
+                    },
+                ),
+            ),
         )
     }
 }
