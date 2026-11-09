@@ -29,6 +29,8 @@ sealed interface ResultUiState {
         val metrics: List<MetricRow>,
         /** 이번 운행을 반영한 오늘 퀘스트. 못 받으면 null (카드 숨김) */
         val mission: TodayMission? = null,
+        /** 이 운행으로 적립된 운행 포인트(상한 적용 후). 모르면 null (표시 안 함) */
+        val earnedPoints: Int? = null,
     ) : ResultUiState
 }
 
@@ -80,7 +82,11 @@ data class PlayCard(
 
 private val TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
-internal fun TripResult.toResultUiState(mission: TodayMission?, grades: List<GradeThreshold>): ResultUiState.Loaded {
+internal fun TripResult.toResultUiState(
+    mission: TodayMission?,
+    grades: List<GradeThreshold>,
+    earnedPoints: Int? = null,
+): ResultUiState.Loaded {
     val goals = turns.count { it.signalOn }
     val canMeasureTurns = SignalType.TURN_SIGNAL in supported && SignalType.STEERING_ANGLE in supported
     val turnValue: MetricValue = when {
@@ -106,6 +112,7 @@ internal fun TripResult.toResultUiState(mission: TodayMission?, grades: List<Gra
             MetricRow(MetricItem.NIGHT_HEADLIGHT, MetricValue.ComingSoon),
         ),
         mission = mission,
+        earnedPoints = earnedPoints.takeIf { scoreState == ScoreState.SCORED },
     )
 }
 

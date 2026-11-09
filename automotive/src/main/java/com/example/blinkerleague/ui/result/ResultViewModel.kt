@@ -25,13 +25,15 @@ class ResultViewModel(
     result: Flow<TripResult?>,
     private val sync: suspend () -> Unit,
     private val loadMission: suspend () -> TodayMission?,
+    private val loadEarnedPoints: suspend () -> Int? = { null },
     private val grades: List<GradeThreshold>,
 ) : ViewModel() {
 
     private val mission = MutableStateFlow<TodayMission?>(null)
+    private val earnedPoints = MutableStateFlow<Int?>(null)
 
-    val uiState: StateFlow<ResultUiState> = combine(result, mission) { result, mission ->
-        result?.toResultUiState(mission, grades) ?: ResultUiState.NotFound
+    val uiState: StateFlow<ResultUiState> = combine(result, mission, earnedPoints) { result, mission, points ->
+        result?.toResultUiState(mission, grades, points) ?: ResultUiState.NotFound
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ResultUiState.Loading)
 
     init {
@@ -39,6 +41,7 @@ class ResultViewModel(
             sync()
             // 퀘스트 진행률은 이번 운행이 서버에 반영된 뒤에 받아야 맞음
             mission.value = loadMission()
+            earnedPoints.value = loadEarnedPoints()
         }
     }
 

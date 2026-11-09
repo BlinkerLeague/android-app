@@ -60,6 +60,12 @@ class TripRepository(
         dao.markUploaded(tripId, result.body.status, result.body.score, clock())
     }
 
+    /** 결과 화면: 이 운행으로 적립된 포인트 (서버 요청 12번 `earnedPoints`). 업로드 전·서버가 안 주면 null */
+    suspend fun earnedPoints(tripId: String): Int? {
+        if (dao.trip(tripId)?.trip?.uploadState != UploadState.UPLOADED) return null
+        return (api.getScore(tripId) as? ApiResult.Success)?.body?.earnedPoints
+    }
+
     /** 홈 "최근 경기". 기기에 저장된 운행을 먼저 보여주고, [refreshRecentScores]가 서버 점수로 갱신함 */
     fun observeRecentResults(limit: Int): Flow<List<TripResult>> =
         dao.observeRecent(limit).map { list -> list.map(mapper::toResult) }

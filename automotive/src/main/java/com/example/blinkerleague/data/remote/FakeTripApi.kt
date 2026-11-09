@@ -41,9 +41,12 @@ class FakeTripApi(
         return ApiResult.Success(stored.getOrPut(request.tripId) { score(request) })
     }
 
+    /** 이 운행의 적립 포인트를 알려줌 (Fake 모드에서 [FakeRewardApi.earnedPointsFor]를 연결, 서버 요청 12번 흉내) */
+    var earnedPointsLookup: ((tripId: String) -> Int?)? = null
+
     override suspend fun getScore(tripId: String): ApiResult<TripScoreResponse> {
         failWith?.let { return it }
-        return stored[tripId]?.let { ApiResult.Success(it) } ?: ApiResult.HttpError(404)
+        return stored[tripId]?.let { ApiResult.Success(it.copy(earnedPoints = earnedPointsLookup?.invoke(tripId))) } ?: ApiResult.HttpError(404)
     }
 
     override suspend fun getRecentTrips(limit: Int): ApiResult<List<RecentTripDto>> {

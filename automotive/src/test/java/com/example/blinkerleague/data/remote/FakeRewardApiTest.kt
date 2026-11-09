@@ -51,9 +51,12 @@ class FakeRewardApiTest {
     }
 
     @Test
-    fun `하루 상한 150P에서 잘림`() = runTest {
+    fun `하루 상한 150P에서 잘림, 운행별 적립(earnedPoints)도 상한 적용 후`() = runTest {
         repeat(4) { trip(9, 6 + it, 50.0, true) } // 50P × 4 = 200 → 150
         assertEquals(150, repository.wallet()!!.balance)
+        val api = FakeRewardApi(trips, missions, { now }, zone)
+        assertEquals(listOf(50, 50, 50, 0), (1..4).map { api.earnedPointsFor("t$it") })
+        assertEquals(null, api.earnedPointsFor("없는 운행"))
     }
 
     @Test

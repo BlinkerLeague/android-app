@@ -103,6 +103,15 @@ class TripRepositoryTest {
     }
 
     @Test
+    fun `적립 포인트는 업로드 뒤 점수 응답에서`() = runTest {
+        repository.saveFinishedTrip(trip("p", 0, listOf(true)))
+        api.earnedPointsLookup = { 7 }
+        assertNull(repository.earnedPoints("p")) // 업로드 전
+        repository.uploadPending()
+        assertEquals(7, repository.earnedPoints("p"))
+    }
+
+    @Test
     fun `업로드를 동시에 두 번 불러도 같은 운행은 한 번만 보냄`() = runTest {
         repository.saveFinishedTrip(trip("a", 0, listOf(true)))
         repository.saveFinishedTrip(trip("b", 1_000_000, listOf(false)))

@@ -49,6 +49,12 @@ class ResultUiStateTest {
     }
 
     @Test
+    fun `적립 포인트는 점수가 난 운행만 표시`() {
+        assertEquals(12, result(ScoreState.SCORED, 67).toResultUiState(null, GradeThreshold.DEFAULT, earnedPoints = 12).earnedPoints)
+        assertNull(result(ScoreState.EXCLUDED_SHORT, null).toResultUiState(null, GradeThreshold.DEFAULT, earnedPoints = 0).earnedPoints)
+    }
+
+    @Test
     fun `업로드 전이면 집계 중, 50점 미만은 등급 없음`() {
         assertEquals(MetricValue.Pending, metric(result(ScoreState.PENDING, null).toResultUiState(null, GradeThreshold.DEFAULT)))
         assertNull(result(ScoreState.SCORED, 33).toResultUiState(null, GradeThreshold.DEFAULT).grade)
