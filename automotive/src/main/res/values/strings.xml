@@ -93,6 +93,9 @@
     <string name="home_quest_label">오늘의 퀘스트</string>
     <string name="home_quest_loading">퀘스트를 불러오고 있어요</string>
     <string name="home_recent_title">최근 경기</string>
+    <string name="home_streak_label">연속 달성</string>
+    <string name="home_streak_today_done">오늘도 달성</string>
+    <string name="home_streak_today_todo">오늘 달성하면 이어져요</string>
     <string name="home_recent_empty">아직 경기가 없어요\n운행을 마치면 여기에 보여요</string>
     <string name="home_day_today">오늘 %1$s</string>
     <string name="home_day_yesterday">어제 %1$s</string>
@@ -114,6 +117,18 @@
     <string name="tab_home">홈</string>
     <string name="tab_achievements">업적</string>
     <string name="tab_wallet">지갑</string>
+
+    <!-- 업적 (SCR-05) -->
+    <string name="achievements_streak">미션 연속 달성</string>
+    <string name="achievements_streak_days">%1$d일</string>
+    <string name="achievements_today_done">오늘 미션을 달성했어요</string>
+    <string name="achievements_today_todo">오늘 미션을 달성하면 이어져요</string>
+    <string name="achievements_reward_in">%1$d일 더 달성하면 +50P</string>
+    <string name="achievements_badges">배지</string>
+    <string name="achievements_locked">잠김</string>
+    <string name="achievements_earned">획득</string>
+    <string name="achievements_earned_on">%1$s 획득</string>
+    <string name="achievements_unavailable">업적을 불러오지 못했어요</string>
 
     <!-- 지갑 (SCR-06) -->
     <string name="wallet_balance">내 포인트</string>

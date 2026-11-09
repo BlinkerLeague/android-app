@@ -32,6 +32,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.blinkerleague.ui.achievements.AchievementsScreen
 import com.example.blinkerleague.ui.demo.DemoScreen
 import com.example.blinkerleague.ui.home.HomeScreen
 import com.example.blinkerleague.ui.onboarding.OnboardingScreen
@@ -45,6 +46,7 @@ private object Routes {
     const val ONBOARDING = "onboarding"
     const val HOME = "home"
     const val WALLET = "wallet"
+    const val ACHIEVEMENTS = "achievements"
     const val DEMO = "demo"
     const val QUEST = "quest"
     const val RESULT = "result/{tripId}"
@@ -83,6 +85,7 @@ fun BlinkerNavHost() {
                         onOpenDemo = { navController.navigate(Routes.DEMO) },
                     )
                 }
+                composable(Routes.ACHIEVEMENTS) { AchievementsScreen() }
                 composable(Routes.WALLET) { WalletScreen() }
                 // 시나리오 재생: 디버그 빌드 홈에서만 들어옴. 재생이 끝나면 결과로 이동(예외, screen-plan 4.1)
                 composable(Routes.DEMO) {
@@ -113,7 +116,7 @@ fun BlinkerNavHost() {
                 }
             }
         }
-        // 하단 탭: 맨 위 화면(홈·지갑)에서만 보임. 상세 화면·온보딩·시나리오 재생에는 없음
+        // 하단 탭: 맨 위 화면(홈·업적·지갑)에서만 보임. 상세 화면·온보딩·시나리오 재생에는 없음
         if (currentRoute in TABS.map { it.route }) BottomTabs(navController, currentRoute)
     }
 }
@@ -121,7 +124,11 @@ fun BlinkerNavHost() {
 private data class Tab(val route: String, val label: Int)
 
 /** 2차 하단 탭 (목업 하단 바의 홈·리그·업적·지갑·설정 중 지금 있는 것만) */
-private val TABS = listOf(Tab(Routes.HOME, R.string.tab_home), Tab(Routes.WALLET, R.string.tab_wallet))
+private val TABS = listOf(
+    Tab(Routes.HOME, R.string.tab_home),
+    Tab(Routes.ACHIEVEMENTS, R.string.tab_achievements),
+    Tab(Routes.WALLET, R.string.tab_wallet),
+)
 
 @Composable
 private fun BottomTabs(navController: NavHostController, currentRoute: String?) {

@@ -58,6 +58,7 @@ private val HomeViewModelFactory = viewModelFactory {
             recordingStatus = container.recordingStatus,
             speedPermission = container.permissions.status(RuntimePermission.SPEED),
             loadQuest = container.missionRepository::todayMission,
+            loadStreak = container.rewardRepository::streak,
             refreshRecent = { container.tripRepository.refreshRecentScores(RECENT_LIMIT) },
             grades = container.config.grades,
             showDemoEntry = BuildConfig.DEBUG,
@@ -99,6 +100,7 @@ fun HomeContent(
             horizontalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             QuestPanel(state, onOpenQuest, Modifier.weight(1f).fillMaxHeight())
+            state.streakDays?.let { StreakPanel(it, state.streakTodayAchieved, Modifier.weight(0.6f).fillMaxHeight()) }
             RecentTripsPanel(state.recentTrips, onOpenTrip, Modifier.weight(1f).fillMaxHeight())
         }
         StatusBar(state.recordingStatus, state.showDemoEntry, onOpenDemo)
@@ -118,6 +120,27 @@ private fun QuestPanel(state: HomeUiState, onOpenQuest: () -> Unit, modifier: Mo
             Text(
                 stringResource(if (state.questLoading) R.string.home_quest_loading else R.string.mission_unavailable),
                 style = MaterialTheme.typography.bodyLarge,
+            )
+        }
+    }
+}
+
+/** 미션 연속 달성 (목업 홈 가운데 칸, 이모지 대신 글자) */
+@Composable
+private fun StreakPanel(days: Int, todayAchieved: Boolean, modifier: Modifier) {
+    Surface(modifier = modifier, color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(16.dp)) {
+        Column(
+            Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(stringResource(R.string.home_streak_label), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.achievements_streak_days, days), style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.primary)
+            Text(
+                stringResource(if (todayAchieved) R.string.home_streak_today_done else R.string.home_streak_today_todo),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
             )
         }
     }

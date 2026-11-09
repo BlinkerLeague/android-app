@@ -4,9 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.blinkerleague.domain.config.GradeThreshold
 import com.example.blinkerleague.domain.model.PermissionStatus
+import com.example.blinkerleague.domain.model.Streak
 import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.domain.model.TripResult
 import com.example.blinkerleague.service.RecordingStatus
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -17,9 +21,6 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 /**
  * 홈 (SCR-01, screen-plan 4.3). 운행 결과가 생겨도 자동으로 결과 화면으로 가지 않고, 최근 경기에서 들어감.
@@ -32,6 +33,7 @@ class HomeViewModel(
     recordingStatus: Flow<RecordingStatus>,
     speedPermission: Flow<PermissionStatus>,
     private val loadQuest: suspend () -> TodayMission?,
+    private val loadStreak: suspend () -> Streak? = { null },
     private val refreshRecent: suspend () -> Unit,
     private val grades: List<GradeThreshold>,
     private val showDemoEntry: Boolean,
@@ -40,14 +42,17 @@ class HomeViewModel(
 ) : ViewModel() {
 
     private val quest = MutableStateFlow<QuestLoad>(QuestLoad.Loading)
+    private val streak = MutableStateFlow<Streak?>(null)
 
     val uiState: StateFlow<HomeUiState> = combine(
-        quest,
+        combine(quest, streak, ::Pair),
         recentTrips,
         recordingStatus,
         speedPermission,
-    ) { quest, trips, status, speed ->
+    ) { (quest, streak), trips, status, speed ->
         HomeUiState(
+            streakDays = streak?.days,
+            streakTodayAchieved = streak?.todayAchieved ?: false,
             quest = (quest as? QuestLoad.Loaded)?.mission,
             questLoading = quest == QuestLoad.Loading,
             recentTrips = trips.map(::toRow),
@@ -67,7 +72,10 @@ class HomeViewModel(
                 .map { trips -> trips.firstOrNull()?.let { it.tripId to it.scoreState } }
                 .distinctUntilChanged()
                 .drop(1)
-                .collect { quest.value = QuestLoad.Loaded(loadQuest()) }
+                .collect {
+                    quest.value = QuestLoad.Loaded(loadQuest())
+                    loadStreak()?.let { streak.value = it }
+                }
         }
     }
 
@@ -76,6 +84,7 @@ class HomeViewModel(
         viewModelScope.launch {
             quest.value = QuestLoad.Loaded(loadQuest())
         }
+        viewModelScope.launch { loadStreak()?.let { streak.value = it } }
         viewModelScope.launch { refreshRecent() }
     }
 
