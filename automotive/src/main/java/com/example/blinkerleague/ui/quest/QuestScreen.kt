@@ -91,11 +91,8 @@ private fun Loaded(mission: TodayMission, onBack: () -> Unit) {
             mission.rewardPoint?.let { point ->
                 Text(stringResource(R.string.quest_reward_label), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // 달성하면 포인트 원장에 적립됨 (지갑 화면)
                     Text(stringResource(R.string.quest_reward, point), style = MaterialTheme.typography.headlineMedium)
-                    // 포인트 지급은 P1 (포인트 원장). 지금은 표시만
-                    Surface(color = MaterialTheme.colorScheme.outlineVariant, shape = RoundedCornerShape(10.dp)) {
-                        Text("P1", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp))
-                    }
                 }
             }
             Text(
