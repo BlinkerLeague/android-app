@@ -18,7 +18,8 @@ data class DetectionConfig(
 }
 
 data class TripConfig(
-    val minDistanceKm: Double = 1.0,
+    /** 이보다 짧은 운행은 점수에서 제외. 서버 결정 D10(11.03): 3km (짧은 운행이 고득점에 유리하지 않게) */
+    val minDistanceKm: Double = 3.0,
     val parkEndMinutes: Int = 3,
     /** 시연 녹화용(디버그 빌드 `--ei parkEndSec N`): 있으면 [parkEndMinutes] 대신 이 초를 씀. 서버 설정에는 없음 */
     val parkEndSec: Int? = null,

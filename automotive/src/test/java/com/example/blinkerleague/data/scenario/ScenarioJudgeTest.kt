@@ -43,10 +43,10 @@ class ScenarioJudgeTest {
     }
 
     @Test
-    fun `미션 달성 시나리오 - 1km 이상, 회전 3번 모두 성공`() {
+    fun `미션 달성 시나리오 - 짧은 운행 기준 이상, 회전 3번 모두 성공`() {
         val s = Scenarios.missionAchieved
         assertEquals(listOf(true, true, true), judge(s).map { it.signalOn })
-        assertTrue(TripDistance.km(s.locations) > 1.0)
+        assertTrue(TripDistance.km(s.locations) > config.trip.minDistanceKm)
     }
 
     @Test
@@ -71,7 +71,7 @@ class ScenarioJudgeTest {
         val boundaries = s.vehicleStates.mapNotNull(segmenter::onVehicleState)
         assertEquals(TripBoundary.Started(0), boundaries.first())
         assertEquals(EndReason.IGNITION_OFF, (boundaries.last() as TripBoundary.Ended).reason)
-        assertTrue(TripDistance.km(s.locations) > 1.0)
+        assertTrue(TripDistance.km(s.locations) > config.trip.minDistanceKm)
     }
 
     @Test

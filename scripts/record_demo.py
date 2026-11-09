@@ -3,11 +3,12 @@
 
 Pleos 에뮬레이터에서 한 번에 진행하며 화면을 녹화합니다.
   1. 앱을 디버그 옵션 --ei parkEndSec 10 으로 다시 띄움 (P단 10초면 운행 종료, 기본은 3분)
-  2. 녹화 시작 (adb screenrecord, 1920x1080, 최대 3분)
-  3. Virtual Console로 vehicle_probe_sim.py demo 재생: D → 좌회전(깜빡이 켬) → 우회전(깜빡이 없음) → 약 1km → P
+  2. 녹화 시작 (adb screenrecord, 1920x1080). screenrecord 한 번은 최대 3분이라 끝나면 이어서 다음 파일로 녹화
+  3. Virtual Console로 vehicle_probe_sim.py demo 재생: D → 좌회전(깜빡이 켬) → 우회전(깜빡이 없음) → 약 3.5km → P
+     (짧은 운행 기준 3km를 넘겨야 점수가 나옴, 서버 결정 D10)
      (주행 중에는 시스템이 앱 화면을 "주행 중에는 사용할 수 없습니다"로 덮고, 앱은 "기록 중" 화면)
   4. 운행 종료 음성이 끝나면 홈 → 최근 경기 → 경기 결과 → 플레이 보기 → 퀘스트 순서로 화면을 넘김
-  5. 녹화를 멈추고 automotive/build/demo/blinker_demo.mp4 로 가져옴
+  5. 녹화를 멈추고 automotive/build/demo/blinker_demo_1.mp4, _2.mp4 … 로 가져옴 (편집 때 이어 붙이기)
 
 준비: 디버그 빌드 설치(Fake 모드 권장: ./gradlew :automotive:installDebug), 등록(온보딩) 완료,
       adb forward tcp:8088 tcp:8088, 속도 권한 허용.
@@ -17,6 +18,7 @@ import os
 import re
 import subprocess
 import sys
+import threading
 import time
 import xml.etree.ElementTree as ET
 
@@ -24,7 +26,8 @@ PKG = "com.example.blinkerleague"
 ADB = os.path.expanduser("~/Library/Android/sdk/platform-tools/adb") if sys.platform == "darwin" else "adb"
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.join(HERE, "..", "automotive", "build", "demo")
-DEVICE_FILE = "/sdcard/blinker_demo.mp4"
+DEVICE_PATTERN = "/sdcard/blinker_demo_{}.mp4"
+SEGMENT_SEC = 175
 PARK_END_SEC = int(os.environ.get("PARK_END_SEC", "10"))
 
 
@@ -69,6 +72,36 @@ def tap_text(match, label):
     return False
 
 
+class Recorder:
+    """screenrecord를 끝날 때마다 다음 파일로 이어서 실행"""
+
+    def __init__(self):
+        self.stopped = threading.Event()
+        self.count = 0
+        self.thread = threading.Thread(target=self._loop, daemon=True)
+
+    def _loop(self):
+        while not self.stopped.is_set():
+            self.count += 1
+            path = DEVICE_PATTERN.format(self.count)
+            adb("shell", "rm", "-f", path, check=False)
+            subprocess.run([ADB, "shell", "screenrecord", "--size", "1920x1080",
+                            "--time-limit", str(SEGMENT_SEC), path], check=False)
+
+    def start(self):
+        self.thread.start()
+
+    def stop_and_pull(self):
+        self.stopped.set()
+        adb("shell", "pkill", "-INT", "screenrecord", check=False)
+        self.thread.join(timeout=20)
+        time.sleep(2)
+        for i in range(1, self.count + 1):
+            out = os.path.abspath(os.path.join(OUT_DIR, f"blinker_demo_{i}.mp4"))
+            adb("pull", DEVICE_PATTERN.format(i), out, check=False)
+            log(f"저장: {out}")
+
+
 def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     log(f"앱 다시 시작 (P단 {PARK_END_SEC}초면 운행 종료)")
@@ -78,8 +111,11 @@ def main():
     time.sleep(6)
 
     log("녹화 시작")
-    adb("shell", "rm", "-f", DEVICE_FILE, check=False)
-    recorder = subprocess.Popen([ADB, "shell", "screenrecord", "--size", "1920x1080", "--time-limit", "180", DEVICE_FILE])
+    for old in os.listdir(OUT_DIR):
+        if old.startswith("blinker_demo"):
+            os.remove(os.path.join(OUT_DIR, old))
+    recorder = Recorder()
+    recorder.start()
     time.sleep(3)
     try:
         log("운행 재생: 좌회전 깜빡이 켬 → 우회전 깜빡이 없음 → P")
@@ -98,12 +134,7 @@ def main():
         adb("shell", "input", "keyevent", "BACK"); time.sleep(3)
     finally:
         log("녹화 멈춤")
-        adb("shell", "pkill", "-INT", "screenrecord", check=False)
-        recorder.wait(timeout=15)
-        time.sleep(2)
-        out = os.path.abspath(os.path.join(OUT_DIR, "blinker_demo.mp4"))
-        adb("pull", DEVICE_FILE, out, check=False)
-        log(f"저장: {out}")
+        recorder.stop_and_pull()
 
 
 if __name__ == "__main__":

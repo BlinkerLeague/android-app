@@ -11,6 +11,7 @@ import com.example.blinkerleague.data.remote.dto.TripScoreResponse
 import com.example.blinkerleague.data.remote.dto.TripUploadRequest
 import com.example.blinkerleague.data.remote.dto.TurnCountDto
 import com.example.blinkerleague.data.remote.dto.TurnPayload
+import com.example.blinkerleague.domain.config.TripConfig
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
 import java.time.OffsetDateTime
@@ -18,7 +19,7 @@ import kotlin.math.roundToInt
 
 /**
  * 서버가 나오기 전 개발·시연용 API. 서버 plan.md 3.4·3.5의 규칙을 흉내 냄:
- * 1km 미만은 EXCLUDED_SHORT, 회전 0회는 NO_TURN, 나머지는 깜빡이 사용률 × 100.
+ * 짧은 운행(기본 3km 미만, 서버 D10)은 EXCLUDED_SHORT, 회전 0회는 NO_TURN, 나머지는 깜빡이 사용률 × 100.
  * 등급은 3.3 `grades`(S95·A85·B70·C50, 그 아래는 null), 득점 = 깜빡이를 켠 회전, 실점 = 안 켠 회전, 반칙 0.
  * 같은 tripId는 처음 결과를 그대로 돌려줌.
  *
@@ -26,7 +27,7 @@ import kotlin.math.roundToInt
  */
 class FakeTripApi(
     var failWith: ApiResult<Nothing>? = null,
-    private val minDistanceKm: Double = 1.0,
+    private val minDistanceKm: Double = TripConfig().minDistanceKm,
     private val grades: List<Pair<String, Int>> = listOf("S" to 95, "A" to 85, "B" to 70, "C" to 50),
 ) : TripApi {
 

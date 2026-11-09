@@ -66,6 +66,6 @@ class TripAssemblerTest {
         // 첫 회전 직전에 운행이 끝났다고 보면 회전도 없고 거리도 줄어듦
         val trip = assemble(endedAtMs = 30_000)
         assertTrue(trip.events.isEmpty())
-        assertTrue(trip.distanceKm < 0.5)
+        assertTrue(trip.distanceKm < assemble().distanceKm / 4)
     }
 }
