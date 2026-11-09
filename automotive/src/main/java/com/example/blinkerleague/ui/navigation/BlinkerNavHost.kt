@@ -41,6 +41,7 @@ import com.example.blinkerleague.ui.report.WeeklyReportScreen
 import com.example.blinkerleague.ui.result.MetricDetailScreen
 import com.example.blinkerleague.ui.result.PlaysScreen
 import com.example.blinkerleague.ui.result.ResultScreen
+import com.example.blinkerleague.ui.settings.SettingsScreen
 import com.example.blinkerleague.ui.wallet.WalletScreen
 
 /** 화면 경로 (screen-plan 4.1) */
@@ -50,6 +51,7 @@ private object Routes {
     const val WALLET = "wallet"
     const val ACHIEVEMENTS = "achievements"
     const val REPORT = "report"
+    const val SETTINGS = "settings"
     const val DEMO = "demo"
     const val QUEST = "quest"
     const val RESULT = "result/{tripId}"
@@ -93,6 +95,7 @@ fun BlinkerNavHost() {
                 composable(Routes.ACHIEVEMENTS) { AchievementsScreen(onOpenReport = { navController.navigate(Routes.REPORT) }) }
                 composable(Routes.REPORT) { WeeklyReportScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.WALLET) { WalletScreen() }
+                composable(Routes.SETTINGS) { SettingsScreen() }
                 // 시나리오 재생: 디버그 빌드 홈에서만 들어옴. 재생이 끝나면 결과로 이동(예외, screen-plan 4.1)
                 composable(Routes.DEMO) {
                     DemoScreen(
@@ -136,7 +139,7 @@ fun BlinkerNavHost() {
                 }
             }
         }
-        // 하단 탭: 맨 위 화면(홈·업적·지갑)에서만 보임. 상세 화면·온보딩·시나리오 재생에는 없음
+        // 하단 탭: 맨 위 화면(홈·업적·지갑·설정)에서만 보임. 상세 화면·온보딩·시나리오 재생에는 없음
         if (currentRoute in TABS.map { it.route }) BottomTabs(navController, currentRoute)
     }
 }
@@ -148,6 +151,7 @@ private val TABS = listOf(
     Tab(Routes.HOME, R.string.tab_home),
     Tab(Routes.ACHIEVEMENTS, R.string.tab_achievements),
     Tab(Routes.WALLET, R.string.tab_wallet),
+    Tab(Routes.SETTINGS, R.string.tab_settings),
 )
 
 @Composable

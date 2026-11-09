@@ -1,5 +1,6 @@
 package com.example.blinkerleague.data.repository
 
+import com.example.blinkerleague.data.auth.DriverProfile
 import com.example.blinkerleague.data.auth.TokenStore
 import com.example.blinkerleague.data.remote.ApiResult
 import com.example.blinkerleague.data.remote.DriverApi
@@ -13,6 +14,9 @@ class DriverRepository(
 ) {
     /** 등록돼 있으면 홈, 아니면 온보딩 (screen-plan 4.1) */
     val registered: StateFlow<Boolean> = tokens.registered
+
+    /** 등록한 닉네임·지역 (설정 화면) */
+    fun profile(): DriverProfile? = tokens.profile()
 
     suspend fun register(nickname: String, regionCode: String): RegisterResult =
         when (val result = api.register(RegisterDriverRequest(nickname.trim(), regionCode))) {
