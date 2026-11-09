@@ -12,19 +12,23 @@ import com.example.blinkerleague.data.permission.PermissionRepository
 import com.example.blinkerleague.data.permission.RuntimePermission
 import com.example.blinkerleague.data.remote.DriverApi
 import com.example.blinkerleague.data.remote.FakeDriverApi
+import com.example.blinkerleague.data.remote.FakeLeagueApi
 import com.example.blinkerleague.data.remote.FakeMissionApi
 import com.example.blinkerleague.data.remote.FakeRewardApi
 import com.example.blinkerleague.data.remote.FakeTripApi
+import com.example.blinkerleague.data.remote.LeagueApi
 import com.example.blinkerleague.data.remote.MissionApi
 import com.example.blinkerleague.data.remote.RewardApi
 import com.example.blinkerleague.data.remote.TripApi
 import com.example.blinkerleague.data.remote.http.HttpClientFactory
 import com.example.blinkerleague.data.remote.http.HttpConfigApi
 import com.example.blinkerleague.data.remote.http.HttpDriverApi
+import com.example.blinkerleague.data.remote.http.HttpLeagueApi
 import com.example.blinkerleague.data.remote.http.HttpMissionApi
 import com.example.blinkerleague.data.remote.http.HttpRewardApi
 import com.example.blinkerleague.data.remote.http.HttpTripApi
 import com.example.blinkerleague.data.repository.DriverRepository
+import com.example.blinkerleague.data.repository.LeagueRepository
 import com.example.blinkerleague.data.repository.MissionRepository
 import com.example.blinkerleague.data.repository.RewardRepository
 import com.example.blinkerleague.data.repository.TripMapper
@@ -82,6 +86,7 @@ class AppContainer(context: Context) {
     private val missionApi: MissionApi
     private val driverApi: DriverApi
     private val rewardApi: RewardApi
+    private val leagueApi: LeagueApi
 
     init {
         if (usesServer) {
@@ -90,6 +95,7 @@ class AppContainer(context: Context) {
             missionApi = HttpMissionApi(service)
             driverApi = HttpDriverApi(service)
             rewardApi = HttpRewardApi(service)
+            leagueApi = HttpLeagueApi(service)
         } else {
             val fakeTrips = FakeTripApi()
             tripApi = fakeTrips
@@ -99,6 +105,7 @@ class AppContainer(context: Context) {
             val fakeRewards = FakeRewardApi(fakeTrips, fakeMissions, System::currentTimeMillis, zone)
             fakeTrips.earnedPointsLookup = fakeRewards::earnedPointsFor
             rewardApi = fakeRewards
+            leagueApi = FakeLeagueApi(fakeTrips, { tokens.profile()?.regionCode }, System::currentTimeMillis, zone)
         }
     }
 
@@ -113,6 +120,9 @@ class AppContainer(context: Context) {
 
     /** 2차 보상: 포인트·연속 달성·배지·주간 리포트 */
     val rewardRepository = RewardRepository(rewardApi)
+
+    /** 지역 리그 (서버 4.4 미구현: 서버 모드에서는 API가 생길 때까지 불러오지 못함) */
+    val leagueRepository = LeagueRepository(leagueApi)
 
     /** 운전자 등록과 등록 여부 (온보딩) */
     val driverRepository = DriverRepository(driverApi, tokens)

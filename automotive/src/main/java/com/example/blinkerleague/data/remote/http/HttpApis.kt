@@ -3,10 +3,12 @@ package com.example.blinkerleague.data.remote.http
 import com.example.blinkerleague.data.remote.ApiResult
 import com.example.blinkerleague.data.remote.ConfigApi
 import com.example.blinkerleague.data.remote.DriverApi
+import com.example.blinkerleague.data.remote.LeagueApi
 import com.example.blinkerleague.data.remote.MissionApi
 import com.example.blinkerleague.data.remote.RewardApi
 import com.example.blinkerleague.data.remote.TripApi
 import com.example.blinkerleague.data.remote.dto.BadgeDto
+import com.example.blinkerleague.data.remote.dto.LeagueResponse
 import com.example.blinkerleague.data.remote.dto.PointsResponse
 import com.example.blinkerleague.data.remote.dto.RecentTripDto
 import com.example.blinkerleague.data.remote.dto.RegisterDriverRequest
@@ -61,6 +63,10 @@ class HttpRewardApi(private val service: BlinkerService) : RewardApi {
     override suspend fun streak(): ApiResult<StreakResponse> = apiCall { service.streak() }
     override suspend fun badges(): ApiResult<List<BadgeDto>> = apiCall { service.badges() }
     override suspend fun weeklyReport(week: String?): ApiResult<WeeklyReportResponse> = apiCall { service.weeklyReport(week) }
+}
+
+class HttpLeagueApi(private val service: BlinkerService) : LeagueApi {
+    override suspend fun currentLeague(): ApiResult<LeagueResponse> = apiCall { service.currentLeague() }
 }
 
 class HttpDriverApi(private val service: BlinkerService) : DriverApi {
