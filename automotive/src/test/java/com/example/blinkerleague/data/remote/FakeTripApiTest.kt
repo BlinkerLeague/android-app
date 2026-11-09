@@ -81,6 +81,22 @@ class FakeTripApiTest {
     }
 
     @Test
+    fun `지금 서버 응답(metrics status·detail, 회전 외 플레이의 result null)도 읽힘`() {
+        val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
+        val now = """
+            {"tripId":"a","status":"SCORED","score":67,"grade":"C",
+             "metrics":[{"metric":"TURN_SIGNAL","status":"SCORED","reason":null,"value":0.67,"score":67,"weight":1.0,"detail":{"total":3}}],
+             "turns":{"total":3,"success":2},"summary":{"goals":2,"conceded":1,"fouls":0},
+             "plays":[{"occurredAt":"2026-11-08T23:15:27+09:00","type":"TURN","direction":"LEFT","result":"GOAL"},
+                      {"occurredAt":"2026-11-08T23:16:00+09:00","type":"LANE_CHANGE","direction":null,"result":null}],
+             "mission":{"missionId":1,"status":"IN_PROGRESS"}}
+        """.trimIndent()
+        val parsed = json.decodeFromString<com.example.blinkerleague.data.remote.dto.TripScoreResponse>(now)
+        assertEquals(listOf("GOAL", null), parsed.plays.map(PlayDto::result))
+        assertEquals("LEFT", parsed.plays.first().direction)
+    }
+
+    @Test
     fun `예전 형식 응답(새 필드 없음)도 읽힘`() {
         val json = Json { ignoreUnknownKeys = true }
         val old = """{"tripId":"a","status":"SCORED","score":75}"""
