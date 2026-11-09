@@ -123,8 +123,8 @@ def scenario_trip(car):
         if mode:
             car.turn("Off")
         time.sleep(8)
-    # 60km/h × 180초 ≈ 3km. 짧은 운행 기준(3km, 서버 D10)을 넘김. 빨리 보려면 TRIP_CRUISE_SEC=70(점수 제외됨)
-    cruise = int(os.environ.get("TRIP_CRUISE_SEC", "180"))
+    # 60km/h × 70초 ≈ 1.2km (앱 기본 짧은 운행 기준 1km). 서버 기준값이 3km이면 TRIP_CRUISE_SEC=180
+    cruise = int(os.environ.get("TRIP_CRUISE_SEC", "70"))
     car.speed_to(60); time.sleep(cruise)
     car.speed_to(0); time.sleep(3)
     car.gear("Park")
@@ -132,8 +132,8 @@ def scenario_trip(car):
 
 
 def scenario_demo(car):
-    """시연 영상용(scripts/record_demo.py): 좌회전 깜빡이 켬(득점) → 우회전 깜빡이 없음(실점) → 3km 넘게 주행 → P.
-    점수 대상이 되려면 짧은 운행 기준(3km, 서버 D10)을 넘어야 함 → 100km/h로 약 2분.
+    """시연 영상용(scripts/record_demo.py): 좌회전 깜빡이 켬(득점) → 우회전 깜빡이 없음(실점) → 1km 넘게 주행 → P.
+    짧은 운행 기준(앱 기본 1km)을 넘김. 서버 기준값이 3km이면 DEMO_CRUISE_SEC=115 (100km/h × 115초 ≈ 3.2km)
     콘솔 조향 +는 오른쪽. 앱을 --ei parkEndSec 10으로 띄우면 P단 10초 뒤 운행이 끝남"""
     car.c.mark("scenario demo start")
     car.gear("Drive"); time.sleep(2)
@@ -144,7 +144,7 @@ def scenario_demo(car):
     car.turn("Off"); time.sleep(8)
     car.steer_to(120); time.sleep(4)   # 우회전, 깜빡이 없음
     car.steer_to(0); time.sleep(4)
-    car.speed_to(100); time.sleep(int(os.environ.get("DEMO_CRUISE_SEC", "115")))  # 약 3.2km
+    car.speed_to(100); time.sleep(int(os.environ.get("DEMO_CRUISE_SEC", "45")))  # 약 1.25km
     car.speed_to(0); time.sleep(3)
     car.gear("Park")
     car.c.mark("scenario demo end")

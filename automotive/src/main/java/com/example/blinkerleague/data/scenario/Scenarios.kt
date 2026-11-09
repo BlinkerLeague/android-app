@@ -53,7 +53,7 @@ object Scenarios {
         end()
     }
 
-    /** 시연 영상 흐름: 좌회전 깜빡이 성공 → 우회전 실패 → 운행 종료. 점수 대상이 되게 3km 넘게 달림(서버 D10) */
+    /** 시연 영상 흐름: 좌회전 깜빡이 성공 → 우회전 실패 → 운행 종료. 약 3.9km (서버 기준값이 3km여도 점수가 나오게) */
     val demo = scenario("시연: 좌회전 성공 → 우회전 실패") {
         start()
         straight(seconds = 60, speedKmh = 90f)
@@ -68,7 +68,7 @@ object Scenarios {
         end()
     }
 
-    /** 3km 이상, 회전 3번 모두 깜빡이 성공 → 오늘의 미션 달성 확인용 */
+    /** 약 3.3km, 회전 3번 모두 깜빡이 성공 → 오늘의 미션 달성 확인용 */
     val missionAchieved = scenario("미션 달성: 회전 3번 모두 성공") {
         start()
         straight(seconds = 40, speedKmh = 90f)
