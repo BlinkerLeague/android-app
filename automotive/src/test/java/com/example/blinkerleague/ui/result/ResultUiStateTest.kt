@@ -62,6 +62,13 @@ class ResultUiStateTest {
     }
 
     @Test
+    fun `회전 없이 다른 항목으로 점수가 나도 깜빡이 항목은 회전 없음 (서버 D28)`() {
+        val state = result(ScoreState.SCORED, 80, signals = emptyList()).toResultUiState(null, GradeThreshold.DEFAULT)
+        assertEquals(MetricValue.NoTurn, metric(state))
+        assertEquals("B", state.grade)
+    }
+
+    @Test
     fun `회전 없음과 미지원은 0점이 아니라 제외로`() {
         val noTurn = result(ScoreState.NO_TURN, null, signals = emptyList()).toResultUiState(null, GradeThreshold.DEFAULT)
         assertEquals(MetricValue.NoTurn, metric(noTurn))

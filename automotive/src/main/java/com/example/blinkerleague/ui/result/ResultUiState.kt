@@ -87,8 +87,9 @@ internal fun TripResult.toResultUiState(mission: TodayMission?, grades: List<Gra
         !canMeasureTurns -> MetricValue.Unsupported
         scoreState == ScoreState.EXCLUDED_SHORT -> MetricValue.Excluded
         scoreState == ScoreState.REJECTED -> MetricValue.NotScored
-        scoreState == ScoreState.SCORED && score != null -> MetricValue.Score(score)
+        // 회전이 없으면 다른 항목으로 점수가 나도(SCORED, 서버 D28) 깜빡이 항목은 "회전 없음"
         scoreState == ScoreState.NO_TURN || turns.isEmpty() -> MetricValue.NoTurn
+        scoreState == ScoreState.SCORED && score != null -> MetricValue.Score(score)
         else -> MetricValue.Pending
     }
     return ResultUiState.Loaded(

@@ -71,8 +71,8 @@ data class PlayDto(
     val type: String,
     /** 회전 방향(LEFT/RIGHT). 서버 요청 8번, 서버가 안 주면 null */
     val direction: String? = null,
-    /** [PlayResult] */
-    val result: String,
+    /** [PlayResult]. `TURN`만 있고 다른 이벤트(LANE_CHANGE 등)는 null (서버 D22) */
+    val result: String? = null,
 )
 
 @Serializable
