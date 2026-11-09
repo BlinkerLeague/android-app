@@ -110,6 +110,27 @@
     <string name="home_status_off">기록이 꺼져 있어요</string>
     <string name="home_demo">시나리오 재생</string>
 
+    <!-- 하단 탭 (2차) -->
+    <string name="tab_home">홈</string>
+    <string name="tab_achievements">업적</string>
+    <string name="tab_wallet">지갑</string>
+
+    <!-- 지갑 (SCR-06) -->
+    <string name="wallet_balance">내 포인트</string>
+    <string name="wallet_points">%1$,dP</string>
+    <string name="wallet_today">오늘 적립</string>
+    <string name="wallet_today_of_cap">%1$d / %2$dP</string>
+    <string name="wallet_cap_reached">오늘 적립 한도를 채웠어요. 내일 다시 쌓여요</string>
+    <string name="wallet_history">적립 내역</string>
+    <string name="wallet_empty">아직 적립한 포인트가 없어요\n운행을 마치면 쌓여요</string>
+    <string name="wallet_unavailable">포인트를 불러오지 못했어요</string>
+    <string name="wallet_reason_trip">운행 적립</string>
+    <string name="wallet_reason_mission">오늘의 미션 달성</string>
+    <string name="wallet_reason_streak">7일 연속 달성</string>
+    <string name="wallet_reason_other">적립</string>
+    <string name="wallet_trip_detail">%1$s · %2$.1fkm × 평점 %3$d</string>
+    <string name="wallet_amount">+%1$dP</string>
+
     <!-- 주행 중 화면 (점수·숫자 없음) -->
     <string name="drv_recording">기록 중</string>
     <string name="drv_recording_body">정차하면 결과를 볼 수 있어요</string>
