@@ -170,6 +170,23 @@
     <string name="metric_seat_belt">안전벨트</string>
     <string name="metric_rain_driving">우천 운전</string>
 
+    <!-- 설정 (SCR-08) -->
+    <string name="tab_settings">설정</string>
+    <string name="settings_profile">내 정보</string>
+    <string name="settings_nickname">닉네임</string>
+    <string name="settings_region">활동 지역</string>
+    <string name="settings_profile_note">닉네임과 지역은 아직 바꿀 수 없어요</string>
+    <string name="settings_app">앱 정보</string>
+    <string name="settings_version">버전</string>
+    <string name="settings_mode">연결</string>
+    <string name="settings_mode_server">서버</string>
+    <string name="settings_mode_local">체험 모드 (서버 연결 없음)</string>
+    <string name="settings_permissions">권한</string>
+    <string name="settings_permission_denied">허용 안 됨</string>
+    <string name="settings_permission_not_requested">아직 묻지 않음</string>
+    <string name="settings_open_app_settings">시스템 설정에서 허용하기</string>
+    <string name="settings_recording">운행 기록</string>
+
     <!-- 지갑 (SCR-06) -->
     <string name="wallet_balance">내 포인트</string>
     <string name="wallet_points">%1$,dP</string>

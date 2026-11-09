@@ -10,6 +10,9 @@ data class Province(val name: String, val districts: List<District>)
  * P0은 서울 25개 구만 넣음. 나머지 시·도는 행정표준코드관리시스템의 법정동 코드 파일로 채울 것 (plan.md)
  */
 object Regions {
+    /** 지역 코드 → "서울 마포구". 목록에 없으면 null */
+    fun label(code: String): String? = all.firstNotNullOfOrNull { p -> p.districts.firstOrNull { it.code == code }?.let { "${p.name} ${it.name}" } }
+
     val all: List<Province> = listOf(
         Province(
             "서울",

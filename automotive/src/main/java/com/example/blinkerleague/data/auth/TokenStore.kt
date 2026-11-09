@@ -17,6 +17,9 @@ interface TokenStore {
 
     fun saveRegistration(response: RegisterDriverResponse)
 
+    /** 등록한 닉네임·지역 코드 (설정 화면). 등록 전이면 null */
+    fun profile(): DriverProfile? = null
+
     fun updateTokens(accessToken: String, refreshToken: String)
 
     /** Refresh까지 거부됨 → 재등록 필요 */
@@ -81,6 +84,12 @@ class PrefsTokenStore(
         if (changed) edit.commit()
     }
 
+    override fun profile(): DriverProfile? {
+        val nickname = prefs.getString(KEY_NICKNAME, null)?.let(cipher::decrypt) ?: return null
+        val region = prefs.getString(KEY_REGION, null)?.let(cipher::decrypt) ?: return null
+        return DriverProfile(nickname, region)
+    }
+
     override fun saveRegistration(response: RegisterDriverResponse) {
         prefs.edit()
             .putString(KEY_DRIVER_ID, cipher.encrypt(response.driverId.toString()))
@@ -122,8 +131,13 @@ class InMemoryTokenStore : TokenStore {
     private val _registered = MutableStateFlow(false)
     override val registered: StateFlow<Boolean> = _registered.asStateFlow()
 
+    private var profile: DriverProfile? = null
+
+    override fun profile(): DriverProfile? = profile
+
     override fun saveRegistration(response: RegisterDriverResponse) {
         updateTokens(response.accessToken, response.refreshToken)
+        profile = DriverProfile(response.nickname, response.regionCode)
         _registered.value = true
     }
 
@@ -138,3 +152,5 @@ class InMemoryTokenStore : TokenStore {
         _registered.value = false
     }
 }
+
+data class DriverProfile(val nickname: String, val regionCode: String)

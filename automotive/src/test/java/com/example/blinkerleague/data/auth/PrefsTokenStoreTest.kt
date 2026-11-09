@@ -36,6 +36,7 @@ class PrefsTokenStoreTest {
         assertEquals("v1:왕빡깜", prefs.getString("nickname", null))
         assertEquals("v1:08611", prefs.getString("regionCode", null))
         assertEquals("v1:1", prefs.getString("driverId", null))
+        assertEquals(DriverProfile("깜빡왕", "11680"), store.profile())
         assertEquals("access-1", store.accessToken)
         assertTrue(store.registered.value)
 
