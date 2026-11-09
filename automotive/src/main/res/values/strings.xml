@@ -130,6 +130,35 @@
     <string name="achievements_earned_on">%1$s 획득</string>
     <string name="achievements_unavailable">업적을 불러오지 못했어요</string>
 
+    <!-- 주간 리포트 (SCR-07) -->
+    <string name="report_open">주간 리포트</string>
+    <string name="report_title">주간 리포트 · %1$s</string>
+    <string name="report_previous">이전 주</string>
+    <string name="report_next">다음 주</string>
+    <string name="report_back">돌아가기</string>
+    <string name="report_summary">이 주의 운행</string>
+    <string name="report_trips">운행 %1$d번 · %2$.1f km</string>
+    <string name="report_no_trips">이 주에는 운행이 없었어요</string>
+    <string name="report_last_mission">이 주의 맞춤 미션</string>
+    <string name="report_mission_achieved">달성</string>
+    <string name="report_mission_failed">미달성</string>
+    <string name="report_mission_assigned">진행 중</string>
+    <string name="report_next_mission">다음 주 맞춤 미션</string>
+    <string name="report_next_registered">다음 주 퀘스트로 등록됐어요</string>
+    <string name="report_mission_min_km">%1$.0fkm 이상 운행한 주에 판정</string>
+    <string name="report_metrics">항목별 점수 (지난주 대비)</string>
+    <string name="report_metrics_empty">점수가 난 운행이 없어 비교할 항목이 없어요</string>
+    <string name="report_weakest">가장 약한 항목</string>
+    <string name="report_no_record">기록 없음</string>
+    <string name="report_up">▲ %1$d</string>
+    <string name="report_down">▼ %1$d</string>
+    <string name="report_same">변화 없음</string>
+    <string name="report_unavailable">리포트를 불러오지 못했어요</string>
+    <string name="metric_signal_cancel">깜빡이 끄기</string>
+    <string name="metric_turn_speed">회전 속도</string>
+    <string name="metric_seat_belt">안전벨트</string>
+    <string name="metric_rain_driving">우천 운전</string>
+
     <!-- 지갑 (SCR-06) -->
     <string name="wallet_balance">내 포인트</string>
     <string name="wallet_points">%1$,dP</string>
