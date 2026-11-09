@@ -101,6 +101,7 @@
 서버는 `driver-register` → `threshold-config` → `trip-upload` → `trip-score` → `daily-mission` 순서로 만들어집니다. 서버 API가 나오기 전까지 앱은 Fake API로 먼저 개발합니다.
 - [x] `POST /api/drivers`: 최초 실행 시 닉네임과 지역 코드(시군구 5자리)를 등록하고, 받은 토큰을 로컬에 저장. 이후 요청은 Bearer 헤더로 보냄
   - [x] `DriverRepository.register`(결과: 등록됨/닉네임 중복/입력 오류/오프라인), 토큰은 `PrefsTokenStore`(SharedPreferences), `registered` Flow로 온보딩·홈 분기. Access 만료 시 자동 재발급
+  - [x] 로컬 서버로 토큰 재발급 확인(11.09): 만료된 Access로 401 → `POST /api/auth/refresh` → 새 토큰 저장·재요청 성공. Refresh까지 거부되면 토큰을 지우고 온보딩으로 돌아감
   - [x] 온보딩 화면 연결 (`ui/onboarding`). Fake 모드도 등록 정보를 저장(`auth_fake`)해 재시작 시 온보딩이 반복되지 않음
   - [ ] 지역 목록: 지금은 서울 25개 구만. 나머지 시·도는 법정동 코드 파일로 채움 (코드를 추측해 넣지 않음)
 - [x] `GET /api/config/thresholds`: 앱 시작 시 내려받음. `version`이 바뀌었을 때만 갱신하고, 받지 못하면 로컬 기본값 사용 — `ConfigRepository`(저장 값 → 기본값), 서버가 주는 항목만 덮어씀(핸들 각도는 서버 요청 1·7 전까지 기본값), 다음 운행부터 적용. Fake 모드는 받지 않음
