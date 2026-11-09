@@ -11,6 +11,8 @@ data class ThresholdsResponse(
     val trip: TripThresholdsDto? = null,
     val turn: TurnThresholdsDto? = null,
     val grades: List<GradeRuleDto>? = null,
+    /** 항목 이름 → 팁 문구 */
+    val tips: Map<String, String>? = null,
 )
 
 @Serializable

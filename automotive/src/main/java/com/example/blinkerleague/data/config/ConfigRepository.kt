@@ -77,6 +77,7 @@ internal fun DetectionConfig.mergedWith(response: ThresholdsResponse): Detection
             uTurnAngleDeg = turn?.uTurnAngleDeg ?: this.turn.uTurnAngleDeg,
         ),
         grades = response.grades?.takeIf { it.isNotEmpty() }?.map { GradeThreshold(it.grade, it.minScore) } ?: grades,
+        tips = tips + response.tips.orEmpty(),
     )
 }
 

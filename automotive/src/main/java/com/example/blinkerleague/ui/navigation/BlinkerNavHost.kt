@@ -22,22 +22,23 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.blinkerleague.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.blinkerleague.BlinkerLeagueApplication
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.blinkerleague.BlinkerLeagueApplication
+import com.example.blinkerleague.R
 import com.example.blinkerleague.ui.achievements.AchievementsScreen
 import com.example.blinkerleague.ui.demo.DemoScreen
 import com.example.blinkerleague.ui.home.HomeScreen
 import com.example.blinkerleague.ui.onboarding.OnboardingScreen
 import com.example.blinkerleague.ui.quest.QuestScreen
 import com.example.blinkerleague.ui.report.WeeklyReportScreen
+import com.example.blinkerleague.ui.result.MetricDetailScreen
 import com.example.blinkerleague.ui.result.PlaysScreen
 import com.example.blinkerleague.ui.result.ResultScreen
 import com.example.blinkerleague.ui.wallet.WalletScreen
@@ -53,6 +54,8 @@ private object Routes {
     const val QUEST = "quest"
     const val RESULT = "result/{tripId}"
     const val PLAYS = "result/{tripId}/plays"
+    const val METRIC = "result/{tripId}/metric/{metric}"
+    fun metric(tripId: String, metric: String) = "result/$tripId/metric/$metric"
     fun result(tripId: String) = "result/$tripId"
     fun plays(tripId: String) = "result/$tripId/plays"
 }
@@ -107,6 +110,7 @@ fun BlinkerNavHost() {
                     val tripId = checkNotNull(entry.arguments?.getString("tripId"))
                     ResultScreen(
                         onOpenPlays = { navController.navigate(Routes.plays(tripId)) },
+                        onOpenMetric = { item -> navController.navigate(Routes.metric(tripId, item.name)) },
                         onOpenQuest = { navController.navigate(Routes.QUEST) },
                         onDone = { navController.popBackStack(Routes.HOME, inclusive = false) },
                     )
@@ -114,8 +118,21 @@ fun BlinkerNavHost() {
                 composable(
                     route = Routes.PLAYS,
                     arguments = listOf(navArgument("tripId") { type = NavType.StringType }),
+                ) { entry ->
+                    val tripId = checkNotNull(entry.arguments?.getString("tripId"))
+                    PlaysScreen(
+                        onBack = { navController.popBackStack() },
+                        onOpenCard = { navController.navigate(Routes.metric(tripId, "TURN_SIGNAL")) },
+                    )
+                }
+                composable(
+                    route = Routes.METRIC,
+                    arguments = listOf(
+                        navArgument("tripId") { type = NavType.StringType },
+                        navArgument("metric") { type = NavType.StringType },
+                    ),
                 ) {
-                    PlaysScreen(onBack = { navController.popBackStack() })
+                    MetricDetailScreen(onBack = { navController.popBackStack() })
                 }
             }
         }
