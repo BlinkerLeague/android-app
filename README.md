@@ -2,11 +2,21 @@
 
 > 회전할 때 깜빡이를 제때 켰는지 운행마다 판정해 경기처럼 점수·퀘스트로 돌려주는 Android Automotive 앱 (깜빡이리그, Pleos 공모전 출품작)
 
+**1차(경기)** — 정차 후에만 보이는 화면
+
 | 홈 | 경기 결과 | 플레이 타임라인 |
 | --- | --- | --- |
 | ![홈](docs/screenshots/home.png) | ![경기 결과](docs/screenshots/result.png) | ![플레이 타임라인](docs/screenshots/plays.png) |
-| **퀘스트** | **온보딩** | |
-| ![퀘스트](docs/screenshots/quest.png) | ![온보딩](docs/screenshots/onboarding.png) | |
+| **항목 상세** | **퀘스트** | **온보딩** |
+| ![항목 상세](docs/screenshots/metric-detail.png) | ![퀘스트](docs/screenshots/quest.png) | ![온보딩](docs/screenshots/onboarding.png) |
+
+**2차(리그·보상)** — 하단 탭
+
+| 리그 | 업적 | 주간 리포트 |
+| --- | --- | --- |
+| ![리그](docs/screenshots/league.png) | ![업적](docs/screenshots/achievements.png) | ![주간 리포트](docs/screenshots/weekly-report.png) |
+| **지갑** | **설정** | |
+| ![지갑](docs/screenshots/wallet.png) | ![설정](docs/screenshots/settings.png) | |
 
 > Pleos Connect 에뮬레이터의 앱 영역(1682×1210dp) 캡처
 
@@ -24,6 +34,8 @@
 - **경기 결과와 퀘스트**: 정차 후 평점·등급, 득점(켠 회전)·실점(안 켠 회전), 플레이 타임라인, 오늘의 퀘스트 진행도를 보여줍니다.
 - **주행 안전**: 주행 중에는 점수 화면을 띄우지 않고 "기록 중" 화면만 보여줍니다. 음성은 시동 때 퀘스트 안내, 운행 종료 때 결과 한마디만 합니다.
 - **오프라인 우선**: 판정은 기기에서 하고 결과를 먼저 저장합니다. 서버 업로드는 연결되면 자동으로 다시 보냅니다. 원시 위치 좌표는 서버로 보내지 않습니다.
+- **리그와 보상(2차)**: 지역 리그(달력 월 시즌, 권역별 순위·지역 안전지수), 미션 연속 달성과 배지, 포인트 지갑(운행·미션·연속 보상 적립), 주간 리포트(항목별 전주 대비, 다음 주 맞춤 미션), 항목 상세(판정 근거·팁), 설정(권한 다시 요청)
+- **보안**: 토큰·등록 정보는 Android Keystore 키로 암호화, 릴리스는 TLS 1.2 이상·백업 끔·정보 로그 끔 ([Pleos 앱 보안 가이드 대응표](docs/security-checklist.md))
 
 ## 🛠 기술 스택
 
@@ -124,7 +136,7 @@ Android Studio에서는 상단 기기 목록에서 `Pleos_Connect_v2.1.0_API_34`
 
 | 방법 | 용도 | 에뮬레이터 필요 |
 | --- | --- | --- |
-| **Compose Preview** | 화면 디자인만 빠르게 확인. `HomeScreen.kt`, `ResultScreen.kt`, `PlaysScreen.kt`, `QuestScreen.kt`, `OnboardingScreen.kt`, `DrivingScreen.kt`를 열고 Split/Design 탭 | ✗ |
+| **Compose Preview** | 화면 디자인만 빠르게 확인. `ui/*/…Screen.kt`(홈·결과·타임라인·항목 상세·퀘스트·온보딩·주행 중·리그·업적·주간 리포트·지갑·설정)를 열고 Split/Design 탭 | ✗ |
 | **시나리오 재생 (디버그 빌드)** | 홈 아래 "시나리오 재생" → "시연: 좌회전 성공 → 우회전 실패" 10배속 → 몇 초 뒤 경기 결과(득점 1 · 실점 1) | ✓ |
 | **Virtual Console** | 기어·속도·방향지시등·핸들 각도를 브라우저에서 바꿔 가며 실제 신호로 확인 (기어 D면 "기록 중" 화면) | ✓ |
 
@@ -174,7 +186,7 @@ automotive/src/
 │   │   └── region/      # 시군구 목록
 │   ├── service/         # 운행 수집 포그라운드 서비스, 음성 안내 흐름
 │   ├── voice/           # Pleos TextToSpeech 래퍼
-│   └── ui/              # driving(주행 중), home, result(+plays), quest, onboarding, demo, theme, navigation
+│   └── ui/              # driving(주행 중), home, result(+plays·항목 상세), quest, onboarding, league, achievements, report, wallet, settings, demo, theme, navigation
 ├── debug/               # 조사용 코드·권한 (릴리스 APK에 포함 안 됨)
 └── release/             # DebugTools 빈 구현
 ```
