@@ -53,31 +53,31 @@ object Scenarios {
         end()
     }
 
-    /** 시연 영상 흐름: 좌회전 깜빡이 성공 → 우회전 실패 → 운행 종료 */
+    /** 시연 영상 흐름: 좌회전 깜빡이 성공 → 우회전 실패 → 운행 종료. 점수 대상이 되게 3km 넘게 달림(서버 D10) */
     val demo = scenario("시연: 좌회전 성공 → 우회전 실패") {
         start()
-        straight(seconds = 40, speedKmh = 50f)
+        straight(seconds = 60, speedKmh = 90f)
         signal(TurnSignalState.LEFT)
         straight(seconds = 4, speedKmh = 25f)
         turn(angleDeg = -90f, seconds = 6, speedKmh = 20f)
         signal(TurnSignalState.OFF)
-        straight(seconds = 40, speedKmh = 50f)
+        straight(seconds = 60, speedKmh = 90f)
         straight(seconds = 4, speedKmh = 25f)
         turn(angleDeg = 90f, seconds = 5, speedKmh = 20f)
-        straight(seconds = 20, speedKmh = 50f)
+        straight(seconds = 30, speedKmh = 90f)
         end()
     }
 
-    /** 1km 이상, 회전 3번 모두 깜빡이 성공 → 오늘의 미션 달성 확인용 */
+    /** 3km 이상, 회전 3번 모두 깜빡이 성공 → 오늘의 미션 달성 확인용 */
     val missionAchieved = scenario("미션 달성: 회전 3번 모두 성공") {
         start()
-        straight(seconds = 30, speedKmh = 50f)
+        straight(seconds = 40, speedKmh = 90f)
         listOf(TurnSignalState.LEFT to -90f, TurnSignalState.RIGHT to 90f, TurnSignalState.LEFT to -90f).forEach { (signal, angle) ->
             signal(signal)
             straight(seconds = 3, speedKmh = 25f)
             turn(angleDeg = angle, seconds = 5, speedKmh = 20f)
             signal(TurnSignalState.OFF)
-            straight(seconds = 25, speedKmh = 50f)
+            straight(seconds = 30, speedKmh = 90f)
         }
         end()
     }
