@@ -1,0 +1,35 @@
+package com.example.blinkerleague.ui.achievements
+
+/** 업적 (SCR-05): 연속 달성 + 배지 진열장 */
+sealed interface AchievementsUiState {
+    data object Loading : AchievementsUiState
+
+    data object Unavailable : AchievementsUiState
+
+    data class Loaded(
+        /** 연속 달성. 못 받으면 null (그 칸만 숨김) */
+        val streak: StreakCard?,
+        val badges: List<BadgeCard>,
+    ) : AchievementsUiState
+}
+
+data class StreakCard(
+    val days: Int,
+    val todayAchieved: Boolean,
+    /** 다음 연속 보상까지 남은 날 (7일마다 50P) */
+    val daysToReward: Int,
+)
+
+data class BadgeCard(
+    val name: String,
+    val condition: String,
+    val earned: Boolean,
+    /** 예: "11.09". 못 받았거나 서버가 안 주면 null */
+    val awardedOn: String?,
+)
+
+/** 연속 보상 주기 (서버 기준값 point.streakRewardDays 기본 7) */
+internal const val STREAK_REWARD_DAYS = 7
+
+/** 다음 보상까지 남은 날: 0일·7일째면 7, 3일째면 4 */
+internal fun daysToReward(days: Int, period: Int = STREAK_REWARD_DAYS): Int = period - days % period

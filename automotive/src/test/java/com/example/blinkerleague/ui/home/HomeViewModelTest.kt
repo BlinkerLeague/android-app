@@ -115,6 +115,23 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun `연속 달성은 refresh 때 받고, 못 받으면 카드 숨김`() = runTest(dispatcher) {
+        val vm = HomeViewModel(
+            recentTrips = trips, recordingStatus = status, speedPermission = speed,
+            loadQuest = { null }, loadStreak = { com.example.blinkerleague.domain.model.Streak(5, true) },
+            refreshRecent = {}, grades = GradeThreshold.DEFAULT, showDemoEntry = false, clock = { now }, zone = zone,
+        )
+        backgroundScope.launch { vm.uiState.collect {} }
+        runCurrent()
+        assertNull(vm.uiState.value.streakDays)
+
+        vm.refresh()
+        runCurrent()
+        assertEquals(5, vm.uiState.value.streakDays)
+        assertTrue(vm.uiState.value.streakTodayAchieved)
+    }
+
+    @Test
     fun `속도 권한이 없거나 기록이 꺼지면 안내`() = runTest(dispatcher) {
         val vm = viewModel(null)
         backgroundScope.launch { vm.uiState.collect {} }

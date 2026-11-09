@@ -9,6 +9,9 @@ data class HomeUiState(
     val quest: TodayMission? = null,
     val questLoading: Boolean = true,
     val recentTrips: List<RecentTripRow> = emptyList(),
+    /** 미션 연속 달성 (2차, 서버 D6에 따라 다시 보임). 못 받으면 null → 카드 숨김 */
+    val streakDays: Int? = null,
+    val streakTodayAchieved: Boolean = false,
     val recordingStatus: RecordingStatus = RecordingStatus.OFF,
     val notices: List<HomeNotice> = emptyList(),
     /** 시나리오 재생 진입 버튼 (디버그 빌드만, screen-plan 1장) */
