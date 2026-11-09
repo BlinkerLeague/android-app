@@ -96,7 +96,9 @@ class AppContainer(context: Context) {
             val fakeMissions = FakeMissionApi(fakeTrips, System::currentTimeMillis, zone)
             missionApi = fakeMissions
             driverApi = FakeDriverApi()
-            rewardApi = FakeRewardApi(fakeTrips, fakeMissions, System::currentTimeMillis, zone)
+            val fakeRewards = FakeRewardApi(fakeTrips, fakeMissions, System::currentTimeMillis, zone)
+            fakeTrips.earnedPointsLookup = fakeRewards::earnedPointsFor
+            rewardApi = fakeRewards
         }
     }
 

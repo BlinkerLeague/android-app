@@ -59,6 +59,7 @@ private val ResultViewModelFactory = viewModelFactory {
                 container.tripRepository.refreshScore(tripId)
             },
             loadMission = container.missionRepository::todayMission,
+            loadEarnedPoints = { container.tripRepository.earnedPoints(tripId) },
             grades = container.config.grades,
         )
     }
@@ -144,6 +145,14 @@ private fun Headline(state: ResultUiState.Loaded) {
             )
             state.score?.let { Text(stringResource(R.string.result_score, it), style = MaterialTheme.typography.headlineMedium) }
             Goals(state)
+            state.earnedPoints?.let { points ->
+                Text(
+                    if (points > 0) stringResource(R.string.result_points, points) else stringResource(R.string.result_points_capped),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = if (points > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
         ScoreState.PENDING -> {
             Message(R.string.result_pending, R.string.result_pending_body)

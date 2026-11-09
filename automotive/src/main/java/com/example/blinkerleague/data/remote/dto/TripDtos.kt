@@ -55,6 +55,8 @@ data class TripScoreResponse(
     val plays: List<PlayDto> = emptyList(),
     /** 이 운행을 반영한 그날 미션 판정. 서버 `daily-mission` 전에는 null */
     val mission: TripMissionDto? = null,
+    /** 이 운행으로 적립된 운행 포인트(하루 상한 적용 후). 서버 요청 12번, 서버가 안 주면 null */
+    val earnedPoints: Int? = null,
 )
 
 @Serializable

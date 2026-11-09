@@ -32,7 +32,15 @@ class FakeRewardApi(
     private val zone: ZoneId,
 ) : RewardApi {
 
-    private data class Credit(val at: Instant, val amount: Int, val reason: String, val description: PointDescriptionDto?)
+    private data class Credit(
+        val at: Instant,
+        val amount: Int,
+        val reason: String,
+        val description: PointDescriptionDto?,
+        val tripId: String? = null,
+    )
+
+    private data class ScoredTrip(val id: String, val at: Instant, val km: Double, val score: Int)
 
     private fun today(): LocalDate = Instant.ofEpochMilli(clock()).atZone(zone).toLocalDate()
 
@@ -40,11 +48,20 @@ class FakeRewardApi(
 
     private fun iso(at: Instant): String = OffsetDateTime.ofInstant(at, zone).toString()
 
-    /** 점수가 난 운행 (종료 시각, 거리, 평점) */
+    /** 점수가 난 운행 */
     private fun scoredTrips() = tripApi.uploadedTrips()
         .filter { (_, result) -> result.status == ScoreStatus.SCORED && result.score != null }
-        .map { (request, result) -> Triple(OffsetDateTime.parse(request.endedAt).toInstant(), request.distanceKm, result.score!!) }
-        .sortedBy { it.first }
+        .map { (request, result) -> ScoredTrip(request.tripId, OffsetDateTime.parse(request.endedAt).toInstant(), request.distanceKm, result.score!!) }
+        .sortedBy { it.at }
+
+    /**
+     * 이 운행으로 적립된 운행 포인트(상한 적용 후, 서버 요청 12번 `earnedPoints`를 흉내 냄).
+     * 점수가 나지 않은 운행은 null, 상한에 걸려 못 받았으면 0
+     */
+    fun earnedPointsFor(tripId: String): Int? {
+        if (scoredTrips().none { it.id == tripId }) return null
+        return credits().firstOrNull { it.tripId == tripId }?.amount ?: 0
+    }
 
     /** 연속 달성 일수 (day로 끝나는) */
     private fun streakEndingAt(day: LocalDate, achieved: Set<LocalDate>): Int {
@@ -59,8 +76,8 @@ class FakeRewardApi(
 
     private fun credits(): List<Credit> {
         val raw = mutableListOf<Credit>()
-        scoredTrips().forEach { (at, km, score) ->
-            raw += Credit(at, floor(min(km, TRIP_MAX_KM) * score / 100.0).toInt(), "TRIP", PointDescriptionDto(km, score))
+        scoredTrips().forEach { t ->
+            raw += Credit(t.at, floor(min(t.km, TRIP_MAX_KM) * t.score / 100.0).toInt(), "TRIP", PointDescriptionDto(t.km, t.score), t.id)
         }
         val achievements = missionApi.achievements()
         achievements.forEach { (day, at) ->
@@ -106,7 +123,7 @@ class FakeRewardApi(
         val signalOn = tripApi.uploadedTrips().sumOf { it.second.turns?.success ?: 0 }
         return ApiResult.Success(
             listOf(
-                BadgeDto("FIRST_TRIP", "첫 경기", "점수가 난 첫 운행", scored.isNotEmpty(), scored.firstOrNull()?.first?.let(::iso)),
+                BadgeDto("FIRST_TRIP", "첫 경기", "점수가 난 첫 운행", scored.isNotEmpty(), scored.firstOrNull()?.at?.let(::iso)),
                 BadgeDto("STREAK_7", "7일 연속", "오늘의 미션 7일 연속 달성", bestStreak >= STREAK_DAYS, null),
                 BadgeDto("SIGNAL_100", "깜빡이 100회", "깜빡이를 켠 회전 누적 100회", signalOn >= 100, null),
             ),
@@ -117,17 +134,17 @@ class FakeRewardApi(
         val thisWeekStart = today().minusDays((today().dayOfWeek.value - 1).toLong()) // 이번 주 월요일
         val reportStart = week?.let(::parseWeek) ?: thisWeekStart.minusWeeks(1)
         if (!reportStart.isBefore(thisWeekStart)) return ApiResult.HttpError(400) // 아직 끝나지 않은 주
-        fun tripsIn(start: LocalDate) = scoredTrips().filter { dayOf(it.first) >= start && dayOf(it.first) < start.plusWeeks(1) }
+        fun tripsIn(start: LocalDate) = scoredTrips().filter { dayOf(it.at) >= start && dayOf(it.at) < start.plusWeeks(1) }
         val thisWeek = tripsIn(reportStart)
         val lastWeek = tripsIn(reportStart.minusWeeks(1))
-        fun avg(trips: List<Triple<Instant, Double, Int>>) = trips.takeIf { it.isNotEmpty() }?.map { it.third }?.average()?.roundToInt()
+        fun avg(trips: List<ScoredTrip>) = trips.takeIf { it.isNotEmpty() }?.map { it.score }?.average()?.roundToInt()
         val now = avg(thisWeek)
         val before = avg(lastWeek)
         return ApiResult.Success(
             WeeklyReportResponse(
                 week = weekKey(reportStart),
                 trips = thisWeek.size,
-                distanceKm = thisWeek.sumOf { it.second },
+                distanceKm = thisWeek.sumOf { it.km },
                 metrics = listOf(MetricChangeDto("TURN_SIGNAL", now, before, if (now != null && before != null) now - before else null)),
                 weakestMetric = if (now != null) "TURN_SIGNAL" else null,
                 lastMission = null,
