@@ -4,14 +4,19 @@ import com.example.blinkerleague.data.remote.ApiResult
 import com.example.blinkerleague.data.remote.ConfigApi
 import com.example.blinkerleague.data.remote.DriverApi
 import com.example.blinkerleague.data.remote.MissionApi
+import com.example.blinkerleague.data.remote.RewardApi
 import com.example.blinkerleague.data.remote.TripApi
+import com.example.blinkerleague.data.remote.dto.BadgeDto
+import com.example.blinkerleague.data.remote.dto.PointsResponse
 import com.example.blinkerleague.data.remote.dto.RecentTripDto
 import com.example.blinkerleague.data.remote.dto.RegisterDriverRequest
 import com.example.blinkerleague.data.remote.dto.RegisterDriverResponse
+import com.example.blinkerleague.data.remote.dto.StreakResponse
 import com.example.blinkerleague.data.remote.dto.ThresholdsResponse
 import com.example.blinkerleague.data.remote.dto.TodayMissionResponse
 import com.example.blinkerleague.data.remote.dto.TripScoreResponse
 import com.example.blinkerleague.data.remote.dto.TripUploadRequest
+import com.example.blinkerleague.data.remote.dto.WeeklyReportResponse
 import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerializationException
@@ -49,6 +54,13 @@ class HttpMissionApi(private val service: BlinkerService) : MissionApi {
 
 class HttpConfigApi(private val service: BlinkerService) : ConfigApi {
     override suspend fun thresholds(): ApiResult<ThresholdsResponse> = apiCall { service.thresholds() }
+}
+
+class HttpRewardApi(private val service: BlinkerService) : RewardApi {
+    override suspend fun points(): ApiResult<PointsResponse> = apiCall { service.points() }
+    override suspend fun streak(): ApiResult<StreakResponse> = apiCall { service.streak() }
+    override suspend fun badges(): ApiResult<List<BadgeDto>> = apiCall { service.badges() }
+    override suspend fun weeklyReport(week: String?): ApiResult<WeeklyReportResponse> = apiCall { service.weeklyReport(week) }
 }
 
 class HttpDriverApi(private val service: BlinkerService) : DriverApi {

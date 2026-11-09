@@ -13,16 +13,20 @@ import com.example.blinkerleague.data.permission.RuntimePermission
 import com.example.blinkerleague.data.remote.DriverApi
 import com.example.blinkerleague.data.remote.FakeDriverApi
 import com.example.blinkerleague.data.remote.FakeMissionApi
+import com.example.blinkerleague.data.remote.FakeRewardApi
 import com.example.blinkerleague.data.remote.FakeTripApi
 import com.example.blinkerleague.data.remote.MissionApi
+import com.example.blinkerleague.data.remote.RewardApi
 import com.example.blinkerleague.data.remote.TripApi
 import com.example.blinkerleague.data.remote.http.HttpClientFactory
 import com.example.blinkerleague.data.remote.http.HttpConfigApi
 import com.example.blinkerleague.data.remote.http.HttpDriverApi
 import com.example.blinkerleague.data.remote.http.HttpMissionApi
+import com.example.blinkerleague.data.remote.http.HttpRewardApi
 import com.example.blinkerleague.data.remote.http.HttpTripApi
 import com.example.blinkerleague.data.repository.DriverRepository
 import com.example.blinkerleague.data.repository.MissionRepository
+import com.example.blinkerleague.data.repository.RewardRepository
 import com.example.blinkerleague.data.repository.TripMapper
 import com.example.blinkerleague.data.repository.TripRepository
 import com.example.blinkerleague.data.vehicle.PleosVehicleSignalSource
@@ -77,6 +81,7 @@ class AppContainer(context: Context) {
     private val tripApi: TripApi
     private val missionApi: MissionApi
     private val driverApi: DriverApi
+    private val rewardApi: RewardApi
 
     init {
         if (usesServer) {
@@ -84,11 +89,14 @@ class AppContainer(context: Context) {
             tripApi = HttpTripApi(service)
             missionApi = HttpMissionApi(service)
             driverApi = HttpDriverApi(service)
+            rewardApi = HttpRewardApi(service)
         } else {
             val fakeTrips = FakeTripApi()
             tripApi = fakeTrips
-            missionApi = FakeMissionApi(fakeTrips, System::currentTimeMillis, zone)
+            val fakeMissions = FakeMissionApi(fakeTrips, System::currentTimeMillis, zone)
+            missionApi = fakeMissions
             driverApi = FakeDriverApi()
+            rewardApi = FakeRewardApi(fakeTrips, fakeMissions, System::currentTimeMillis, zone)
         }
     }
 
@@ -100,6 +108,9 @@ class AppContainer(context: Context) {
 
     /** 지금 기준값. 운행 기록·화면은 시작할 때 이 값을 읽음 */
     val config: DetectionConfig get() = configRepository.config.value
+
+    /** 2차 보상: 포인트·연속 달성·배지·주간 리포트 */
+    val rewardRepository = RewardRepository(rewardApi)
 
     /** 운전자 등록과 등록 여부 (온보딩) */
     val driverRepository = DriverRepository(driverApi, tokens)
