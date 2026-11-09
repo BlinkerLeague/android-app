@@ -37,6 +37,7 @@ import com.example.blinkerleague.ui.demo.DemoScreen
 import com.example.blinkerleague.ui.home.HomeScreen
 import com.example.blinkerleague.ui.onboarding.OnboardingScreen
 import com.example.blinkerleague.ui.quest.QuestScreen
+import com.example.blinkerleague.ui.report.WeeklyReportScreen
 import com.example.blinkerleague.ui.result.PlaysScreen
 import com.example.blinkerleague.ui.result.ResultScreen
 import com.example.blinkerleague.ui.wallet.WalletScreen
@@ -47,6 +48,7 @@ private object Routes {
     const val HOME = "home"
     const val WALLET = "wallet"
     const val ACHIEVEMENTS = "achievements"
+    const val REPORT = "report"
     const val DEMO = "demo"
     const val QUEST = "quest"
     const val RESULT = "result/{tripId}"
@@ -85,7 +87,8 @@ fun BlinkerNavHost() {
                         onOpenDemo = { navController.navigate(Routes.DEMO) },
                     )
                 }
-                composable(Routes.ACHIEVEMENTS) { AchievementsScreen() }
+                composable(Routes.ACHIEVEMENTS) { AchievementsScreen(onOpenReport = { navController.navigate(Routes.REPORT) }) }
+                composable(Routes.REPORT) { WeeklyReportScreen(onBack = { navController.popBackStack() }) }
                 composable(Routes.WALLET) { WalletScreen() }
                 // 시나리오 재생: 디버그 빌드 홈에서만 들어옴. 재생이 끝나면 결과로 이동(예외, screen-plan 4.1)
                 composable(Routes.DEMO) {

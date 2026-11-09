@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -15,6 +16,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,14 +47,14 @@ private val AchievementsViewModelFactory = viewModelFactory {
 }
 
 @Composable
-fun AchievementsScreen(viewModel: AchievementsViewModel = viewModel(factory = AchievementsViewModelFactory)) {
+fun AchievementsScreen(onOpenReport: () -> Unit, viewModel: AchievementsViewModel = viewModel(factory = AchievementsViewModelFactory)) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
-    AchievementsContent(state)
+    AchievementsContent(state, onOpenReport)
 }
 
 @Composable
-fun AchievementsContent(state: AchievementsUiState) {
+fun AchievementsContent(state: AchievementsUiState, onOpenReport: () -> Unit) {
     Box(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 24.dp)) {
         when (state) {
             AchievementsUiState.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
@@ -62,7 +64,12 @@ fun AchievementsContent(state: AchievementsUiState) {
                 modifier = Modifier.align(Alignment.Center),
             )
             is AchievementsUiState.Loaded -> Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                state.streak?.let { StreakPanel(it, Modifier.weight(0.8f).fillMaxHeight()) }
+                Column(Modifier.weight(0.8f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                    state.streak?.let { StreakPanel(it, Modifier.weight(1f).fillMaxWidth()) }
+                    OutlinedButton(onClick = onOpenReport, modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp)) {
+                        Text(stringResource(R.string.report_open), style = MaterialTheme.typography.labelLarge)
+                    }
+                }
                 Panel(Modifier.weight(1.2f).fillMaxHeight()) {
                     Text(stringResource(R.string.achievements_badges), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     LazyVerticalGrid(
@@ -148,6 +155,7 @@ private fun AchievementsPreview() = BlinkerLeagueTheme {
                     BadgeCard("깜빡이 100회", "깜빡이를 켠 회전 누적 100회", false, null),
                 ),
             ),
+            onOpenReport = {},
         )
     }
 }
