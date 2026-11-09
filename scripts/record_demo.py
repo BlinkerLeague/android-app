@@ -4,8 +4,8 @@
 Pleos 에뮬레이터에서 한 번에 진행하며 화면을 녹화합니다.
   1. 앱을 디버그 옵션 --ei parkEndSec 10 으로 다시 띄움 (P단 10초면 운행 종료, 기본은 3분)
   2. 녹화 시작 (adb screenrecord, 1920x1080). screenrecord 한 번은 최대 3분이라 끝나면 이어서 다음 파일로 녹화
-  3. Virtual Console로 vehicle_probe_sim.py demo 재생: D → 좌회전(깜빡이 켬) → 우회전(깜빡이 없음) → 약 3.5km → P
-     (짧은 운행 기준 3km를 넘겨야 점수가 나옴, 서버 결정 D10)
+  3. Virtual Console로 vehicle_probe_sim.py demo 재생: D → 좌회전(깜빡이 켬) → 우회전(깜빡이 없음) → 약 1.5km → P
+     (짧은 운행 기준 1km를 넘김. 서버 모드에서 서버 기준값이 3km이면 DEMO_CRUISE_SEC=115)
      (주행 중에는 시스템이 앱 화면을 "주행 중에는 사용할 수 없습니다"로 덮고, 앱은 "기록 중" 화면)
   4. 운행 종료 음성이 끝나면 홈 → 최근 경기 → 경기 결과 → 플레이 보기 → 퀘스트 순서로 화면을 넘김
   5. 녹화를 멈추고 automotive/build/demo/blinker_demo_1.mp4, _2.mp4 … 로 가져옴 (편집 때 이어 붙이기)
