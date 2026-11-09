@@ -15,6 +15,7 @@
 - [ ] **출시 키 만들기·보관**: 아래 "6. 출시용(release) APK"의 `keytool` 명령으로 키를 만들고 `local.properties`에 4줄을 적습니다. 키 파일과 비밀번호는 저장소에 올리지 말고 따로 보관합니다(잃어버리면 같은 앱으로 업데이트할 수 없음).
 - [ ] 시연 영상: "좌회전 깜빡이 성공 → 우회전 실패 → 운행 종료 → 점수·퀘스트 화면" — `python3 scripts/record_demo.py`로 에뮬레이터 화면을 자동 녹화할 수 있음(약 2분 30초, `automotive/build/demo/blinker_demo_1.mp4` — 3분을 넘으면 `_2.mp4`로 이어짐). 편집·자막은 직접
 - [ ] 공모전 제출 양식 작성
+- [ ] Pleos 앱 보안 가이드 남은 항목: [`docs/security-checklist.md`](docs/security-checklist.md) "남은 일" (운행 기록 암호화 여부, 운영 서버 HTTPS 주소, 의존성 점검)
 
 ## 📌 주요 기능
 

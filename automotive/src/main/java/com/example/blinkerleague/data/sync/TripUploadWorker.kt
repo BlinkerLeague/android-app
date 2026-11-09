@@ -1,7 +1,6 @@
 package com.example.blinkerleague.data.sync
 
 import android.content.Context
-import android.util.Log
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
@@ -10,6 +9,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.example.blinkerleague.AppLog
 import com.example.blinkerleague.BlinkerLeagueApplication
 import com.example.blinkerleague.data.repository.UploadSummary
 import java.util.concurrent.TimeUnit
@@ -26,12 +26,12 @@ class TripUploadWorker(context: Context, params: WorkerParameters) : CoroutineWo
     override suspend fun doWork(): Result {
         val repository = (applicationContext as BlinkerLeagueApplication).container.tripRepository
         val summary = repository.uploadPending()
-        Log.i(TAG, "업로드 시도 #${runAttemptCount + 1}: $summary")
+        AppLog.i(TAG, "업로드 시도 #${runAttemptCount + 1}: $summary")
         return when (UploadRetryPolicy.decide(summary, runAttemptCount)) {
             UploadRetryPolicy.Decision.DONE -> Result.success()
             UploadRetryPolicy.Decision.RETRY -> Result.retry()
             UploadRetryPolicy.Decision.GIVE_UP -> {
-                Log.w(TAG, "재시도 ${UploadRetryPolicy.MAX_ATTEMPTS}회 초과 — 다음 운행 종료·앱 시작 때 다시 예약됨")
+                AppLog.w(TAG, "재시도 ${UploadRetryPolicy.MAX_ATTEMPTS}회 초과 — 다음 운행 종료·앱 시작 때 다시 예약됨")
                 Result.success()
             }
         }
@@ -54,8 +54,8 @@ class TripUploadWorker(context: Context, params: WorkerParameters) : CoroutineWo
             runCatching {
                 WorkManager.getInstance(context).enqueueUniqueWork(UNIQUE_NAME, ExistingWorkPolicy.APPEND_OR_REPLACE, request)
             }
-                .onSuccess { Log.i(TAG, "업로드 예약 ($reason)") }
-                .onFailure { Log.w(TAG, "업로드 예약 실패 ($reason): $it") }
+                .onSuccess { AppLog.i(TAG, "업로드 예약 ($reason)") }
+                .onFailure { AppLog.w(TAG, "업로드 예약 실패 ($reason): $it") }
         }
     }
 }

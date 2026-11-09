@@ -7,6 +7,7 @@ import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFact
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.Authenticator
+import okhttp3.ConnectionSpec
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -34,7 +35,11 @@ object HttpClientFactory {
 
     fun create(baseUrl: String, tokens: TokenStore): BlinkerService {
         val url = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
+        // Pleos 앱 보안 가이드: TLS 1.2 이상만(MODERN_TLS = TLS 1.3·1.2). http는 디버그 빌드의 로컬 서버(10.0.2.2)뿐이고
+        // 릴리스는 network security config 기본값이 평문을 막음
+        val specs = if (url.startsWith("https://")) listOf(ConnectionSpec.MODERN_TLS) else listOf(ConnectionSpec.CLEARTEXT)
         val plain = OkHttpClient.Builder()
+            .connectionSpecs(specs)
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .build()

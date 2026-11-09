@@ -33,6 +33,9 @@ class PrefsTokenStoreTest {
         store.saveRegistration(RegisterDriverResponse(1, "깜빡왕", "11680", "access-1", "refresh-1"))
 
         assertEquals("v1:1-ssecca", prefs.getString("accessToken", null))
+        assertEquals("v1:왕빡깜", prefs.getString("nickname", null))
+        assertEquals("v1:08611", prefs.getString("regionCode", null))
+        assertEquals("v1:1", prefs.getString("driverId", null))
         assertEquals("access-1", store.accessToken)
         assertTrue(store.registered.value)
 
@@ -49,6 +52,16 @@ class PrefsTokenStoreTest {
         assertTrue(store.registered.value)
         assertEquals("v1:ssecca-nialp", prefs.getString("accessToken", null))
         assertEquals("plain-refresh", store.refreshToken)
+    }
+
+    @Test
+    fun `예전 버전의 평문 닉네임·지역·Long 운전자 ID도 암호화`() {
+        prefs.edit().putString("refreshToken", "r").putString("nickname", "깜빡왕").putString("regionCode", "11680")
+            .putLong("driverId", 7).commit()
+
+        store()
+        assertEquals("v1:왕빡깜", prefs.getString("nickname", null))
+        assertEquals("v1:7", prefs.getString("driverId", null))
     }
 
     @Test
