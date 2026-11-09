@@ -51,13 +51,13 @@ private val PlaysViewModelFactory = viewModelFactory {
 
 /** 플레이 타임라인 (SCR-02a). 카드 탭 상세(SCR-02b)는 P1이라 탭 동작 없음 */
 @Composable
-fun PlaysScreen(onBack: () -> Unit, viewModel: PlaysViewModel = viewModel(factory = PlaysViewModelFactory)) {
+fun PlaysScreen(onBack: () -> Unit, onOpenCard: () -> Unit, viewModel: PlaysViewModel = viewModel(factory = PlaysViewModelFactory)) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    PlaysContent(state, onBack)
+    PlaysContent(state, onBack, onOpenCard)
 }
 
 @Composable
-fun PlaysContent(state: PlaysUiState, onBack: () -> Unit) {
+fun PlaysContent(state: PlaysUiState, onBack: () -> Unit, onOpenCard: () -> Unit = {}) {
     Column(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Panel(Modifier.weight(1f).fillMaxWidth()) {
             Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
@@ -85,7 +85,7 @@ fun PlaysContent(state: PlaysUiState, onBack: () -> Unit) {
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        items(state.plays) { PlayCardItem(it) }
+                        items(state.plays) { PlayCardItem(it, onOpenCard) }
                     }
                 }
             }
@@ -105,14 +105,16 @@ fun PlaysContent(state: PlaysUiState, onBack: () -> Unit) {
 }
 
 @Composable
-private fun PlayCardItem(play: PlayCard) {
+private fun PlayCardItem(play: PlayCard, onClick: () -> Unit) {
     // 득점 파랑·실점 주황 (색만으로 구분하지 않도록 글자도 함께)
     val (container, content) = if (play.goal) SuccessContainer to OnSuccessContainer else WarningContainer to OnWarningContainer
     val label = when (play.direction) {
         TurnDirection.LEFT -> if (play.goal) R.string.plays_left_goal else R.string.plays_left_conceded
         TurnDirection.RIGHT -> if (play.goal) R.string.plays_right_goal else R.string.plays_right_conceded
     }
+    // 카드를 누르면 깜빡이 항목 상세 (SCR-02b)
     Surface(
+        onClick = onClick,
         modifier = Modifier.width(240.dp).heightIn(min = 200.dp, max = 360.dp).fillMaxHeight(),
         color = container,
         shape = RoundedCornerShape(16.dp),

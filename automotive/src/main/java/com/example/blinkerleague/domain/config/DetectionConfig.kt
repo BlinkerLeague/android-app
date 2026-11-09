@@ -11,8 +11,18 @@ data class DetectionConfig(
     val turn: TurnConfig = TurnConfig(),
     val guard: GuardConfig = GuardConfig(),
     val grades: List<GradeThreshold> = GradeThreshold.DEFAULT,
+    /** 항목별 팁 문구 (항목 상세 SCR-02b). 서버 기준값 `tips`가 오면 항목별로 덮어씀 */
+    val tips: Map<String, String> = DEFAULT_TIPS,
 ) {
     companion object {
+        /** 서버 기본 기준값의 팁 문구. 깜빡이는 앱 판정 기준(회전 5초 전)에 맞춘 문구 */
+        val DEFAULT_TIPS = mapOf(
+            "TURN_SIGNAL" to "회전 5초 전에 깜빡이를 켜 보세요.",
+            "SMOOTH_DRIVING" to "출발은 부드럽게, 정지는 미리 천천히 해 보세요.",
+            "SAFETY_WARNING" to "앞차와 거리를 넉넉히 두고 주변을 살펴 보세요.",
+            "NIGHT_HEADLIGHT" to "해가 지면 전조등을 꼭 켜 주세요.",
+        )
+
         val DEFAULT = DetectionConfig()
     }
 }

@@ -68,16 +68,23 @@ private val ResultViewModelFactory = viewModelFactory {
 @Composable
 fun ResultScreen(
     onOpenPlays: () -> Unit,
+    onOpenMetric: (MetricItem) -> Unit,
     onOpenQuest: () -> Unit,
     onDone: () -> Unit,
     viewModel: ResultViewModel = viewModel(factory = ResultViewModelFactory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    ResultContent(state, onOpenPlays, onOpenQuest, onDone)
+    ResultContent(state, onOpenPlays, onOpenQuest, onDone, onOpenMetric)
 }
 
 @Composable
-fun ResultContent(state: ResultUiState, onOpenPlays: () -> Unit, onOpenQuest: () -> Unit, onDone: () -> Unit) {
+fun ResultContent(
+    state: ResultUiState,
+    onOpenPlays: () -> Unit,
+    onOpenQuest: () -> Unit,
+    onDone: () -> Unit,
+    onOpenMetric: (MetricItem) -> Unit = {},
+) {
     Box(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 24.dp)) {
         when (state) {
             ResultUiState.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
@@ -89,13 +96,19 @@ fun ResultContent(state: ResultUiState, onOpenPlays: () -> Unit, onOpenQuest: ()
                 Text(stringResource(R.string.result_not_found), style = MaterialTheme.typography.titleLarge)
                 DoneButton(onDone, Modifier.width(240.dp))
             }
-            is ResultUiState.Loaded -> Loaded(state, onOpenPlays, onOpenQuest, onDone)
+            is ResultUiState.Loaded -> Loaded(state, onOpenPlays, onOpenQuest, onDone, onOpenMetric)
         }
     }
 }
 
 @Composable
-private fun Loaded(state: ResultUiState.Loaded, onOpenPlays: () -> Unit, onOpenQuest: () -> Unit, onDone: () -> Unit) {
+private fun Loaded(
+    state: ResultUiState.Loaded,
+    onOpenPlays: () -> Unit,
+    onOpenQuest: () -> Unit,
+    onDone: () -> Unit,
+    onOpenMetric: (MetricItem) -> Unit,
+) {
     Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
         Panel(Modifier.weight(0.8f).fillMaxHeight()) {
             Column(
@@ -119,7 +132,7 @@ private fun Loaded(state: ResultUiState.Loaded, onOpenPlays: () -> Unit, onOpenQ
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    state.metrics.forEach { MetricLine(it) }
+                    state.metrics.forEach { MetricLine(it, onClick = { onOpenMetric(it.item) }) }
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -192,7 +205,7 @@ private fun Message(title: Int, body: Int?) {
 }
 
 @Composable
-private fun MetricLine(row: MetricRow) {
+private fun MetricLine(row: MetricRow, onClick: () -> Unit) {
     val name = stringResource(
         when (row.item) {
             MetricItem.TURN_SIGNAL -> R.string.result_metric_turn_signal
@@ -204,7 +217,11 @@ private fun MetricLine(row: MetricRow) {
     val value = row.value
     val muted = value !is MetricValue.Score
     val textColor = if (muted) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
-    Row(Modifier.fillMaxWidth().heightIn(min = 40.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 64.dp).clip(RoundedCornerShape(10.dp)).clickable(onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
         Text(name, style = MaterialTheme.typography.bodyLarge, color = textColor, modifier = Modifier.width(200.dp))
         if (value is MetricValue.Score) {
             val track = MaterialTheme.colorScheme.outlineVariant

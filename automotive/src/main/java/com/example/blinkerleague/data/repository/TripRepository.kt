@@ -5,12 +5,15 @@ import com.example.blinkerleague.data.local.UploadState
 import com.example.blinkerleague.data.remote.ApiResult
 import com.example.blinkerleague.data.remote.TripApi
 import com.example.blinkerleague.data.remote.dto.ScoreStatus
+import com.example.blinkerleague.domain.model.MetricDetail
 import com.example.blinkerleague.domain.model.Trip
 import com.example.blinkerleague.domain.model.TripResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.intOrNull
 
 data class UploadSummary(
     val uploaded: Int,
@@ -58,6 +61,21 @@ class TripRepository(
         val result = api.getScore(tripId) as? ApiResult.Success ?: return
         if (result.body.status == ScoreStatus.UPLOADED) return
         dao.markUploaded(tripId, result.body.status, result.body.score, clock())
+    }
+
+    /** 항목 상세: 서버가 준 이 운행의 항목별 판정 결과. 업로드 전·조회 실패면 null */
+    suspend fun metricDetails(tripId: String): List<MetricDetail>? {
+        if (dao.trip(tripId)?.trip?.uploadState != UploadState.UPLOADED) return null
+        val body = (api.getScore(tripId) as? ApiResult.Success)?.body ?: return null
+        return body.metrics.map { m ->
+            MetricDetail(
+                metric = m.metric,
+                status = m.status,
+                reason = m.reason,
+                score = m.score,
+                counts = m.detail.orEmpty().mapNotNull { (k, v) -> (v as? JsonPrimitive)?.intOrNull?.let { k to it } }.toMap(),
+            )
+        }
     }
 
     /** 결과 화면: 이 운행으로 적립된 포인트 (서버 요청 12번 `earnedPoints`). 업로드 전·서버가 안 주면 null */

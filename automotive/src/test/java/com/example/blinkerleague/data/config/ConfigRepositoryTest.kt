@@ -23,7 +23,7 @@ class ConfigRepositoryTest {
          "weights":{"TURN_SIGNAL":0.4,"SMOOTH_DRIVING":0.3,"SAFETY_WARNING":0.2,"NIGHT_HEADLIGHT":0.1},
          "point":{"tripMaxKm":50,"dailyCap":150},
          "grades":[{"grade":"S","minScore":95},{"grade":"A","minScore":85},{"grade":"B","minScore":70},{"grade":"C","minScore":50}],
-         "tips":{"TURN_SIGNAL":"회전 5초 전에 깜빡이를 켜 보세요."}}
+         "tips":{"TURN_SIGNAL":"회전 30m 전에 깜빡이를 켜 보세요.","SEAT_BELT":"출발 전에 안전벨트를 매 주세요."}}
     """.trimIndent()
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -55,6 +55,10 @@ class ConfigRepositoryTest {
         assertEquals(DetectionConfig.DEFAULT.turn.steeringRightPositive, merged.turn.steeringRightPositive)
         assertEquals(GradeThreshold.DEFAULT, merged.grades)
         assertEquals(DetectionConfig.DEFAULT.guard, merged.guard)
+        // 팁은 서버 것이 항목별로 덮어쓰고, 서버에 없는 항목은 기본 문구 유지
+        assertEquals("회전 30m 전에 깜빡이를 켜 보세요.", merged.tips["TURN_SIGNAL"])
+        assertEquals("출발 전에 안전벨트를 매 주세요.", merged.tips["SEAT_BELT"])
+        assertEquals(DetectionConfig.DEFAULT_TIPS["NIGHT_HEADLIGHT"], merged.tips["NIGHT_HEADLIGHT"])
     }
 
     @Test

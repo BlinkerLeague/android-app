@@ -39,6 +39,15 @@
     <string name="result_quest">퀘스트 · %1$s</string>
     <string name="result_done">확인</string>
 
+    <!-- 항목 상세 (SCR-02b) -->
+    <string name="detail_score">%1$d점</string>
+    <string name="detail_counts">회전 %1$d번 · 제때 %2$d · 늦게 %3$d · 안 켬 %4$d</string>
+    <string name="detail_counts_local">서버 판정을 받기 전이라 기기 기록으로 셌어요</string>
+    <string name="detail_tip">이렇게 해 보세요</string>
+    <string name="detail_turns">이번 운행의 회전</string>
+    <string name="summary_turn_left_short">좌회전</string>
+    <string name="summary_turn_right_short">우회전</string>
+
     <!-- 플레이 타임라인 (SCR-02a) -->
     <string name="plays_header">%1$s ~ %2$s · %3$.1f km · 플레이 %4$d</string>
     <string name="plays_left_goal">좌회전 득점</string>
