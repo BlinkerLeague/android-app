@@ -97,6 +97,25 @@ class FakeTripApiTest {
     }
 
     @Test
+    fun `측정하지 못한 항목(value·score·weight null, detail 객체)이 섞인 지금 서버 응답도 읽힘`() {
+        // 앱 HTTP 클라이언트와 같은 설정, 로컬 서버 develop 5d1ad9c 실제 응답 일부 (2026-11-09)
+        val json = com.example.blinkerleague.data.remote.http.HttpClientFactory.json
+        val body = """
+            {"tripId":"a","status":"SCORED","score":67,"grade":"C",
+             "metrics":[
+               {"metric":"TURN_SIGNAL","status":"SCORED","reason":null,"value":0.6666666666666666,"score":67,"weight":1.0,"detail":{"late":0,"turns":3,"onTime":2,"missed":1}},
+               {"metric":"SMOOTH_DRIVING","status":"UNSUPPORTED","reason":"SIGNAL_NOT_SUPPORTED","value":null,"score":null,"weight":null,"detail":{}}
+             ],
+             "turns":{"total":3,"success":2},"summary":{"goals":2,"conceded":1,"fouls":0},"plays":[],"mission":{"missionId":1,"status":"IN_PROGRESS"}}
+        """.trimIndent()
+        val parsed = json.decodeFromString<com.example.blinkerleague.data.remote.dto.TripScoreResponse>(body)
+        assertEquals(2, parsed.metrics.size)
+        assertEquals("UNSUPPORTED", parsed.metrics[1].status)
+        assertNull(parsed.metrics[1].score)
+        assertEquals("2", parsed.metrics[0].detail!!["onTime"].toString())
+    }
+
+    @Test
     fun `예전 형식 응답(새 필드 없음)도 읽힘`() {
         val json = Json { ignoreUnknownKeys = true }
         val old = """{"tripId":"a","status":"SCORED","score":75}"""

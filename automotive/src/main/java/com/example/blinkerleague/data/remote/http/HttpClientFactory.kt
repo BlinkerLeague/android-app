@@ -31,6 +31,8 @@ object HttpClientFactory {
     val json = Json {
         ignoreUnknownKeys = true
         explicitNulls = false
+        // 기본값이 있는 필드에 서버가 null을 보내면 기본값으로 (응답 전체를 버리지 않게)
+        coerceInputValues = true
     }
 
     fun create(baseUrl: String, tokens: TokenStore): BlinkerService {
