@@ -8,9 +8,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.IBinder
-import android.util.Log
 import androidx.core.app.ServiceCompat
 import com.example.blinkerleague.AppContainer
+import com.example.blinkerleague.AppLog
 import com.example.blinkerleague.BlinkerLeagueApplication
 import com.example.blinkerleague.R
 import com.example.blinkerleague.data.sync.TripUploadWorker
@@ -69,16 +69,16 @@ class TripCollectionService : Service() {
             clock = System::currentTimeMillis,
             newId = container::newId,
         )
-        Log.i(TAG, "수집 시작, 지원 신호: ${container.vehicleSignalSource.capabilities()}")
+        AppLog.i(TAG, "수집 시작, 지원 신호: ${container.vehicleSignalSource.capabilities()}")
         scope.launch {
             recorder.state.collect { state ->
                 container.setRecordingStatus(state.toStatus())
                 container.voiceGuide.onRecorderState(state)
                 when (state) {
-                    is RecorderState.Recording -> Log.i(TAG, "운행 시작 ${state.tripId}")
+                    is RecorderState.Recording -> AppLog.i(TAG, "운행 시작 ${state.tripId}")
                     is RecorderState.Finished -> {
                         val result = container.tripRepository.observeResult(state.tripId).first()
-                        Log.i(
+                        AppLog.i(
                             TAG,
                             "운행 끝 ${state.tripId} → 저장됨: 거리=%.2fkm 회전=${result?.turns?.map { "${it.direction}:${if (it.signalOn) "켬" else "안 켬"}" }}"
                                 .format(result?.distanceKm ?: 0.0),
@@ -96,7 +96,7 @@ class TripCollectionService : Service() {
     override fun onDestroy() {
         scope.cancel()
         container.setRecordingStatus(RecordingStatus.OFF)
-        Log.i(TAG, "수집 종료")
+        AppLog.i(TAG, "수집 종료")
         super.onDestroy()
     }
 
@@ -113,8 +113,8 @@ class TripCollectionService : Service() {
          */
         fun start(context: Context, reason: String) {
             runCatching { context.startForegroundService(Intent(context, TripCollectionService::class.java)) }
-                .onSuccess { Log.i(TAG, "시작 요청 ($reason)") }
-                .onFailure { Log.w(TAG, "시작 실패 ($reason): $it") }
+                .onSuccess { AppLog.i(TAG, "시작 요청 ($reason)") }
+                .onFailure { AppLog.w(TAG, "시작 실패 ($reason): $it") }
         }
     }
 }

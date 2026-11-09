@@ -1,18 +1,18 @@
 package com.example.blinkerleague.data.vehicle
 
-import android.car.Car
-import android.car.VehiclePropertyIds
-import android.car.hardware.CarPropertyValue
-import android.car.hardware.property.CarPropertyManager
-import android.content.Context
-import android.content.pm.PackageManager
-import android.util.Log
 import ai.pleos.playground.vehicle.Vehicle
 import ai.pleos.playground.vehicle.constant.area.TurnSignalValue
 import ai.pleos.playground.vehicle.constant.control.VehicleGear
 import ai.pleos.playground.vehicle.listener.GearSelectionListener
 import ai.pleos.playground.vehicle.listener.SteeringWheelAngleListener
 import ai.pleos.playground.vehicle.listener.TurnSignalStateListener
+import android.car.Car
+import android.car.VehiclePropertyIds
+import android.car.hardware.CarPropertyValue
+import android.car.hardware.property.CarPropertyManager
+import android.content.Context
+import android.content.pm.PackageManager
+import com.example.blinkerleague.AppLog
 import com.example.blinkerleague.domain.model.Availability
 import com.example.blinkerleague.domain.model.CapabilityReport
 import com.example.blinkerleague.domain.model.Gear
@@ -21,6 +21,7 @@ import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.TurnSignalState
 import com.example.blinkerleague.domain.model.VehicleStateSample
+import kotlin.coroutines.resume
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
@@ -32,7 +33,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.coroutines.resume
 
 /**
  * 실제 차량 신호 공급원: Pleos Vehicle SDK 2.3.2(방향지시등·핸들 각도·기어) + CarPropertyManager(속도).
@@ -65,7 +65,7 @@ class PleosVehicleSignalSource(
 
     private val propertyManager: CarPropertyManager? by lazy {
         runCatching { Car.createCar(appContext)?.getCarManager(Car.PROPERTY_SERVICE) as? CarPropertyManager }
-            .onFailure { Log.w(TAG, "CarPropertyManager 연결 실패", it) }
+            .onFailure { AppLog.w(TAG, "CarPropertyManager 연결 실패", it) }
             .getOrNull()
     }
 
@@ -93,7 +93,7 @@ class PleosVehicleSignalSource(
                 suspendCancellableCoroutine { cont ->
                     try {
                         call({ if (cont.isActive) cont.resume(Availability.SUPPORTED) }) { e ->
-                            Log.i(TAG, "capability 실패: $e")
+                            AppLog.i(TAG, "capability 실패: $e")
                             if (cont.isActive) cont.resume(Availability.UNSUPPORTED)
                         }
                     } catch (e: SecurityException) {
@@ -114,7 +114,7 @@ class PleosVehicleSignalSource(
                 state?.let { trySend(SignalSample(clock(), it.toDomain())) }
             }
             override fun onFailed(exception: Exception) {
-                Log.w(TAG, "방향지시등 미지원: $exception")
+                AppLog.w(TAG, "방향지시등 미지원: $exception")
                 close()
             }
         }
@@ -129,7 +129,7 @@ class PleosVehicleSignalSource(
                 angle?.let { trySend(SteeringSample(clock(), it)) }
             }
             override fun onFailed(exception: Exception) {
-                Log.w(TAG, "핸들 각도 미지원: $exception")
+                AppLog.w(TAG, "핸들 각도 미지원: $exception")
                 close()
             }
         }
@@ -144,7 +144,7 @@ class PleosVehicleSignalSource(
                 trySend(VehicleStateSample(clock(), ignitionOn = null, gear = gear.toDomain()))
             }
             override fun onFailed(exception: Exception) {
-                Log.w(TAG, "기어 미지원: $exception")
+                AppLog.w(TAG, "기어 미지원: $exception")
                 close()
             }
         }
@@ -160,7 +160,7 @@ class PleosVehicleSignalSource(
     private val speedUpdates: Flow<SpeedSample> = callbackFlow {
         val manager = propertyManager
         if (manager == null || !speedGranted()) {
-            Log.w(TAG, "속도를 받을 수 없음 (권한 ${speedGranted()}, 서비스 ${manager != null})")
+            AppLog.w(TAG, "속도를 받을 수 없음 (권한 ${speedGranted()}, 서비스 ${manager != null})")
             close()
             return@callbackFlow
         }
@@ -169,7 +169,7 @@ class PleosVehicleSignalSource(
                 (value.value as? Float)?.let { mps -> trySend(SpeedSample(clock(), mps * MPS_TO_KMH)) }
             }
             override fun onErrorEvent(propertyId: Int, areaId: Int) {
-                Log.w(TAG, "속도 오류 이벤트 area=$areaId")
+                AppLog.w(TAG, "속도 오류 이벤트 area=$areaId")
             }
         }
         val registered = runCatching {
@@ -179,7 +179,7 @@ class PleosVehicleSignalSource(
             close()
             return@callbackFlow
         }
-        Log.i(TAG, "속도 구독 시작")
+        AppLog.i(TAG, "속도 구독 시작")
         awaitClose { manager.unregisterCallback(callback) }
     }
 

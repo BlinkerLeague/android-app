@@ -1,5 +1,10 @@
 package com.example.blinkerleague.voice
 
+import ai.pleos.playground.tts.TextToSpeech
+import ai.pleos.playground.tts.constant.ErrorType
+import ai.pleos.playground.tts.constant.Mode
+import ai.pleos.playground.tts.listener.EventListener
+import ai.pleos.playground.tts.listener.OnInitializeListener
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
@@ -7,18 +12,13 @@ import android.media.AudioManager
 import android.media.AudioPlaybackConfiguration
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
-import ai.pleos.playground.tts.TextToSpeech
-import ai.pleos.playground.tts.constant.ErrorType
-import ai.pleos.playground.tts.constant.Mode
-import ai.pleos.playground.tts.listener.EventListener
-import ai.pleos.playground.tts.listener.OnInitializeListener
+import com.example.blinkerleague.AppLog
+import java.util.Locale
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
-import java.util.Locale
 
 /**
  * Pleos TextToSpeech SDK(3.3.1)로 읽는 구현. API는 SDK 클래스(javap)로 확인함:
@@ -58,7 +58,7 @@ class PleosTtsAnnouncer(
         override fun onDone() = finish(true)
         override fun onStop() = finish(false)
         override fun onError(type: ErrorType) {
-            Log.w(TAG, "TTS 오류: $type")
+            AppLog.w(TAG, "TTS 오류: $type")
             finish(false)
         }
         override fun onUpdatedRms(rms: Double) = Unit
@@ -69,15 +69,15 @@ class PleosTtsAnnouncer(
         var outcome = Outcome.FAILED
         for (attempt in 1..MAX_ATTEMPTS) {
             if (!awaitNavigationQuiet()) {
-                Log.i(TAG, "내비 안내가 끝나지 않아 이번 안내를 건너뜀")
+                AppLog.i(TAG, "내비 안내가 끝나지 않아 이번 안내를 건너뜀")
                 break
             }
             outcome = withFocus { speakUnlessNavigation(engine, text) } ?: Outcome.FAILED
             if (outcome != Outcome.INTERRUPTED) break
-            Log.i(TAG, "내비 안내가 시작돼 멈춤 (시도 $attempt/$MAX_ATTEMPTS)")
+            AppLog.i(TAG, "내비 안내가 시작돼 멈춤 (시도 $attempt/$MAX_ATTEMPTS)")
         }
         val ok = outcome == Outcome.DONE
-        Log.i(TAG, "안내 ${if (ok) "완료" else "실패($outcome)"}: $text")
+        AppLog.i(TAG, "안내 ${if (ok) "완료" else "실패($outcome)"}: $text")
         ok
     }
 
@@ -124,7 +124,7 @@ class PleosTtsAnnouncer(
         tts?.let { return it }
         val result = CompletableDeferred<ErrorType?>()
         val engine = runCatching { TextToSpeech(appContext, Mode.ON_DEVICE) }.getOrElse {
-            Log.w(TAG, "TTS 생성 실패", it)
+            AppLog.w(TAG, "TTS 생성 실패", it)
             return null
         }
         engine.initialize(object : OnInitializeListener {
@@ -139,7 +139,7 @@ class PleosTtsAnnouncer(
             if (!result.isCompleted) ErrorType.TIMEOUT else null
         }
         if (error != null) {
-            Log.w(TAG, "TTS 초기화 실패: $error — 음성 안내를 건너뜀")
+            AppLog.w(TAG, "TTS 초기화 실패: $error — 음성 안내를 건너뜀")
             runCatching { engine.release() }
             return null
         }
@@ -157,20 +157,20 @@ class PleosTtsAnnouncer(
             .setAudioAttributes(attributes)
             .setAcceptsDelayedFocusGain(true)
             .setOnAudioFocusChangeListener { change ->
-                Log.i(TAG, "포커스 변화: ${focusName(change)}")
+                AppLog.i(TAG, "포커스 변화: ${focusName(change)}")
                 if (change == AudioManager.AUDIOFOCUS_GAIN) granted.complete(true)
             }
             .build()
         try {
             val result = audioManager.requestAudioFocus(request)
-            Log.i(TAG, "포커스 요청 결과: $result (1=GRANTED, 2=DELAYED, 0=FAILED)")
+            AppLog.i(TAG, "포커스 요청 결과: $result (1=GRANTED, 2=DELAYED, 0=FAILED)")
             when (result) {
                 AudioManager.AUDIOFOCUS_REQUEST_GRANTED -> granted.complete(true)
                 AudioManager.AUDIOFOCUS_REQUEST_DELAYED -> Unit // 내비 음성 등이 끝나면 GAIN이 옴
                 else -> return null
             }
             if (withTimeoutOrNull(FOCUS_WAIT_MS) { granted.await() } != true) {
-                Log.i(TAG, "오디오 포커스를 받지 못해 안내를 건너뜀")
+                AppLog.i(TAG, "오디오 포커스를 받지 못해 안내를 건너뜀")
                 return null
             }
             return block()

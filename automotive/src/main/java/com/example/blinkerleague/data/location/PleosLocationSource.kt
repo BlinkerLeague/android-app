@@ -1,10 +1,10 @@
 package com.example.blinkerleague.data.location
 
-import android.content.Context
-import android.util.Log
 import ai.pleos.playground.location.fused.FusedLocation
 import ai.pleos.playground.location.fused.listener.FusedLocationListener
 import ai.pleos.playground.location.fused.model.LocationData
+import android.content.Context
+import com.example.blinkerleague.AppLog
 import com.example.blinkerleague.domain.model.LocationSample
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
@@ -37,7 +37,7 @@ class PleosLocationSource(
             instance.initialize()
             instance
         } else {
-            Log.w(TAG, "FusedLocation 미지원")
+            AppLog.w(TAG, "FusedLocation 미지원")
             null
         }
     }
@@ -59,11 +59,11 @@ class PleosLocationSource(
                 }
             }
             override fun onError(exception: Exception) {
-                Log.w(TAG, "위치 오류: $exception")
+                AppLog.w(TAG, "위치 오류: $exception")
             }
         }
         val registered = runCatching { sdk.registerFusedLocationCallback(listener) }
-            .onFailure { Log.w(TAG, "위치 구독 실패 (권한 확인)", it) }
+            .onFailure { AppLog.w(TAG, "위치 구독 실패 (권한 확인)", it) }
             .isSuccess
         if (!registered) {
             close()
