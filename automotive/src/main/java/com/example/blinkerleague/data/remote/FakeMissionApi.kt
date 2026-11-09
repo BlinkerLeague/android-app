@@ -31,18 +31,7 @@ class FakeMissionApi(
         failWith?.let { return it }
         val today = Instant.ofEpochMilli(clock()).atZone(zone).toLocalDate()
 
-        // 라운드 = 점수 대상 운행 (turns 합계, 성공 수), 종료 시각순
-        val rounds = tripApi.uploadedTrips()
-            .filter { (_, result) -> result.status != ScoreStatus.EXCLUDED_SHORT }
-            .map { (request, result) ->
-                Round(
-                    day = OffsetDateTime.parse(request.endedAt).atZoneSameInstant(zone).toLocalDate(),
-                    endedAt = OffsetDateTime.parse(request.endedAt).toInstant(),
-                    turns = result.turns?.total ?: 0,
-                    success = result.turns?.success ?: 0,
-                )
-            }
-            .sortedBy { it.endedAt }
+        val rounds = rounds()
         // 오늘 라운드가 없으면 마지막 미션 날
         val day = if (rounds.any { it.day == today }) today else rounds.lastOrNull()?.day ?: today
         val dayRounds = rounds.filter { it.day == day }
@@ -70,6 +59,23 @@ class FakeMissionApi(
             ),
         )
     }
+
+    /** 미션을 달성한 날 → 처음 달성한 라운드(운행)의 종료 시각. 포인트·연속 달성·배지 Fake([FakeRewardApi])가 씀 */
+    fun achievements(): Map<LocalDate, Instant> =
+        rounds().filter { it.achieved(requiredTurns) }.groupBy { it.day }.mapValues { (_, r) -> r.first().endedAt }
+
+    /** 라운드 = 점수 대상 운행 (회전 수, 성공 수), 종료 시각순 */
+    private fun rounds(): List<Round> = tripApi.uploadedTrips()
+        .filter { (_, result) -> result.status != ScoreStatus.EXCLUDED_SHORT }
+        .map { (request, result) ->
+            Round(
+                day = OffsetDateTime.parse(request.endedAt).atZoneSameInstant(zone).toLocalDate(),
+                endedAt = OffsetDateTime.parse(request.endedAt).toInstant(),
+                turns = result.turns?.total ?: 0,
+                success = result.turns?.success ?: 0,
+            )
+        }
+        .sortedBy { it.endedAt }
 
     private data class Round(val day: LocalDate, val endedAt: Instant, val turns: Int, val success: Int) {
         fun achieved(required: Int) = turns >= required && success == turns

@@ -1,12 +1,16 @@
 package com.example.blinkerleague.data.remote.http
 
+import com.example.blinkerleague.data.remote.dto.BadgeDto
+import com.example.blinkerleague.data.remote.dto.PointsResponse
 import com.example.blinkerleague.data.remote.dto.RecentTripDto
 import com.example.blinkerleague.data.remote.dto.RegisterDriverRequest
 import com.example.blinkerleague.data.remote.dto.RegisterDriverResponse
+import com.example.blinkerleague.data.remote.dto.StreakResponse
 import com.example.blinkerleague.data.remote.dto.ThresholdsResponse
 import com.example.blinkerleague.data.remote.dto.TodayMissionResponse
 import com.example.blinkerleague.data.remote.dto.TripScoreResponse
 import com.example.blinkerleague.data.remote.dto.TripUploadRequest
+import com.example.blinkerleague.data.remote.dto.WeeklyReportResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -29,6 +33,18 @@ interface BlinkerService {
 
     @GET("api/config/thresholds")
     suspend fun thresholds(): ThresholdsResponse
+
+    @GET("api/points")
+    suspend fun points(): PointsResponse
+
+    @GET("api/streak")
+    suspend fun streak(): StreakResponse
+
+    @GET("api/badges")
+    suspend fun badges(): List<BadgeDto>
+
+    @GET("api/reports/weekly")
+    suspend fun weeklyReport(@Query("week") week: String?): WeeklyReportResponse
 
     @GET("api/missions/today")
     suspend fun todayMission(): TodayMissionResponse
