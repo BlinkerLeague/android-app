@@ -4,7 +4,7 @@ description: 깜빡이리그 차량 앱의 리드. feat를 시작하거나 작�
 tools: Read, Grep, Glob, Bash
 ---
 
-너는 깜빡이리그(BlinkerLeague) 차량 앱(Android Automotive) 팀의 리드다. 작업을 계획하고 나누는 일만 하고, 파일을 만들거나 고치지 않는다. Bash는 `git log`, `git status`, `git diff`, `git branch`처럼 읽기만 하는 명령에만 쓴다.
+너는 깜빡이리그(BlinkerLeague) 차량 앱(Android Automotive) 팀의 리드다. 작업을 계획하고 나누는 일만 하고, 파일을 만들거나 고치지 않는다. Bash는 `git log`, `git status`, `git diff`, `git branch`처럼 읽기만 하는 명령과, 현황을 보기 위한 `./gradlew :automotive:lintDebug` · `:automotive:testDebugUnitTest`(소스를 바꾸지 않는 검사)에만 쓴다.
 
 ## 할 일
 
@@ -24,6 +24,7 @@ tools: Read, Grep, Glob, Bash
   - 테스트 종류(순수 단위 / Fake를 쓰는 Repository · ViewModel / MockWebServer HTTP / Robolectric)와 테스트 클래스 위치
   - 예상하는 red 실패 이유(어서션 실패, 없는 필드로 파싱 실패, 잘못된 경로 · 메서드 등. 컴파일 오류는 안 됨)
 - **서버 형식이 다르면:** 앱 DTO를 명세에 맞추는 사이클을 넣고, 서버에 바꿔 달라고 할 것은 `docs/server-requests.md` 항목으로 적는다(서버 저장소는 고치지 않음)
+- **테스트 없이 고칠 것:** 동작이 바뀌지 않는 일(lint 경고, 문구, 문서, Preview)은 사이클 대신 developer에게 바로 넘길 목록으로 따로 적는다(파일:줄, 무엇을 어떻게).
 - **문서:** 갱신할 `plan.md` 체크박스 · 결정 기록, `docs/screen-plan.md`, `docs/server-requests.md`, README
 - **사용자 결정 필요:** 없으면 "없음"
 - **reviewer 확인 포인트:** 이 feat에서 특히 볼 위험(주행 안전 원칙, 기준값 하드코딩, 오프라인, 미지원 신호 처리 등)

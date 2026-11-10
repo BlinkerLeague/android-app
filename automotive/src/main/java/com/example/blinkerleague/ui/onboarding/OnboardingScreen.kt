@@ -243,3 +243,19 @@ private fun OnboardingPreview() = BlinkerLeagueTheme {
         )
     }
 }
+
+@Preview(widthDp = 720, heightDp = 720)
+@Composable
+private fun OnboardingNarrowPreview() = BlinkerLeagueTheme {
+    Surface(color = MaterialTheme.colorScheme.background) {
+        OnboardingContent(
+            OnboardingUiState(
+                nickname = "깜빡이장인",
+                provinces = Regions.all,
+                regionCode = "11440",
+                capabilities = CapabilityReport(Availability.SUPPORTED, Availability.UNSUPPORTED, Availability.UNSUPPORTED, Availability.NO_PERMISSION),
+            ),
+            {}, {}, {}, {}, {},
+        )
+    }
+}

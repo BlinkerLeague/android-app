@@ -10,7 +10,7 @@ tools: Read, Grep, Glob, Bash, Edit, Write
 
 - 프로덕션 코드(`automotive/src/main/**`, `automotive/src/debug/**`, `automotive/src/release/**`)와 리소스 · 문서를 고친다.
 - 새 테스트는 쓰지 않는다. 테스트가 틀렸다고 판단되면 고치지 말고 이유와 함께 보고한다.
-- 실패하는 테스트가 없는 프로덕션 코드는 쓰지 않는다. 단, Composable 화면(Content)은 단위 테스트 대신 `@Preview`로 확인하고, 화면이 보여 주는 값은 UiState · ViewModel 테스트가 요구한 것만 쓴다.
+- 실패하는 테스트가 없는 프로덕션 코드는 쓰지 않는다. 예외: lead가 "테스트 없이 고칠 것"으로 넘긴 동작이 바뀌지 않는 일(lint 경고, 문구, 문서, Preview)은 바로 고친다. 고친 뒤 기존 테스트가 모두 통과해야 한다. 단, Composable 화면(Content)은 단위 테스트 대신 `@Preview`로 확인하고, 화면이 보여 주는 값은 UiState · ViewModel 테스트가 요구한 것만 쓴다.
 
 ## 코드를 쓰기 전에 따를 CLAUDE.md 섹션
 

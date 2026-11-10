@@ -285,10 +285,15 @@ internal fun Panel(modifier: Modifier, content: @Composable () -> Unit) {
     }
 }
 
-private fun previewState(state: ScoreState, score: Int?, grade: String?) = ResultUiState.Loaded(
+private fun previewState(
+    state: ScoreState,
+    score: Int?,
+    grade: String?,
+    turnValue: MetricValue = if (score != null) MetricValue.Score(score) else MetricValue.Pending,
+) = ResultUiState.Loaded(
     scoreState = state, score = score, grade = grade, distanceKm = 14.2, goals = 2, conceded = 1,
     metrics = listOf(
-        MetricRow(MetricItem.TURN_SIGNAL, if (score != null) MetricValue.Score(score) else MetricValue.Pending),
+        MetricRow(MetricItem.TURN_SIGNAL, turnValue),
         MetricRow(MetricItem.SMOOTH_DRIVING, MetricValue.ComingSoon),
         MetricRow(MetricItem.SAFETY_WARNING, MetricValue.ComingSoon),
         MetricRow(MetricItem.NIGHT_HEADLIGHT, MetricValue.ComingSoon),
@@ -306,4 +311,20 @@ private fun ResultScoredPreview() = BlinkerLeagueTheme {
 @Composable
 private fun ResultPendingNarrowPreview() = BlinkerLeagueTheme {
     Surface(color = MaterialTheme.colorScheme.background) { ResultContent(previewState(ScoreState.PENDING, null, null), {}, {}, {}) }
+}
+
+@Preview(widthDp = 1280, heightDp = 720)
+@Composable
+private fun ResultNoTurnPreview() = BlinkerLeagueTheme {
+    Surface(color = MaterialTheme.colorScheme.background) {
+        ResultContent(previewState(ScoreState.NO_TURN, null, null, MetricValue.NoTurn).copy(goals = 0, conceded = 0), {}, {}, {})
+    }
+}
+
+@Preview(widthDp = 1280, heightDp = 720)
+@Composable
+private fun ResultExcludedShortPreview() = BlinkerLeagueTheme {
+    Surface(color = MaterialTheme.colorScheme.background) {
+        ResultContent(previewState(ScoreState.EXCLUDED_SHORT, null, null, MetricValue.Excluded).copy(distanceKm = 0.6, goals = 0, conceded = 0), {}, {}, {})
+    }
 }
