@@ -19,7 +19,7 @@ interface LeagueApi {
     suspend fun currentLeague(): ApiResult<LeagueResponse>
 
     /** `PUT /api/drivers/me/league-visibility` 리그 순위 공개 설정 */
-    suspend fun setVisibility(visible: Boolean): ApiResult<LeagueVisibilityDto> = TODO()
+    suspend fun setVisibility(visible: Boolean): ApiResult<LeagueVisibilityDto>
 }
 
 /**

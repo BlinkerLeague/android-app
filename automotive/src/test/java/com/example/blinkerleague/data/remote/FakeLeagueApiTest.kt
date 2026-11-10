@@ -86,6 +86,7 @@ class FakeLeagueApiTest {
     fun `서버에 리그가 없으면(404) 불러오지 못함`() = runTest(dispatcher) {
         val none = LeagueRepository(object : LeagueApi {
             override suspend fun currentLeague() = ApiResult.HttpError(404)
+            override suspend fun setVisibility(visible: Boolean) = ApiResult.HttpError(404)
         })
         val vm = LeagueViewModel(none::current) { now }
         vm.refresh()
