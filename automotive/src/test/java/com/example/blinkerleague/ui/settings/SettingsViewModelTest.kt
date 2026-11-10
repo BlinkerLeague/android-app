@@ -136,4 +136,34 @@ class SettingsViewModelTest {
         // then
         assertEquals(listOf(false), saved)
     }
+
+    @Test
+    fun `저장하는 동안 토글을 저장 중으로 표시하고, 저장이 끝나면 푼다`() = runTest(dispatcher) {
+        // given
+        // 느린 네트워크라 저장이 바로 끝나지 않음
+        val gate = CompletableDeferred<Boolean>()
+        val vm = SettingsViewModel(
+            { DriverProfile("깜빡왕", "11440") }, speed, status, "1.0", true,
+            loadLeagueVisible = { true },
+            saveLeagueVisible = { gate.await() },
+        )
+        backgroundScope.launch { vm.uiState.collect {} }
+        runCurrent()
+
+        // when
+        vm.setLeagueVisible(false)
+        runCurrent()
+
+        // then
+        assertTrue(vm.uiState.value.leagueVisibilitySaving)
+
+        // when
+        // 저장 성공
+        gate.complete(true)
+        runCurrent()
+
+        // then
+        assertFalse(vm.uiState.value.leagueVisibilitySaving)
+        assertEquals(false, vm.uiState.value.leagueVisible)
+    }
 }
