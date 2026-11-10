@@ -20,6 +20,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.time.ZoneId
@@ -85,10 +86,25 @@ class FakeLeagueApiTest {
     fun `서버에 리그가 없으면(404) 불러오지 못함`() = runTest(dispatcher) {
         val none = LeagueRepository(object : LeagueApi {
             override suspend fun currentLeague() = ApiResult.HttpError(404)
+            override suspend fun setVisibility(visible: Boolean) = ApiResult.HttpError(404)
         })
         val vm = LeagueViewModel(none::current) { now }
         vm.refresh()
         runCurrent()
         assertEquals(LeagueUiState.Unavailable, vm.uiState.value)
+    }
+
+    @Test
+    fun `Fake에서 순위 공개를 끄면 다음 리그 조회에 반영된다`() = runTest(dispatcher) {
+        // given
+        // 기본은 공개 (서버 D8)
+        assertTrue(repository.current()!!.visible)
+
+        // when
+        val saved = repository.setVisible(false)
+
+        // then
+        assertTrue(saved)
+        assertFalse(repository.current()!!.visible)
     }
 }

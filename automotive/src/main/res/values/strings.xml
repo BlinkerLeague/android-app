@@ -247,4 +247,8 @@
     <string name="collection_channel">운행 기록</string>
     <string name="collection_notification">깜빡이리그 · 기록 중</string>
 
+    <string name="settings_league">리그</string>
+    <string name="settings_league_visible">리그 순위에 내 닉네임 공개</string>
+    <string name="settings_league_visible_note">끄면 순위 · 지역 안전지수 · 시즌 우승에서 빠져요. 내 점수는 계속 볼 수 있어요</string>
+    <string name="settings_league_failed">저장하지 못했어요. 연결을 확인한 뒤 다시 눌러 주세요</string>
 </resources>

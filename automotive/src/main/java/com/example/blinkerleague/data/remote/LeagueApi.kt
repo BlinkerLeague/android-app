@@ -5,6 +5,7 @@ import com.example.blinkerleague.data.remote.dto.LeagueMeDto
 import com.example.blinkerleague.data.remote.dto.LeagueRegionDto
 import com.example.blinkerleague.data.remote.dto.LeagueResponse
 import com.example.blinkerleague.data.remote.dto.LeagueSeasonDto
+import com.example.blinkerleague.data.remote.dto.LeagueVisibilityResponseDto
 import com.example.blinkerleague.data.remote.dto.ScoreStatus
 import com.example.blinkerleague.domain.region.LeagueRegions
 import java.time.Instant
@@ -16,6 +17,9 @@ import java.time.ZoneId
 interface LeagueApi {
     /** `GET /api/leagues/current` (docs/api/openapi.json `CurrentLeagueResponse`) */
     suspend fun currentLeague(): ApiResult<LeagueResponse>
+
+    /** `PUT /api/drivers/me/league-visibility` 리그 순위 공개 설정 */
+    suspend fun setVisibility(visible: Boolean): ApiResult<LeagueVisibilityResponseDto>
 }
 
 /**
@@ -29,6 +33,14 @@ class FakeLeagueApi(
     private val clock: () -> Long,
     private val zone: ZoneId,
 ) : LeagueApi {
+
+    /** 순위 공개 설정 (서버 D8, 기본 공개). Fake는 앱이 살아 있는 동안만 기억 */
+    private var visible = true
+
+    override suspend fun setVisibility(visible: Boolean): ApiResult<LeagueVisibilityResponseDto> {
+        this.visible = visible
+        return ApiResult.Success(LeagueVisibilityResponseDto(visible))
+    }
 
     override suspend fun currentLeague(): ApiResult<LeagueResponse> {
         val month = YearMonth.from(Instant.ofEpochMilli(clock()).atZone(zone))
@@ -47,6 +59,7 @@ class FakeLeagueApi(
                 season = LeagueSeasonDto(month.toString(), start.toOffsetDateTime().toString(), end.toOffsetDateTime().toString()),
                 league = name?.let { LeagueDto(leagueCode = it, name = it, participants = 1, rankingPublished = false) },
                 me = LeagueMeDto(
+                    visible = visible,
                     eligible = km >= 50 || trips.size >= 10, averageScore = score, score = score,
                     trips = trips.size, distanceKm = km,
                 ),

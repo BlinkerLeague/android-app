@@ -8,6 +8,8 @@ data class League(
     val regions: List<LeagueRegion>,
     /** 지난 시즌 우승 칭호 (서버 D30 · D34) */
     val championships: List<Championship> = emptyList(),
+    /** 리그 순위 공개 설정 (서버 D8, 기본 공개). 끄면 순위 · 안전지수 · 시즌 우승에서 빠짐 */
+    val visible: Boolean = true,
 )
 
 /** 우승 칭호: 시즌(예: 2026-10)과 권역 이름 */

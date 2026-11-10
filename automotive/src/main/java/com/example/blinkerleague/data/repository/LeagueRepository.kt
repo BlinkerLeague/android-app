@@ -41,6 +41,10 @@ class LeagueRepository(
             },
             regions = body.regions.map { LeagueRegion(it.name ?: it.leagueCode, it.safetyIndex?.roundToInt(), it.rank) },
             championships = me?.championships.orEmpty().map { Championship(it.seasonId, it.name ?: it.leagueCode) },
+            visible = me?.visible ?: true,
         )
     }
+
+    /** 리그 순위 공개를 바꿈. 서버에 저장되면 true */
+    suspend fun setVisible(visible: Boolean): Boolean = api.setVisibility(visible) is ApiResult.Success
 }

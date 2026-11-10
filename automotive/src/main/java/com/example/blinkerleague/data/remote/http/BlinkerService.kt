@@ -2,6 +2,8 @@ package com.example.blinkerleague.data.remote.http
 
 import com.example.blinkerleague.data.remote.dto.BadgeDto
 import com.example.blinkerleague.data.remote.dto.LeagueResponse
+import com.example.blinkerleague.data.remote.dto.LeagueVisibilityDto
+import com.example.blinkerleague.data.remote.dto.LeagueVisibilityResponseDto
 import com.example.blinkerleague.data.remote.dto.PointsResponse
 import com.example.blinkerleague.data.remote.dto.RecentTripDto
 import com.example.blinkerleague.data.remote.dto.RegisterDriverRequest
@@ -15,6 +17,7 @@ import com.example.blinkerleague.data.remote.dto.WeeklyReportResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -49,6 +52,9 @@ interface BlinkerService {
 
     @GET("api/leagues/current")
     suspend fun currentLeague(): LeagueResponse
+
+    @PUT("api/drivers/me/league-visibility")
+    suspend fun setLeagueVisibility(@Body request: LeagueVisibilityDto): LeagueVisibilityResponseDto
 
     @GET("api/missions/today")
     suspend fun todayMission(): TodayMissionResponse
