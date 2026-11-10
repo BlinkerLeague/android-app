@@ -53,6 +53,20 @@ class LeagueRepositoryTest {
         assertEquals(listOf("서울 서북권" to 90, "부산" to null), league.regions.map { it.name to it.safetyIndex })
     }
 
+    @Test
+    fun `리그 점수를 평균 점수와 시즌 포인트로 나눠 담는다`() = runTest {
+        // given
+        // 평균 92.6점 + 시즌 포인트 45P = 리그 점수 137.6
+        respond(SERVER_LEAGUE)
+
+        // when
+        val my = repository.current()!!.myLeague!!
+
+        // then
+        assertEquals(93, my.averageScore)
+        assertEquals(45, my.points)
+    }
+
     companion object {
         /** 서버 명세 `CurrentLeagueResponse` 예시 (서버 docs/app-team-changes-2026-11-10.md 형식) */
         val SERVER_LEAGUE = """

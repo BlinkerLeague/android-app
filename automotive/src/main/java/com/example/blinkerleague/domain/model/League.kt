@@ -18,6 +18,9 @@ data class MyLeague(
     val seasonKm: Double,
     val seasonTrips: Int,
     val top: List<LeagueEntry>,
+    /** 리그 점수 = 평균 점수 + 이번 시즌 포인트 (서버 D34) */
+    val averageScore: Int? = null,
+    val points: Int = 0,
 )
 
 data class LeagueEntry(val rank: Int, val nickname: String, val score: Int, val me: Boolean)
