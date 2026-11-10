@@ -15,6 +15,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
@@ -65,5 +66,27 @@ class SettingsViewModelTest {
 
         // then
         assertEquals(false, vm.uiState.value.leagueVisible)
+    }
+
+    @Test
+    fun `순위 공개를 끄면 서버에 저장하고 토글이 꺼진다`() = runTest(dispatcher) {
+        // given
+        val saved = mutableListOf<Boolean>()
+        val vm = SettingsViewModel(
+            { DriverProfile("깜빡왕", "11440") }, speed, status, "1.0", true,
+            loadLeagueVisible = { true },
+            saveLeagueVisible = { saved += it; true },
+        )
+        backgroundScope.launch { vm.uiState.collect {} }
+        runCurrent()
+
+        // when
+        vm.setLeagueVisible(false)
+        runCurrent()
+
+        // then
+        assertEquals(listOf(false), saved)
+        assertEquals(false, vm.uiState.value.leagueVisible)
+        assertFalse(vm.uiState.value.leagueVisibilityFailed)
     }
 }
