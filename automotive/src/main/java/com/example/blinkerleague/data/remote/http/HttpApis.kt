@@ -10,6 +10,7 @@ import com.example.blinkerleague.data.remote.TripApi
 import com.example.blinkerleague.data.remote.dto.BadgeDto
 import com.example.blinkerleague.data.remote.dto.LeagueResponse
 import com.example.blinkerleague.data.remote.dto.LeagueVisibilityDto
+import com.example.blinkerleague.data.remote.dto.LeagueVisibilityResponseDto
 import com.example.blinkerleague.data.remote.dto.PointsResponse
 import com.example.blinkerleague.data.remote.dto.RecentTripDto
 import com.example.blinkerleague.data.remote.dto.RegisterDriverRequest
@@ -69,7 +70,7 @@ class HttpRewardApi(private val service: BlinkerService) : RewardApi {
 class HttpLeagueApi(private val service: BlinkerService) : LeagueApi {
     override suspend fun currentLeague(): ApiResult<LeagueResponse> = apiCall { service.currentLeague() }
 
-    override suspend fun setVisibility(visible: Boolean): ApiResult<LeagueVisibilityDto> =
+    override suspend fun setVisibility(visible: Boolean): ApiResult<LeagueVisibilityResponseDto> =
         apiCall { service.setLeagueVisibility(LeagueVisibilityDto(visible)) }
 }
 
