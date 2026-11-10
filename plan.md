@@ -270,5 +270,5 @@
 | 2026-11-10 | PUT /api/drivers/me/league-visibility 응답의 visible은 선택값으로 읽고 성공 응답이면 저장 성공 | openapi LeagueVisibilityResponse에 required 없음 (리뷰 4번) |
 | 2026-11-10 | lint 경고 15건(라이브러리 버전 12 · InlinedApi 2 · Compose lint 비활성 1)은 MVP 뒤로 미룸. DataExtractionRules는 dataExtractionRules 연결로 해결(뒤이은 fullBackupContent 권고는 API 28~30이 allowBackup=false라 tools:ignore), FullBackupContent 오류(device_* 도메인)는 오탐이라 tools:ignore | 오류 0. 버전 올리기는 compileSdk 상향과 회귀 위험이 있고, Pleos 대상은 API 34라 SPECIAL_USE 상수 문제가 실제로 나지 않음 |
 | 2026-11-10 | 홈 최근 경기 행은 업로드 대기 · 회전 0회 문구의 앞부분만 보여 줌 | 한 줄짜리 행. 전체 문구는 SCR-02에서 보임 (screen-plan 5장) |
-| 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |
 | 2026-11-10 | 백업·기기 간 전송은 파일별이 아니라 모든 도메인 제외(dataExtractionRules), fullBackupContent는 두지 않음 | allowBackup=false와 같은 뜻. 파일 이름 나열은 새 저장소가 빠질 위험. 운행 DB만 옮겨지면 새로 등록한 운전자로 예전 운행이 올라갈 수 있음. API 28~30은 allowBackup=false로 충분. lint FullBackupContent는 device_* 도메인 오탐이라 무시(프레임워크 FullBackup.java는 해석함) |
+| 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |

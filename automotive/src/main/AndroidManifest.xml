@@ -36,6 +36,7 @@
       API 28~30은 allowBackup=false로 백업·전송 모두 꺼짐. API 31+ 기기 간 전송은 allowBackup으로 막히지 않아
       dataExtractionRules에서 모든 도메인을 제외함.
       lint DataExtractionRules(minSdk 28이라 fullBackupContent 권고)는 API 28~30이 allowBackup=false로 꺼져 있어 무시함.
+      연결 누락은 DataExtractionRulesTest가 확인함.
     -->
     <application
         android:name=".BlinkerLeagueApplication"

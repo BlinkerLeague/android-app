@@ -2,6 +2,7 @@
 <!--
   lint FullBackupContent 검사는 data-extraction-rules의 device_* 도메인을 몰라 "Unexpected domain"으로 잡음(오탐).
   프레임워크 FullBackup.java는 device_* 도메인을 해석하므로 그대로 둠.
+  규칙을 바꾸면 DataExtractionRulesTest의 ALL_DOMAINS도 함께 고칠 것(파일 전체 FullBackupContent 검사를 끄므로 테스트가 대신 확인).
 -->
 <data-extraction-rules xmlns:tools="http://schemas.android.com/tools"
     tools:ignore="FullBackupContent">
