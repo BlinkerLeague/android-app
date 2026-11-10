@@ -18,7 +18,7 @@
 | `GET /api/trips?limit=N` 최근 경기 | `RecentTripResult[]` | SCR-01 홈 | 연결됨. `status` · `score`만 기기 기록에 반영 |
 | `GET /api/missions/today` 오늘의 미션 | `TodayMissionResponse`: `conditions` · `progress` · `status` · `rewardPoint` | SCR-01 카드, SCR-03 | 연결됨 |
 | `GET /api/points` 포인트 | `PointsResponse`: `balance` · `todayEarned` · `dailyCap` · `entries` | SCR-06 지갑 | 연결됨 |
-| `GET /api/streak` 연속 달성 | `StreakView`: `streakDays` · `todayAchieved` | SCR-01 연승 카드, SCR-05 | 연결됨. 연속 보상 주기는 아직 하드코딩 7(기준값 `point.streakRewardDays`로 바꿀 예정) |
+| `GET /api/streak` 연속 달성 | `StreakView`: `streakDays` · `todayAchieved` | SCR-01 연승 카드, SCR-05 | 연결됨. 연속 보상 주기 · 보상 포인트는 아직 하드코딩 7 · 50P(기준값 `point.streakRewardDays` · `streakRewardPoint`로 바꿀 예정) |
 | `GET /api/badges` 배지 진열장 | `BadgeResponse[]`: 4종(`FIRST_TRIP` · `STREAK_7` · `SIGNAL_100` · `SEASON_CHAMPION`) | SCR-05 업적 | 연결됨. Fake는 3종 |
 | `GET /api/reports/weekly?week=` 주간 리포트 | `WeeklyReportView` | SCR-07 | 연결됨 |
 | `GET /api/leagues/current` 이번 시즌 리그 | `CurrentLeagueResponse`: `season` · `league` · `me` · `regions` | SCR-04 리그 | 연결됨(11.10 서버 형식으로 맞춤) |

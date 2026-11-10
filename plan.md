@@ -176,7 +176,7 @@
 | 9 | HTTP 구현체 (`TripApi`·`MissionApi`·등록) | 신호 | — | 완료: Retrofit, 토큰 재발급, `DriverRepository`. 서버 주소 설정 시 사용 |
 | 9b | 마무리 (7장 6): 예외 문구 점검, 실제 앱 폭 측정(1682×1210dp), 시연 리허설, lint 오류 0 | 신호(혼자 개발) | 4~8 | 완료 (11.10, feature/p0-finish): lint 오류 0(경고 16은 2차), 예외 문구 7종 확인, 좁은 폭 Preview, 시연 결과 회귀 테스트(C · 50 · 득점 1 · 실점 1 · 카드 2장) |
 | 10 | 시연 영상, release APK, README, 제출 양식 (5장) | 함께 | 4~8 | 11.13~ |
-| 11 | 기획서 정합성 수정 ("현황 점검" 미구현 1~4): 용어 퀘스트 통일, SCR-02 머리말 "오늘의 N번째 경기", SCR-02b 적용 가중치, 연속 보상 주기를 기준값 `point.streakRewardDays`로 | 신호(혼자 개발) | — | 예정 |
+| 11 | 기획서 정합성 수정 ("현황 점검" 미구현 1~4): 용어 퀘스트 통일, SCR-02 머리말 "오늘의 N번째 경기", SCR-02b 적용 가중치, 연속 보상 주기 · 보상 포인트를 기준값 `point.streakRewardDays` · `streakRewardPoint`로 | 신호(혼자 개발) | — | 예정 |
 
 - 권한 사용법(화면 쪽): 상태는 `container.permissions.status(RuntimePermission.SPEED)`(`GRANTED`/`DENIED`/`NOT_REQUESTED`), 요청은 `rememberPermissionRequester(container.permissions, RuntimePermission.SPEED)`. 허용되면 운행 수집이 재시작 없이 속도를 받기 시작함
 - **주의(온보딩 문구)**: `CAR_SPEED` 시스템 요청 창은 "이 기기의 **위치 정보**에 액세스하도록 허용하시겠습니까?"로 뜸(에뮬레이터). 요청 전 앱 화면에서 "속도를 쓰기 위해 묻는 것"이라고 먼저 설명해야 함
@@ -209,10 +209,10 @@
 
 | # | 내용 | 기획서 | 코드 위치 | 시기 | 크기 |
 | --- | --- | --- | --- | --- | --- |
-| 1 | 용어 "미션" → "퀘스트" 통일 (화면 · 시동 음성 · 지갑 적립 사유, "오늘의 미션" 계열) | 전반 | `voice/VoiceScript.kt:15-18`, `strings.xml` 64 · 70 · 72 · 73 · 152 · 154 · 155 · 219 | MVP 전 | 소 |
+| 1 | 용어 "미션" → "퀘스트" 통일 ("오늘의 미션" · 일일 미션 계열: 화면 · 시동 음성 · 지갑 적립 사유 · 업적 "미션 연속 달성"). 제외: 주간 리포트 "맞춤 미션"(`strings.xml` 172 · 176, 서버 주간 미션 개념), 서버가 주는 배지 조건 문구 | 전반 | `voice/VoiceScript.kt:15-18`, `strings.xml` 64 · 70 · 72 · 73 · 152 · 154 · 155 · 219 | MVP 전 | 소 |
 | 2 | SCR-02 머리말 "오늘의 N번째 경기 종료" (지금 "경기 종료 · N km") | 3장 | `strings.xml:15` `result_header`, `ui/result` | MVP 전 | 소 |
 | 3 | SCR-02b 적용 가중치 표시 (`metrics[].weight`를 받지만 `MetricDetail`에서 버림) | 5장 | `TripRepository.metricDetails`, `domain/model/MetricDetail.kt`, `MetricDetailScreen` | MVP 전 | 소 |
-| 4 | 연속 보상 주기 하드코딩 제거: `STREAK_REWARD_DAYS = 7` → 기준값 `point.streakRewardDays` (화면 문구의 "7일" · "+50P"도 하드코딩) | (코드 규칙) | `ui/achievements/AchievementsUiState.kt:32`, `ConfigDtos.kt`, `strings.xml` 156 · 220 | MVP 전 | 소 |
+| 4 | 연속 보상 하드코딩 제거: 주기 `STREAK_REWARD_DAYS = 7`과 보상 문구 "+50P" → 기준값 `point.streakRewardDays` · `streakRewardPoint` (지갑 사유 "7일 연속 달성"(`strings.xml:220`)은 서버 사유 코드 `STREAK_7`의 이름표이고 과거 적립 행에 붙으므로 제외) | (코드 규칙) | `ui/achievements/AchievementsUiState.kt:19 · 32`, `ConfigDtos.kt`(`ThresholdsResponse`에 `point` 없음), `strings.xml:156` | MVP 전 | 소 |
 | 5 | SCR-08 음성 안내 끄기 토글 | 5 · 10장 | `ui/settings`, `service/TripVoiceGuide` | 2차 | 중 |
 | 6 | SCR-08 내 차량 측정 항목 목록 (`CapabilityReport`, 온보딩 3단계 재사용) | 2 · 5장 | `ui/settings` | 2차 | 소 |
 | 7 | SCR-05 연승 7일 진행 점 | 8장 | `ui/achievements` | 2차 | 소 |
@@ -250,8 +250,8 @@
 | 〃 | `earnedPoints` | 서버 대기 | 앱 DTO에만 있음. openapi에 없음 (서버 요청 12번) |
 | `GET /api/trips` | `grade` · `endedAt` · `distanceKm` | 안 씀 | 기기 기록을 먼저 보여 주고 `status` · `score`만 갱신 (결정 11.08) |
 | `GET /api/missions/today` | `missionId` · `periodKey` | 안 씀 | 화면에 필요 없음 (`rewardPoint`는 SCR-03에서 씀) |
-| `GET /api/config/thresholds` | `point.streakRewardDays` | 쓸 계획 | 미구현 4 (하드코딩 7 제거) |
-| 〃 | `point.dailyCap` · `tripMaxKm` · `streakRewardPoint`, `weights`, `minSamples`, `league.commonItems` · `topN`, `harsh.penaltyPer10Km`, `safetyWarning.penaltyPer100Km` | 안 씀 | 서버 계산용. 하루 상한은 `GET /api/points`의 `dailyCap`, 가중치는 `metrics[].weight`로 받음 |
+| `GET /api/config/thresholds` | `point.streakRewardDays` · `streakRewardPoint` | 쓸 계획 | 미구현 4 (하드코딩 7 · +50P 제거) |
+| 〃 | `point.dailyCap` · `tripMaxKm`, `weights`, `minSamples`, `league.commonItems` · `topN`, `harsh.penaltyPer10Km`, `safetyWarning.penaltyPer100Km` | 안 씀 | 서버 계산용. 하루 상한은 `GET /api/points`의 `dailyCap`, 가중치는 `metrics[].weight`로 받음 |
 | 〃 | `harsh.deltaKmhPerSec` | 쓸 계획 | 2차 앱 작업 11 (급가속 · 급감속) |
 | 〃 | `safetyWarning.mergeWindowSec` | 쓸 계획 | 2차 앱 작업 13 (안전 경고) |
 | 〃 | `turn.signalLeadDistanceM` · `lateSignalScore` | 결정 대기 | 깜빡이 4단계(`signalTiming`) 결정 뒤 |
@@ -269,7 +269,9 @@
 
 ### 의도적으로 다름
 
-색(득점 파랑 · 실점 주황), "반칙" 용어 없음, 회전 0회 평점 없음, 50점 미만 등급 비움, 코인 → P, 정차 = P단만, 짧은 운행 1km, 달력 월 시즌, 위치 동의 화면 없음, 오토라이트 · 비상등 API 없음. 자세한 내용은 위 "목업 개정과의 차이" 표와 결정 기록에 있습니다.
+색(득점 파랑 · 실점 주황), "반칙" 용어 없음, 코인 → P, 짧은 운행 1km, 달력 월 시즌, 위치 동의 화면 없음, 오토라이트 · 비상등 API 없음. 자세한 내용은 위 "목업 개정과의 차이" 표와 결정 기록에 있습니다.
+
+적용 중(결정 기록 없음, screen-plan 9장): 회전 0회 평점 없음, 50점 미만 등급 비움, 정차 = P단만.
 
 ## 2차 (12.2 PT) 앱 작업
 
