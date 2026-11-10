@@ -196,6 +196,7 @@
 | 7 | SCR-08 설정: 내 정보(닉네임·지역), 속도 권한 다시 요청(거부가 반복되면 시스템 설정 열기), 운행 기록 상태, 앱 정보(버전·연결 모드), "리그 순위 공개" 토글(서버 D8: 기본 공개, `PUT /api/drivers/me/league-visibility`, 현재 값은 리그 조회 `me.visible`) | 완료(토글 11.10, `feature/league-visibility`) |
 | 8 | SCR-04 리그(하단 탭 두 번째): 시즌·D-day, 내 리그(권역)·리그 점수·순위(10명 미만 비공개)·순위 자격 진행, 상위 순위, 지역 안전지수. 서버 4.4 미구현 → 응답 형식을 서버 요청 14번으로 제안, Fake는 나 혼자(순위 비공개) | 완료(앱). 서버 API가 생기면 형식 확인 |
 | 9 | 리그 응답을 서버 형식으로 맞춤(서버 #48 · #49, `CurrentLeagueResponse`): `league` · `me` · `regions`, 리그 점수 = 평균 + 시즌 포인트(D34) 표시, 지난 시즌 우승 칭호, 순위 목록의 내 행은 닉네임으로 찾음 | 완료(11.10, `feature/league-server-format`) |
+| 10 | 리그 순위 자격(시즌 50km 또는 10회)·순위 공개 인원(10명)을 하드코딩 대신 기준값 `league`(`minSeasonDistanceKm`·`minSeasonTrips`·`minParticipants`)에서 읽음. 화면 문구와 Fake 판정 모두 | 완료(11.10, `feature/league-qualify-config`) |
 
 ## 서버와 맞춰야 할 항목
 서버 `plan.md` 7장과 같은 목록입니다. 서버 작업은 우리가 하지 않으므로, 서버에 필요한 내용은 [`docs/server-requests.md`](docs/server-requests.md)에 정리해 전달합니다.

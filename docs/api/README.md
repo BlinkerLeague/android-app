@@ -12,7 +12,7 @@
 | --- | --- | --- | --- |
 | `POST /api/drivers` 운전자 등록 | `RegisterDriverResponse` (201 · 400 · 409) | SCR-00 온보딩 | 연결됨 |
 | `POST /api/auth/refresh` 토큰 재발급 | `TokenResponse` (200 · 400 · 401) | 공통(401 때 자동) | 연결됨 |
-| `GET /api/config/thresholds` 판정 기준값 | `ThresholdsResponse`: `trip` · `turn` · `grades` · `tips` · `league` 등 | 판정, SCR-02b 팁, SCR-04 순위 자격 | 연결됨. `league` 그룹은 앱이 아직 안 읽음 |
+| `GET /api/config/thresholds` 판정 기준값 | `ThresholdsResponse`: `trip` · `turn` · `grades` · `tips` · `league` 등 | 판정, SCR-02b 팁, SCR-04 순위 자격 | 연결됨. `league`는 `minParticipants` · `minSeasonDistanceKm` · `minSeasonTrips`만 읽음(11.10) |
 | `POST /api/trips` 운행 업로드 | `TripResult` (200 재전송 · 201 · 400 · 401 · 409 · 413) | 업로드, SCR-02 | 연결됨. 400 · 413은 재시도하지 않음(`REJECTED`) |
 | `GET /api/trips/{tripId}/score` 운행 점수 | `TripResult`: `status` · `score` · `grade` · `metrics` · `plays` · `mission` | SCR-02 · 02a · 02b | 연결됨. `earnedPoints`는 명세에 아직 없음(서버 요청 12번) |
 | `GET /api/trips?limit=N` 최근 경기 | `RecentTripResult[]` | SCR-01 홈 | 연결됨 |
