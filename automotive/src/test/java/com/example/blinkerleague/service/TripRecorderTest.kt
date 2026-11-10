@@ -13,10 +13,13 @@ import com.example.blinkerleague.data.scenario.Scenarios
 import com.example.blinkerleague.data.scenario.scenario
 import com.example.blinkerleague.data.vehicle.FakeVehicleSignalSource
 import com.example.blinkerleague.domain.config.DetectionConfig
+import com.example.blinkerleague.domain.config.GradeThreshold
 import com.example.blinkerleague.domain.model.Gear
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.TurnDirection
 import com.example.blinkerleague.domain.model.TurnSignalState
+import com.example.blinkerleague.ui.result.toPlaysUiState
+import com.example.blinkerleague.ui.result.toResultUiState
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -91,6 +94,32 @@ class TripRecorderTest {
         val scored = repository.observeResult(finished.tripId).first()!!
         assertEquals(ScoreState.SCORED, scored.scoreState)
         assertEquals(50, scored.score)
+    }
+
+    @Test
+    fun `시연 시나리오 결과는 C · 평점 50 · 득점 1 · 실점 1, 플레이 카드 2장`() = runTest {
+        // given
+        // 시연 시나리오를 0ms(가상 시간)부터 재생해 기록하고 업로드까지 마친 결과
+        val s = Scenarios.demo
+        val recorder = recorder(s)
+        backgroundScope.launch { recorder.run() }
+        advanceTimeBy(s.durationMs + 1_000)
+        val finished = recorder.state.value as RecorderState.Finished
+        repository.uploadPending()
+        val scored = repository.observeResult(finished.tripId).first()!!
+
+        // when
+        val result = scored.toResultUiState(null, GradeThreshold.DEFAULT)
+        val plays = scored.toPlaysUiState(ZoneId.of("Asia/Seoul"))
+
+        // then
+        assertEquals("C", result.grade)
+        assertEquals(50, result.score)
+        assertEquals(1, result.goals)
+        assertEquals(1, result.conceded)
+        assertEquals(listOf(true, false), plays.plays.map { it.goal })
+        assertEquals(1, plays.goals)
+        assertEquals(1, plays.conceded)
     }
 
     @Test
