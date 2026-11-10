@@ -199,7 +199,7 @@
 | 10 | 리그 순위 자격(시즌 50km 또는 10회)·순위 공개 인원(10명)을 하드코딩 대신 기준값 `league`(`minSeasonDistanceKm`·`minSeasonTrips`·`minParticipants`)에서 읽음. 화면 문구와 Fake 판정 모두 | 완료(11.10, `feature/league-qualify-config`) |
 
 - 리그 순위 공개 후속 (리뷰 낮음, 11.10): 공개를 끈 상태를 리그 화면에 안내 · 오프라인으로 설정을 열면 토글이 숨겨지고 다시 불러오지 않음 · 화면을 떠나면 진행 중 저장이 취소될 수 있음(다시 들어오면 서버 값으로 맞춰짐)
-- 9b에서 미룬 것 (11.10): 라이브러리 버전 올리기(GradleDependency 12) · Compose BOM 올려 Compose lint 다시 켜기 · dataExtractionRules xml(기기 간 전송에서 토큰 · 설정 제외) · TripCollectionService API 34 미만 SPECIAL_USE 분기 · 2차 화면 5개(업적 · 리그 · 주간 리포트 · 설정 · 지갑) 좁은 폭 Preview
+- 9b에서 미룬 것 (11.10): 라이브러리 버전 올리기(GradleDependency 12) · Compose BOM 올려 Compose lint 다시 켜기 · dataExtractionRules xml(기기 간 전송에서 토큰 · 설정 제외) (완료 11.10, `feature/data-extraction-rules`) · TripCollectionService API 34 미만 SPECIAL_USE 분기 · 2차 화면 5개(업적 · 리그 · 주간 리포트 · 설정 · 지갑) 좁은 폭 Preview
 - 좁은 폭(720dp) 레이아웃 (리뷰 낮음, 11.10, 실제 앱 영역 1682dp에서는 문제없음): 온보딩 측정 가능 항목 행에서 상태 문구가 항목 이름을 눌러 버림(OnboardingScreen CapabilityLine) · 결과 화면 항목 행 이름 칸 고정 width(200.dp)로 상태 문구가 여러 줄로 접힘(ResultScreen) · NO_TURN · EXCLUDED_SHORT 좁은 폭 Preview
 
 ## 서버와 맞춰야 할 항목
@@ -268,6 +268,7 @@
 | 2026-11-10 | 순위 공개 토글의 현재 값은 리그 조회(`me.visible`)에서 읽고, 저장에 실패하면 토글을 바꾸지 않고 안내 | 서버에 조회 전용 API가 없음. 기기에 따로 저장하면 서버 값과 어긋날 수 있음 |
 | 2026-11-10 | 순위 공개 저장 중에는 토글을 막음(leagueVisibilitySaving) | 앞 요청을 취소해도 이미 보낸 PUT은 서버에서 처리돼 순서를 보장할 수 없음. 요청이 늘 하나라 단순하고 저장 중임이 보임 (review/2026-11-10-feature-league-visibility.md 1번) |
 | 2026-11-10 | PUT /api/drivers/me/league-visibility 응답의 visible은 선택값으로 읽고 성공 응답이면 저장 성공 | openapi LeagueVisibilityResponse에 required 없음 (리뷰 4번) |
-| 2026-11-10 | lint 경고 16건(라이브러리 버전 12 · InlinedApi 2 · DataExtractionRules 1 · Compose lint 비활성 1)은 MVP 뒤로 미룸 | 오류 0. 버전 올리기는 compileSdk 상향과 회귀 위험이 있고, Pleos 대상은 API 34라 SPECIAL_USE 상수 문제가 실제로 나지 않음 |
+| 2026-11-10 | lint 경고 15건(라이브러리 버전 12 · InlinedApi 2 · Compose lint 비활성 1)은 MVP 뒤로 미룸. DataExtractionRules는 dataExtractionRules 연결로 해결(뒤이은 fullBackupContent 권고는 API 28~30이 allowBackup=false라 tools:ignore), FullBackupContent 오류(device_* 도메인)는 오탐이라 tools:ignore | 오류 0. 버전 올리기는 compileSdk 상향과 회귀 위험이 있고, Pleos 대상은 API 34라 SPECIAL_USE 상수 문제가 실제로 나지 않음 |
 | 2026-11-10 | 홈 최근 경기 행은 업로드 대기 · 회전 0회 문구의 앞부분만 보여 줌 | 한 줄짜리 행. 전체 문구는 SCR-02에서 보임 (screen-plan 5장) |
+| 2026-11-10 | 백업·기기 간 전송은 파일별이 아니라 모든 도메인 제외(dataExtractionRules), fullBackupContent는 두지 않음 | allowBackup=false와 같은 뜻. 파일 이름 나열은 새 저장소가 빠질 위험. 운행 DB만 옮겨지면 새로 등록한 운전자로 예전 운행이 올라갈 수 있음. API 28~30은 allowBackup=false로 충분. lint FullBackupContent는 device_* 도메인 오탐이라 무시(프레임워크 FullBackup.java는 해석함) |
 | 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |

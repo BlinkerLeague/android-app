@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-feature
         android:name="android.hardware.type.automotive"
@@ -30,14 +31,24 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!--
+      백업·기기 간 전송: 토큰(Keystore 암호화) · 기준값 캐시 · 운행 DB를 옮기지 않음.
+      API 28~30은 allowBackup=false로 백업·전송 모두 꺼짐. API 31+ 기기 간 전송은 allowBackup으로 막히지 않아
+      dataExtractionRules에서 모든 도메인을 제외함.
+      lint DataExtractionRules(minSdk 28이라 fullBackupContent 권고)는 API 28~30이 allowBackup=false로 꺼져 있어 무시함.
+      연결 누락은 DataExtractionRulesTest가 확인함.
+    -->
     <application
         android:name=".BlinkerLeagueApplication"
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.BlinkerLeague">
+        android:theme="@style/Theme.BlinkerLeague"
+        tools:ignore="DataExtractionRules"
+        tools:targetApi="31">
 
         <activity
             android:name=".MainActivity"
