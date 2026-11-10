@@ -52,4 +52,18 @@ class SettingsViewModelTest {
         assertNull(SettingsViewModel({ null }, speed, status, "1.0", false).uiState.value.nickname)
         assertNull(Regions.label("99999"))
     }
+
+    @Test
+    fun `설정을 열면 서버의 순위 공개 상태를 보여준다`() = runTest(dispatcher) {
+        // given
+        // 서버에는 순위 공개가 꺼져 있음
+        val vm = SettingsViewModel({ DriverProfile("깜빡왕", "11440") }, speed, status, "1.0", true, loadLeagueVisible = { false })
+
+        // when
+        backgroundScope.launch { vm.uiState.collect {} }
+        runCurrent()
+
+        // then
+        assertEquals(false, vm.uiState.value.leagueVisible)
+    }
 }

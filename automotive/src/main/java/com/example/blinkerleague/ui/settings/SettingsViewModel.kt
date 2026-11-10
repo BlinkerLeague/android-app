@@ -18,6 +18,10 @@ class SettingsViewModel(
     recordingStatus: Flow<RecordingStatus>,
     version: String,
     usesServer: Boolean,
+    /** 지금 순위 공개 설정 (리그 조회 `me.visible`). 받지 못하면 null */
+    private val loadLeagueVisible: suspend () -> Boolean? = { null },
+    /** 순위 공개 설정 저장. 서버에 저장되면 true */
+    private val saveLeagueVisible: suspend (Boolean) -> Boolean = { false },
 ) : ViewModel() {
 
     private val me = profile()
@@ -36,4 +40,7 @@ class SettingsViewModel(
         SharingStarted.WhileSubscribed(5_000),
         SettingsUiState(nickname = me?.nickname, region = me?.regionCode?.let { Regions.label(it) ?: it }, version = version, usesServer = usesServer),
     )
+
+    /** "리그 순위 공개" 토글 */
+    fun setLeagueVisible(visible: Boolean) {}
 }
