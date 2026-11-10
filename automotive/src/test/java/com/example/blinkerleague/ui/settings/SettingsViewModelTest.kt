@@ -17,6 +17,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -88,5 +89,26 @@ class SettingsViewModelTest {
         assertEquals(listOf(false), saved)
         assertEquals(false, vm.uiState.value.leagueVisible)
         assertFalse(vm.uiState.value.leagueVisibilityFailed)
+    }
+
+    @Test
+    fun `서버 저장에 실패하면 토글은 그대로 두고 실패를 알린다`() = runTest(dispatcher) {
+        // given
+        // 오프라인이라 저장 실패
+        val vm = SettingsViewModel(
+            { DriverProfile("깜빡왕", "11440") }, speed, status, "1.0", true,
+            loadLeagueVisible = { true },
+            saveLeagueVisible = { false },
+        )
+        backgroundScope.launch { vm.uiState.collect {} }
+        runCurrent()
+
+        // when
+        vm.setLeagueVisible(false)
+        runCurrent()
+
+        // then
+        assertEquals(true, vm.uiState.value.leagueVisible)
+        assertTrue(vm.uiState.value.leagueVisibilityFailed)
     }
 }
