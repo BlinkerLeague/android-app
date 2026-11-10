@@ -85,6 +85,9 @@ com.example.blinkerleague
 
 - `feature/*` 브랜치에서 작업하고 `develop`으로 PR을 보냄.
 - 기능은 TDD(red → green → refactor)로 만듦. 역할별 서브에이전트 `.claude/agents/`(lead · tester · developer · reviewer)가 규칙의 원본임.
+- **기능 개발은 서브에이전트를 이 순서로 실행함:** lead(작업 분배 · TDD 사이클 목록) → tester(red: 실패 테스트 커밋) → developer(green · refactor) → reviewer(검토).
+  사이클마다 tester와 developer를 번갈아 부르고, 브랜치가 끝나면 reviewer를 부름. 메인 세션은 역할을 대신하지 않고 결과를 전달 · 확인만 함.
+  reviewer의 검토 결과는 `review/<YYYY-MM-DD>-<브랜치 이름의 / 를 - 로>.md`로 남기고 같은 브랜치에 커밋한 뒤 PR을 올림. 지적이 있으면 developer가 고치고 reviewer가 다시 검토함.
   테스트 작성 규칙(한글 이름, `// given` · `// when` · `// then`)은 `tester.md`, green · refactor 규칙은 `developer.md`를 따름.
   red(`test:`) · green(`feat:`/`fix:`) · refactor(`refactor:`)는 커밋을 나눔.
 - 서버 API 형식은 `docs/api/openapi.json`(서버 Swagger에서 받은 명세)이 기준. 화면과 API 대응은 `docs/api/README.md`.

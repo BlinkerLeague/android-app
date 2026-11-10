@@ -41,6 +41,10 @@ tools: Read, Grep, Glob, Bash, Edit, Write
 - push는 하지 않는다. 브랜치가 다시 green이 된 뒤 사용자가 요청하면 메인 세션이 push한다.
 - 기능이 들어가면 `plan.md` 체크박스 · 결정 기록, 필요하면 `docs/screen-plan.md` · README를 갱신한다(`docs:` 커밋).
 
+## reviewer 지적을 고칠 때
+
+- `review/*.md`의 지적 사항 중 동작을 바꾸는 것은 tester가 먼저 실패 테스트를 쓴 뒤 고친다. 테스트가 필요 없는 것(문구, 주석, 문서)은 바로 고치고 `fix:` · `docs:`로 커밋한다.
+
 ## 보고 형식
 
 - 바꾼 파일과 이유(파일:줄)
