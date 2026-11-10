@@ -1,20 +1,20 @@
 package com.example.blinkerleague.data.remote
 
+import com.example.blinkerleague.data.remote.dto.LeagueDto
+import com.example.blinkerleague.data.remote.dto.LeagueMeDto
+import com.example.blinkerleague.data.remote.dto.LeagueRegionDto
 import com.example.blinkerleague.data.remote.dto.LeagueResponse
 import com.example.blinkerleague.data.remote.dto.LeagueSeasonDto
-import com.example.blinkerleague.data.remote.dto.LeagueRegionDto
-import com.example.blinkerleague.data.remote.dto.MyLeagueDto
 import com.example.blinkerleague.data.remote.dto.ScoreStatus
 import com.example.blinkerleague.domain.region.LeagueRegions
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.YearMonth
 import java.time.ZoneId
-import kotlin.math.roundToInt
 
-/** 지역 리그 API (서버 4.4, 미구현) */
+/** 지역 리그 API (서버 4.4) */
 interface LeagueApi {
-    /** `GET /api/leagues/current` (서버 요청 14번 형식) */
+    /** `GET /api/leagues/current` (docs/api/openapi.json `CurrentLeagueResponse`) */
     suspend fun currentLeague(): ApiResult<LeagueResponse>
 }
 
@@ -40,18 +40,16 @@ class FakeLeagueApi(
                 result.status == ScoreStatus.SCORED && result.score != null && !at.isBefore(start.toInstant()) && at.isBefore(end.toInstant())
             }
         val km = trips.sumOf { it.first.distanceKm }
-        val score = if (km > 0) (trips.sumOf { it.first.distanceKm * it.second.score!! } / km).roundToInt() else null
+        val score = if (km > 0) trips.sumOf { it.first.distanceKm * it.second.score!! } / km else null
         val name = regionCode()?.let(LeagueRegions::of)
-        val my = name?.let {
-            MyLeagueDto(
-                region = it, name = it, participants = 1, rankPublic = false, myRank = null, myScore = score,
-                qualified = km >= 50 || trips.size >= 10, seasonKm = km, seasonTrips = trips.size,
-            )
-        }
         return ApiResult.Success(
             LeagueResponse(
                 season = LeagueSeasonDto(month.toString(), start.toOffsetDateTime().toString(), end.toOffsetDateTime().toString()),
-                myLeague = my,
+                league = name?.let { LeagueDto(leagueCode = it, name = it, participants = 1, rankingPublished = false) },
+                me = LeagueMeDto(
+                    eligible = km >= 50 || trips.size >= 10, averageScore = score, score = score,
+                    trips = trips.size, distanceKm = km,
+                ),
                 regions = listOfNotNull(name?.let { LeagueRegionDto(it, it, null, null) }),
             ),
         )

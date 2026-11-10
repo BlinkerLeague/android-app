@@ -7,29 +7,31 @@ import com.example.blinkerleague.domain.model.LeagueEntry
 import com.example.blinkerleague.domain.model.LeagueRegion
 import com.example.blinkerleague.domain.model.MyLeague
 import java.time.OffsetDateTime
+import kotlin.math.roundToInt
 
-/** 지역 리그. 받지 못하면 null (서버 리그 API가 아직 없으면 404 → null) */
+/** 지역 리그. 받지 못하면 null */
 class LeagueRepository(private val api: LeagueApi) {
     suspend fun current(): League? {
         val body = (api.currentLeague() as? ApiResult.Success)?.body ?: return null
         val endsAt = runCatching { OffsetDateTime.parse(body.season.endsAt).toInstant().toEpochMilli() }.getOrNull() ?: return null
+        val me = body.me
         return League(
             seasonId = body.season.seasonId,
             seasonEndsAtMs = endsAt,
-            myLeague = body.myLeague?.let { m ->
+            myLeague = body.league?.let { l ->
                 MyLeague(
-                    name = m.name ?: m.region,
-                    participants = m.participants,
-                    rankPublic = m.rankPublic,
-                    myRank = m.myRank,
-                    myScore = m.myScore,
-                    qualified = m.qualified,
-                    seasonKm = m.seasonKm,
-                    seasonTrips = m.seasonTrips,
-                    top = m.top.map { LeagueEntry(it.rank, it.nickname, it.score, it.me) },
+                    name = l.name ?: l.leagueCode,
+                    participants = l.participants,
+                    rankPublic = l.rankingPublished,
+                    myRank = me?.rank,
+                    myScore = me?.score?.roundToInt(),
+                    qualified = me?.eligible ?: false,
+                    seasonKm = me?.distanceKm ?: 0.0,
+                    seasonTrips = me?.trips ?: 0,
+                    top = l.rankings.map { LeagueEntry(it.rank, it.nickname, it.score.roundToInt(), false) },
                 )
             },
-            regions = body.regions.map { LeagueRegion(it.name ?: it.region, it.safetyIndex, it.rank) },
+            regions = body.regions.map { LeagueRegion(it.name ?: it.leagueCode, it.safetyIndex?.roundToInt(), it.rank) },
         )
     }
 }
