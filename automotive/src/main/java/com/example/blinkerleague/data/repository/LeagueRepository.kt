@@ -45,5 +45,5 @@ class LeagueRepository(
     }
 
     /** 리그 순위 공개를 바꿈. 서버에 저장되면 true */
-    suspend fun setVisible(visible: Boolean): Boolean = false
+    suspend fun setVisible(visible: Boolean): Boolean = api.setVisibility(visible) is ApiResult.Success
 }
