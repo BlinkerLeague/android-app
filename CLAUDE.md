@@ -25,7 +25,7 @@
 - **앱**: 실시간성이 필요한 일. 신호·위치 수집, 운행 구분, 회전 감지, 깜빡이·가감속·전조등 판정, 로컬 선저장과 재전송, 정차 화면, 음성
 - **서버**: 규칙이 바뀔 수 있는 일. 점수 계산, 미션 판정, 포인트 원장, 리그, 리포트
   - 별도 저장소 https://github.com/BlinkerLeague/server (Java 17 + Spring Boot 3.3. 기획서에는 Kotlin으로 적혀 있지만 서버는 Java로 확정됨)
-  - API 요청·응답 형식은 서버 저장소 `plan.md` 3장이 기준. 앱 DTO도 그 형식에 맞춤
+  - API 요청·응답 형식은 서버 Swagger 명세(`docs/api/openapi.json`, 서버 저장소에도 같은 파일)가 기준. 앱 DTO도 그 형식에 맞춤
   - **서버 작업은 이 팀이 하지 않음.** 형식 변경이나 서버에 필요한 것은 `docs/server-requests.md`에 적어 서버 팀에 전달함 (서버 저장소는 수정하지 않음)
   - 인증: `POST /api/drivers`에서 받은 토큰을 `Authorization: Bearer <token>` 헤더로 보냄
 - 앱은 **판정된 이벤트만** 서버로 보냄. 원시 위치 좌표는 절대 서버로 보내지 않음
@@ -84,5 +84,12 @@ com.example.blinkerleague
 ## 작업 방식
 
 - `feature/*` 브랜치에서 작업하고 `develop`으로 PR을 보냄.
+- 기능은 TDD(red → green → refactor)로 만듦. 역할별 서브에이전트 `.claude/agents/`(lead · tester · developer · reviewer)가 규칙의 원본임.
+- **기능 개발은 서브에이전트를 이 순서로 실행함:** lead(작업 분배 · TDD 사이클 목록) → tester(red: 실패 테스트 커밋) → developer(green · refactor) → reviewer(검토).
+  사이클마다 tester와 developer를 번갈아 부르고, 브랜치가 끝나면 reviewer를 부름. 메인 세션은 역할을 대신하지 않고 결과를 전달 · 확인만 함.
+  reviewer의 검토 결과는 `review/<YYYY-MM-DD>-<브랜치 이름의 / 를 - 로>.md`로 남기고 같은 브랜치에 커밋한 뒤 PR을 올림. 지적이 있으면 developer가 고치고 reviewer가 다시 검토함.
+  테스트 작성 규칙(한글 이름, `// given` · `// when` · `// then`)은 `tester.md`, green · refactor 규칙은 `developer.md`를 따름.
+  red(`test:`) · green(`feat:`/`fix:`) · refactor(`refactor:`)는 커밋을 나눔.
+- 서버 API 형식은 `docs/api/openapi.json`(서버 Swagger에서 받은 명세)이 기준. 화면과 API 대응은 `docs/api/README.md`.
 - 작업 전에 `plan.md`의 해당 단계를 확인하고, 끝나면 체크박스와 결정 기록을 갱신함.
 - MVP 기한(11.15)이 촉박함. P0 범위 밖의 기능은 먼저 제안하지 말고 `plan.md`의 2차 목록에 적어둠.
