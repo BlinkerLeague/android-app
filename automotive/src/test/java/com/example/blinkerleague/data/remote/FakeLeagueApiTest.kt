@@ -20,6 +20,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.time.ZoneId
@@ -90,5 +91,19 @@ class FakeLeagueApiTest {
         vm.refresh()
         runCurrent()
         assertEquals(LeagueUiState.Unavailable, vm.uiState.value)
+    }
+
+    @Test
+    fun `Fake에서 순위 공개를 끄면 다음 리그 조회에 반영된다`() = runTest(dispatcher) {
+        // given
+        // 기본은 공개 (서버 D8)
+        assertTrue(repository.current()!!.visible)
+
+        // when
+        val saved = repository.setVisible(false)
+
+        // then
+        assertTrue(saved)
+        assertFalse(repository.current()!!.visible)
     }
 }
