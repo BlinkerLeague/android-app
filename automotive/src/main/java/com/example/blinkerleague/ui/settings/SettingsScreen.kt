@@ -12,11 +12,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -50,6 +53,8 @@ private val SettingsViewModelFactory = viewModelFactory {
             recordingStatus = container.recordingStatus,
             version = BuildConfig.VERSION_NAME,
             usesServer = container.usesServer,
+            loadLeagueVisible = { container.leagueRepository.current()?.visible },
+            saveLeagueVisible = container.leagueRepository::setVisible,
         )
     }
 }
@@ -63,6 +68,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel(factory = SettingsVi
     SettingsContent(
         state = state,
         onRequestSpeed = requestSpeed,
+        onLeagueVisibleChange = viewModel::setLeagueVisible,
         // 거부를 여러 번 하면 시스템이 요청 창을 더 띄우지 않으므로 앱 정보 화면으로 보냄
         onOpenAppSettings = {
             context.startActivity(
@@ -74,7 +80,12 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel(factory = SettingsVi
 }
 
 @Composable
-fun SettingsContent(state: SettingsUiState, onRequestSpeed: () -> Unit, onOpenAppSettings: () -> Unit) {
+fun SettingsContent(
+    state: SettingsUiState,
+    onRequestSpeed: () -> Unit,
+    onOpenAppSettings: () -> Unit,
+    onLeagueVisibleChange: (Boolean) -> Unit = {},
+) {
     Row(
         Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 24.dp),
         horizontalArrangement = Arrangement.spacedBy(20.dp),
@@ -88,6 +99,21 @@ fun SettingsContent(state: SettingsUiState, onRequestSpeed: () -> Unit, onOpenAp
             Label(R.string.settings_app)
             Line(R.string.settings_version, state.version)
             Line(R.string.settings_mode, stringResource(if (state.usesServer) R.string.settings_mode_server else R.string.settings_mode_local))
+            state.leagueVisible?.let { visible ->
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Label(R.string.settings_league)
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = 64.dp).toggleable(value = visible, role = Role.Switch, onValueChange = onLeagueVisibleChange),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(stringResource(R.string.settings_league_visible), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                    Switch(checked = visible, onCheckedChange = null)
+                }
+                Text(stringResource(R.string.settings_league_visible_note), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (state.leagueVisibilityFailed) {
+                    Text(stringResource(R.string.settings_league_failed), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+                }
+            }
         }
         Panel(Modifier.weight(1f).fillMaxHeight()) {
             Label(R.string.settings_permissions)
@@ -158,7 +184,7 @@ private fun SettingsPreview() = BlinkerLeagueTheme {
     Surface(color = MaterialTheme.colorScheme.background) {
         Box {
             SettingsContent(
-                SettingsUiState("깜빡이장인", "서울 마포구", PermissionStatus.DENIED, RecordingStatus.WAITING, "1.0", false),
+                SettingsUiState("깜빡이장인", "서울 마포구", PermissionStatus.DENIED, RecordingStatus.WAITING, "1.0", false, leagueVisible = true),
                 {}, {},
             )
         }
