@@ -44,6 +44,18 @@ class DataExtractionRulesTest {
         assertEquals(ALL_DOMAINS, excluded)
     }
 
+    @Test
+    fun `클라우드 백업 규칙도 앱 데이터 영역을 모두 제외한다`() {
+        // given
+        // allowBackup=false여도 나중에 바뀔 때를 대비해 규칙에서도 제외
+
+        // when
+        val excluded = excludedDomains("cloud-backup")
+
+        // then
+        assertEquals(ALL_DOMAINS, excluded)
+    }
+
     private companion object {
         val ALL_DOMAINS = setOf(
             "root", "file", "database", "sharedpref", "external",
