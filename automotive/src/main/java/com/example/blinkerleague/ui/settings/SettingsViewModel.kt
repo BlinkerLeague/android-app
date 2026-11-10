@@ -53,7 +53,11 @@ class SettingsViewModel(
     )
 
     /** "리그 순위 공개" 토글 */
-    fun setLeagueVisible(visible: Boolean) {}
+    fun setLeagueVisible(visible: Boolean) {
+        viewModelScope.launch {
+            if (saveLeagueVisible(visible)) league.value = LeagueToggle(visible, failed = false)
+        }
+    }
 
     private data class LeagueToggle(val visible: Boolean?, val failed: Boolean)
 }
