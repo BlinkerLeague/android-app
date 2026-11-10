@@ -72,3 +72,7 @@ data class LeagueRegionDto(
     val safetyIndex: Double? = null,
     val rank: Int? = null,
 )
+
+/** `PUT /api/drivers/me/league-visibility` 요청 · 응답 (서버 D8, 기본 공개) */
+@Serializable
+data class LeagueVisibilityDto(val visible: Boolean)

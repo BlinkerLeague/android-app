@@ -43,4 +43,7 @@ class LeagueRepository(
             championships = me?.championships.orEmpty().map { Championship(it.seasonId, it.name ?: it.leagueCode) },
         )
     }
+
+    /** 리그 순위 공개를 바꿈. 서버에 저장되면 true */
+    suspend fun setVisible(visible: Boolean): Boolean = false
 }

@@ -101,6 +101,23 @@ class LeagueRepositoryTest {
         assertEquals(listOf("안전왕" to false, "깜빡왕" to true), top.map { it.nickname to it.me })
     }
 
+    @Test
+    fun `순위 공개 설정을 서버에 PUT으로 보낸다`() = runTest {
+        // given
+        server.enqueue(MockResponse().setResponseCode(200).setHeader("Content-Type", "application/json").setBody("""{"visible":false}"""))
+
+        // when
+        val saved = repository.setVisible(false)
+
+        // then
+        assertTrue(saved)
+        val request = server.takeRequest()
+        assertEquals("PUT", request.method)
+        assertEquals("/api/drivers/me/league-visibility", request.path)
+        assertEquals("Bearer access-1", request.getHeader("Authorization"))
+        assertEquals("""{"visible":false}""", request.body.readUtf8())
+    }
+
     companion object {
         /** 서버 명세 `CurrentLeagueResponse` 예시 (서버 docs/app-team-changes-2026-11-10.md 형식) */
         val SERVER_LEAGUE = """

@@ -5,6 +5,7 @@ import com.example.blinkerleague.data.remote.dto.LeagueMeDto
 import com.example.blinkerleague.data.remote.dto.LeagueRegionDto
 import com.example.blinkerleague.data.remote.dto.LeagueResponse
 import com.example.blinkerleague.data.remote.dto.LeagueSeasonDto
+import com.example.blinkerleague.data.remote.dto.LeagueVisibilityDto
 import com.example.blinkerleague.data.remote.dto.ScoreStatus
 import com.example.blinkerleague.domain.region.LeagueRegions
 import java.time.Instant
@@ -16,6 +17,9 @@ import java.time.ZoneId
 interface LeagueApi {
     /** `GET /api/leagues/current` (docs/api/openapi.json `CurrentLeagueResponse`) */
     suspend fun currentLeague(): ApiResult<LeagueResponse>
+
+    /** `PUT /api/drivers/me/league-visibility` 리그 순위 공개 설정 */
+    suspend fun setVisibility(visible: Boolean): ApiResult<LeagueVisibilityDto> = TODO()
 }
 
 /**
