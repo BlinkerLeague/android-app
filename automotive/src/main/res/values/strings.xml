@@ -139,6 +139,9 @@
     <string name="league_qualified">이번 시즌 순위 자격을 채웠어요</string>
     <string name="league_qualify_rule">이번 시즌 %1$dkm 또는 %2$d번 운행하면 순위에 올라요</string>
     <string name="league_season_progress">이번 시즌 %1$.1fkm · %2$d번 운행</string>
+    <string name="league_score_breakdown">평균 %1$s점 + 시즌 포인트 %2$dP</string>
+    <string name="league_championships">우승 칭호 · %1$s</string>
+    <string name="league_championship_item">%1$s %2$s</string>
     <string name="league_ranking">리그 순위</string>
     <string name="league_regions">지역 안전지수</string>
     <string name="league_regions_empty">순위가 공개된 지역이 아직 없어요</string>

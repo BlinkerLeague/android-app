@@ -36,6 +36,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.blinkerleague.BlinkerLeagueApplication
 import com.example.blinkerleague.R
+import com.example.blinkerleague.domain.model.Championship
 import com.example.blinkerleague.domain.model.LeagueEntry
 import com.example.blinkerleague.domain.model.LeagueRegion
 import com.example.blinkerleague.domain.model.MyLeague
@@ -92,6 +93,13 @@ private fun MyLeaguePanel(state: LeagueUiState.Loaded, modifier: Modifier) {
             style = MaterialTheme.typography.displayMedium.copy(fontSize = 72.sp),
             color = MaterialTheme.colorScheme.primary,
         )
+        if (my.myScore != null) {
+            Text(
+                stringResource(R.string.league_score_breakdown, my.averageScore?.toString() ?: "—", my.points),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         Text(
             when {
                 my.rankPublic && my.myRank != null -> stringResource(R.string.league_rank, my.myRank, my.participants)
@@ -111,6 +119,10 @@ private fun MyLeaguePanel(state: LeagueUiState.Loaded, modifier: Modifier) {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        if (state.championships.isNotEmpty()) {
+            val titles = state.championships.map { stringResource(R.string.league_championship_item, it.seasonId, it.name) }.joinToString(", ")
+            Text(stringResource(R.string.league_championships, titles), style = MaterialTheme.typography.bodyMedium)
+        }
     }
 }
 
@@ -173,9 +185,10 @@ private fun LeaguePreview() = BlinkerLeagueTheme {
         LeagueContent(
             LeagueUiState.Loaded(
                 11, 21,
-                MyLeague("서울 서북권", 24, true, 3, 88, true, 62.4, 12, emptyList()),
-                listOf(LeagueEntry(1, "안전왕", 95, false), LeagueEntry(2, "깜빡깜빡", 91, false), LeagueEntry(3, "blinker", 88, true)),
+                MyLeague("서울 서북권", 24, true, 3, 128, true, 62.4, 12, emptyList(), averageScore = 88, points = 40),
+                listOf(LeagueEntry(1, "안전왕", 145, false), LeagueEntry(2, "깜빡깜빡", 131, false), LeagueEntry(3, "blinker", 128, true)),
                 listOf(LeagueRegion("서울 동남권", 89, 1), LeagueRegion("서울 서북권", 86, 2)),
+                listOf(Championship("2026-10", "서울 서북권")),
             ),
         )
     }

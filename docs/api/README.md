@@ -21,7 +21,7 @@
 | `GET /api/streak` 연속 달성 | `StreakView`: `streakDays` · `todayAchieved` | SCR-01 연승 카드, SCR-05 | 연결됨 |
 | `GET /api/badges` 배지 진열장 | `BadgeResponse[]`: 4종(`FIRST_TRIP` · `STREAK_7` · `SIGNAL_100` · `SEASON_CHAMPION`) | SCR-05 업적 | 연결됨. Fake는 3종 |
 | `GET /api/reports/weekly?week=` 주간 리포트 | `WeeklyReportView` | SCR-07 | 연결됨 |
-| `GET /api/leagues/current` 이번 시즌 리그 | `CurrentLeagueResponse`: `season` · `league` · `me` · `regions` | SCR-04 리그 | **형식 다름**: 앱 DTO는 서버 요청 14번 제안 형식(`myLeague`)이라 실서버 응답을 읽지 못함 |
+| `GET /api/leagues/current` 이번 시즌 리그 | `CurrentLeagueResponse`: `season` · `league` · `me` · `regions` | SCR-04 리그 | 연결됨(11.10 서버 형식으로 맞춤) |
 | `PUT /api/drivers/me/league-visibility` 순위 공개 설정 | `LeagueVisibilityRequest/Response { visible }` (200 · 400 · 401 · 404) | SCR-08 설정 | **미연결**: 설정의 "리그 순위 공개" 토글 없음 |
 
 ## 리그 응답 (`CurrentLeagueResponse`) 요약
