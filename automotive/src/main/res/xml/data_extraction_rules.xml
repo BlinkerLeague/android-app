@@ -1,2 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<data-extraction-rules />
+<data-extraction-rules>
+    <!-- 토큰(Keystore 암호화) · 기준값 캐시 · 운행 DB는 다른 기기로 옮기지 않음 -->
+    <device-transfer>
+        <exclude domain="root" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
+        <exclude domain="device_root" path="." />
+        <exclude domain="device_file" path="." />
+        <exclude domain="device_database" path="." />
+        <exclude domain="device_sharedpref" path="." />
+    </device-transfer>
+</data-extraction-rules>
