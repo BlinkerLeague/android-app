@@ -4,6 +4,7 @@ import com.example.blinkerleague.data.remote.dto.TripEventDto
 import com.example.blinkerleague.data.remote.dto.TripUploadRequest
 import com.example.blinkerleague.data.remote.dto.TurnPayload
 import com.example.blinkerleague.data.repository.LeagueRepository
+import com.example.blinkerleague.domain.config.LeagueConfig
 import com.example.blinkerleague.domain.region.LeagueRegions
 import com.example.blinkerleague.ui.league.LeagueUiState
 import com.example.blinkerleague.ui.league.LeagueViewModel
@@ -106,5 +107,22 @@ class FakeLeagueApiTest {
         // then
         assertTrue(saved)
         assertFalse(repository.current()!!.visible)
+    }
+
+    @Test
+    fun `Fake는 기준값의 순위 자격 거리로 자격을 판정한다`() = runTest(dispatcher) {
+        // given
+        // 기준값: 시즌 30km 또는 5회. 이번 달 40km · 2번 운행
+        val relaxed = LeagueRepository(
+            FakeLeagueApi(trips, { "11440" }, { now }, zone) { LeagueConfig(minSeasonDistanceKm = 30.0, minSeasonTrips = 5) },
+        )
+        trip(11, 2, 10.0, true)
+        trip(11, 5, 30.0, true)
+
+        // when
+        val my = relaxed.current()!!.myLeague!!
+
+        // then
+        assertTrue(my.qualified)
     }
 }

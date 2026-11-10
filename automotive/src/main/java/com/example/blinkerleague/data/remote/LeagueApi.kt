@@ -7,6 +7,7 @@ import com.example.blinkerleague.data.remote.dto.LeagueResponse
 import com.example.blinkerleague.data.remote.dto.LeagueSeasonDto
 import com.example.blinkerleague.data.remote.dto.LeagueVisibilityDto
 import com.example.blinkerleague.data.remote.dto.ScoreStatus
+import com.example.blinkerleague.domain.config.LeagueConfig
 import com.example.blinkerleague.domain.region.LeagueRegions
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -32,6 +33,8 @@ class FakeLeagueApi(
     private val regionCode: () -> String?,
     private val clock: () -> Long,
     private val zone: ZoneId,
+    /** 순위 자격 기준 (기준값 `league`) */
+    private val rule: () -> LeagueConfig = { LeagueConfig() },
 ) : LeagueApi {
 
     /** 순위 공개 설정 (서버 D8, 기본 공개). Fake는 앱이 살아 있는 동안만 기억 */
