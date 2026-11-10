@@ -34,6 +34,14 @@ class FakeLeagueApi(
     private val zone: ZoneId,
 ) : LeagueApi {
 
+    /** 순위 공개 설정 (서버 D8, 기본 공개). Fake는 앱이 살아 있는 동안만 기억 */
+    private var visible = true
+
+    override suspend fun setVisibility(visible: Boolean): ApiResult<LeagueVisibilityDto> {
+        this.visible = visible
+        return ApiResult.Success(LeagueVisibilityDto(visible))
+    }
+
     override suspend fun currentLeague(): ApiResult<LeagueResponse> {
         val month = YearMonth.from(Instant.ofEpochMilli(clock()).atZone(zone))
         val start = month.atDay(1).atStartOfDay(zone)
@@ -51,6 +59,7 @@ class FakeLeagueApi(
                 season = LeagueSeasonDto(month.toString(), start.toOffsetDateTime().toString(), end.toOffsetDateTime().toString()),
                 league = name?.let { LeagueDto(leagueCode = it, name = it, participants = 1, rankingPublished = false) },
                 me = LeagueMeDto(
+                    visible = visible,
                     eligible = km >= 50 || trips.size >= 10, averageScore = score, score = score,
                     trips = trips.size, distanceKm = km,
                 ),
