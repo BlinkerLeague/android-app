@@ -122,7 +122,7 @@ class AppContainer(context: Context) {
     val rewardRepository = RewardRepository(rewardApi)
 
     /** 지역 리그 (서버 4.4 미구현: 서버 모드에서는 API가 생길 때까지 불러오지 못함) */
-    val leagueRepository = LeagueRepository(leagueApi)
+    val leagueRepository = LeagueRepository(leagueApi) { tokens.profile()?.nickname }
 
     /** 운전자 등록과 등록 여부 (온보딩) */
     val driverRepository = DriverRepository(driverApi, tokens)

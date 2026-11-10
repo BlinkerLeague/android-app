@@ -20,6 +20,7 @@ class LeagueRepository(
         val body = (api.currentLeague() as? ApiResult.Success)?.body ?: return null
         val endsAt = runCatching { OffsetDateTime.parse(body.season.endsAt).toInstant().toEpochMilli() }.getOrNull() ?: return null
         val me = body.me
+        val nickname = myNickname()
         return League(
             seasonId = body.season.seasonId,
             seasonEndsAtMs = endsAt,
@@ -33,7 +34,7 @@ class LeagueRepository(
                     qualified = me?.eligible ?: false,
                     seasonKm = me?.distanceKm ?: 0.0,
                     seasonTrips = me?.trips ?: 0,
-                    top = l.rankings.map { LeagueEntry(it.rank, it.nickname, it.score.roundToInt(), false) },
+                    top = l.rankings.map { LeagueEntry(it.rank, it.nickname, it.score.roundToInt(), me = nickname != null && it.nickname == nickname) },
                     averageScore = me?.averageScore?.roundToInt(),
                     points = me?.points ?: 0,
                 )
