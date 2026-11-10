@@ -12,7 +12,7 @@
 | 필수 | 저장 데이터 암호화 (운행 기록) | ⚠️ | Room DB에 운행 시각·거리·회전(방향, 깜빡이 여부)이 평문으로 남음. 원시 위치 좌표·식별자는 저장하지 않음. 민감정보로 볼지 판단 필요 (암호화하려면 SQLCipher 등 도입) |
 | 필수 | 로그 관리 | ✅ | 토큰·좌표는 어디서도 로그로 찍지 않음. 릴리스 빌드는 정보 로그를 남기지 않고 경고·오류만 남김 (`AppLog`). HTTP 로그 인터셉터 없음 |
 | 권장 | 캐시 | ✅ | 민감정보를 캐시에 두지 않음 |
-| 권장 | 자동 백업 비활성화 | ✅ | `android:allowBackup="false"` |
+| 권장 | 자동 백업 비활성화 | ✅ | `android:allowBackup="false"` + `android:dataExtractionRules`(`res/xml/data_extraction_rules.xml`). API 31+ 클라우드 백업 · 기기 간 전송 모두 모든 도메인 제외, API 28~30은 allowBackup=false로 꺼짐. 토큰은 Keystore 키가 기기 밖으로 나가지 않아 이중 보호 |
 | 권장 | 외부 저장소 | ✅ | 외부 저장소를 쓰지 않음 (앱 전용 내부 저장소만) |
 | 필수 | URL 노출 방지 | ✅ | 토큰은 `Authorization: Bearer` 헤더로만 보냄 |
 
