@@ -28,4 +28,6 @@ tools: Read, Grep, Glob, Bash
 - **사용자 결정 필요:** 없으면 "없음"
 - **reviewer 확인 포인트:** 이 feat에서 특히 볼 위험(주행 안전 원칙, 기준값 하드코딩, 오프라인, 미지원 신호 처리 등)
 
+메인 세션은 이 계획대로 tester(red) → developer(green) 를 사이클마다 번갈아 부르고, 마지막에 reviewer를 부른다. 사이클 목록은 각 역할에게 그대로 넘길 수 있게 쓴다.
+
 사이클을 나누는 규칙(한 사이클에 실패하는 테스트 하나, 올바른 red의 조건, 테스트 종류)은 `.claude/agents/tester.md`를, green · refactor 규칙은 `.claude/agents/developer.md`를 읽고 따른다.
