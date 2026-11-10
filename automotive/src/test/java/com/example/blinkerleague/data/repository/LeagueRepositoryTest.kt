@@ -120,6 +120,20 @@ class LeagueRepositoryTest {
     }
 
     @Test
+    fun `순위 공개 저장 응답에 visible이 없어도 저장 성공으로 본다`() = runTest {
+        // given
+        // 서버 명세의 LeagueVisibilityResponse에는 required 필드가 없어 visible이 빠질 수 있음
+        server.enqueue(MockResponse().setResponseCode(200).setHeader("Content-Type", "application/json").setBody("{}"))
+
+        // when
+        val saved = repository.setVisible(false)
+
+        // then
+        assertTrue(saved)
+        assertEquals("""{"visible":false}""", server.takeRequest().body.readUtf8())
+    }
+
+    @Test
     fun `리그 응답에서 내 순위 공개 설정을 읽는다`() = runTest {
         // given
         // 순위 공개를 끈 운전자
