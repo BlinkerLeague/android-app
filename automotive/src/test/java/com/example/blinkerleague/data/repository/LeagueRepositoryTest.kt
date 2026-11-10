@@ -4,6 +4,7 @@ import com.example.blinkerleague.data.auth.InMemoryTokenStore
 import com.example.blinkerleague.data.remote.dto.RegisterDriverResponse
 import com.example.blinkerleague.data.remote.http.HttpClientFactory
 import com.example.blinkerleague.data.remote.http.HttpLeagueApi
+import com.example.blinkerleague.domain.model.Championship
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -65,6 +66,22 @@ class LeagueRepositoryTest {
         // then
         assertEquals(93, my.averageScore)
         assertEquals(45, my.points)
+    }
+
+    @Test
+    fun `지난 시즌 우승 칭호를 담는다`() = runTest {
+        // given
+        // 2026-09, 2026-10 시즌에 서울 서북권 우승
+        respond(SERVER_LEAGUE)
+
+        // when
+        val league = repository.current()!!
+
+        // then
+        assertEquals(
+            listOf(Championship("2026-09", "서울 서북권"), Championship("2026-10", "서울 서북권")),
+            league.championships,
+        )
     }
 
     companion object {

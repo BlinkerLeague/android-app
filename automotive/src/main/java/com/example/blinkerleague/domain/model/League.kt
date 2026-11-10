@@ -6,7 +6,12 @@ data class League(
     val seasonEndsAtMs: Long,
     val myLeague: MyLeague?,
     val regions: List<LeagueRegion>,
+    /** 지난 시즌 우승 칭호 (서버 D30 · D34) */
+    val championships: List<Championship> = emptyList(),
 )
+
+/** 우승 칭호: 시즌(예: 2026-10)과 권역 이름 */
+data class Championship(val seasonId: String, val name: String)
 
 data class MyLeague(
     val name: String,
