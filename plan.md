@@ -8,7 +8,9 @@
 - 구현 가이드 (10/27, 기획서 문서의 탭): SDK 사용 흐름, 핸들 각도 판정, 확인 목록
 - Pleos 앱 보안 가이드 대응표: [`docs/security-checklist.md`](docs/security-checklist.md)
 - Pleos 문의 사항(실차·SDK·심사): [`docs/pleos-inquiries.md`](docs/pleos-inquiries.md)
-- 서버 저장소와 서버 계획: https://github.com/BlinkerLeague/server (`plan.md`). API 형식은 이 문서를 따름
+- 서버 저장소와 서버 계획: https://github.com/BlinkerLeague/server (`plan.md`)
+- **서버 API 명세: [`docs/api/openapi.json`](docs/api/openapi.json)** (서버 Swagger, 11.10 기준 13개). 화면별 대응과 앱 연결 상태는 [`docs/api/README.md`](docs/api/README.md)
+- 역할별 서브에이전트와 TDD 규칙: `.claude/agents/` (lead · tester · developer · reviewer)
 
 ## 일정
 
