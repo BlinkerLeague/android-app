@@ -13,6 +13,7 @@ data class ThresholdsResponse(
     val grades: List<GradeRuleDto>? = null,
     /** 항목 이름 → 팁 문구 */
     val tips: Map<String, String>? = null,
+    val league: LeagueThresholdsDto? = null,
 )
 
 @Serializable
@@ -37,3 +38,11 @@ data class TurnThresholdsDto(
 
 @Serializable
 data class GradeRuleDto(val grade: String, val minScore: Int)
+
+/** 지역 리그 기준 (서버 D11 · D13). commonItems · topN은 서버 계산용이라 앱은 읽지 않음 */
+@Serializable
+data class LeagueThresholdsDto(
+    val minParticipants: Int? = null,
+    val minSeasonDistanceKm: Double? = null,
+    val minSeasonTrips: Int? = null,
+)
