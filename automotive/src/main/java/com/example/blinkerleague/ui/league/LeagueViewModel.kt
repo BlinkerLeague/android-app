@@ -32,6 +32,7 @@ class LeagueViewModel(
                     top = l.myLeague?.takeIf { it.rankPublic }?.top.orEmpty(),
                     regions = l.regions,
                     championships = l.championships,
+                    rule = rule(),
                 )
             } ?: if (_uiState.value is LeagueUiState.Loaded) _uiState.value else LeagueUiState.Unavailable
         }

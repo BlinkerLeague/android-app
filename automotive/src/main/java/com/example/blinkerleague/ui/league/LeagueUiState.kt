@@ -27,7 +27,3 @@ sealed interface LeagueUiState {
         val rule: LeagueConfig = LeagueConfig(),
     ) : LeagueUiState
 }
-
-/** 순위 자격 기준 (서버 D13 기본값. 기준값 설정에 있으나 앱 안내 문구용) */
-internal const val QUALIFY_KM = 50
-internal const val QUALIFY_TRIPS = 10
