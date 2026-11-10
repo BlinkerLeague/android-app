@@ -45,6 +45,7 @@ class SettingsViewModel(
             usesServer = usesServer,
             leagueVisible = toggle.visible,
             leagueVisibilityFailed = toggle.failed,
+            leagueVisibilitySaving = toggle.saving,
         )
     }.stateIn(
         viewModelScope,
