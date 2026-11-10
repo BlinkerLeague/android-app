@@ -4,6 +4,7 @@ import com.example.blinkerleague.data.auth.DriverProfile
 import com.example.blinkerleague.domain.model.PermissionStatus
 import com.example.blinkerleague.domain.region.Regions
 import com.example.blinkerleague.service.RecordingStatus
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -110,5 +111,29 @@ class SettingsViewModelTest {
         // then
         assertEquals(true, vm.uiState.value.leagueVisible)
         assertTrue(vm.uiState.value.leagueVisibilityFailed)
+    }
+
+    @Test
+    fun `저장 중에 토글을 다시 누르면 서버에 한 번만 저장을 요청한다`() = runTest(dispatcher) {
+        // given
+        // 느린 네트워크라 첫 저장이 끝나지 않음
+        val gate = CompletableDeferred<Boolean>()
+        val saved = mutableListOf<Boolean>()
+        val vm = SettingsViewModel(
+            { DriverProfile("깜빡왕", "11440") }, speed, status, "1.0", true,
+            loadLeagueVisible = { true },
+            saveLeagueVisible = { saved += it; gate.await() },
+        )
+        backgroundScope.launch { vm.uiState.collect {} }
+        runCurrent()
+
+        // when
+        vm.setLeagueVisible(false)
+        runCurrent()
+        vm.setLeagueVisible(false)
+        runCurrent()
+
+        // then
+        assertEquals(listOf(false), saved)
     }
 }
