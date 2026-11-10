@@ -1,5 +1,6 @@
 package com.example.blinkerleague.ui.league
 
+import com.example.blinkerleague.domain.config.LeagueConfig
 import com.example.blinkerleague.domain.model.Championship
 import com.example.blinkerleague.domain.model.LeagueEntry
 import com.example.blinkerleague.domain.model.LeagueRegion
@@ -22,6 +23,8 @@ sealed interface LeagueUiState {
         val regions: List<LeagueRegion>,
         /** 지난 시즌 우승 칭호 */
         val championships: List<Championship> = emptyList(),
+        /** 순위 자격 · 공개 기준 (기준값 `league`) */
+        val rule: LeagueConfig = LeagueConfig(),
     ) : LeagueUiState
 }
 

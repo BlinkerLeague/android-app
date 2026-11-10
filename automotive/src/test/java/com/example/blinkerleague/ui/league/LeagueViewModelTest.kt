@@ -1,5 +1,6 @@
 package com.example.blinkerleague.ui.league
 
+import com.example.blinkerleague.domain.config.LeagueConfig
 import com.example.blinkerleague.domain.model.Championship
 import com.example.blinkerleague.domain.model.League
 import kotlinx.coroutines.Dispatchers
@@ -42,5 +43,20 @@ class LeagueViewModelTest {
 
         // then
         assertEquals(titles, (vm.uiState.value as LeagueUiState.Loaded).championships)
+    }
+
+    @Test
+    fun `순위 자격과 공개 인원 안내에 기준값을 쓴다`() = runTest(dispatcher) {
+        // given
+        // 서버 기준값: 30km 또는 5회, 20명부터 순위 공개
+        val rule = LeagueConfig(minParticipants = 20, minSeasonDistanceKm = 30.0, minSeasonTrips = 5)
+        val vm = LeagueViewModel({ League("2026-11", seasonEnd, null, emptyList()) }, { rule }) { now }
+
+        // when
+        vm.refresh()
+        runCurrent()
+
+        // then
+        assertEquals(rule, (vm.uiState.value as LeagueUiState.Loaded).rule)
     }
 }

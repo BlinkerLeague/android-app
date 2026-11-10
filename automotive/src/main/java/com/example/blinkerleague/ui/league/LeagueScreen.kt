@@ -46,7 +46,7 @@ import com.example.blinkerleague.ui.theme.OnSuccessContainer
 private val LeagueViewModelFactory = viewModelFactory {
     initializer {
         val container = (this[APPLICATION_KEY] as BlinkerLeagueApplication).container
-        LeagueViewModel(container.leagueRepository::current, System::currentTimeMillis)
+        LeagueViewModel(container.leagueRepository::current, clock = System::currentTimeMillis)
     }
 }
 

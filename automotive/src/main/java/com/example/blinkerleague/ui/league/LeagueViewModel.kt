@@ -2,6 +2,7 @@ package com.example.blinkerleague.ui.league
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.blinkerleague.domain.config.LeagueConfig
 import com.example.blinkerleague.domain.model.League
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,6 +12,8 @@ import kotlin.math.ceil
 
 class LeagueViewModel(
     private val loadLeague: suspend () -> League?,
+    /** 순위 자격 · 공개 기준 (기준값 `league`) */
+    private val rule: () -> LeagueConfig = { LeagueConfig() },
     private val clock: () -> Long,
 ) : ViewModel() {
 
