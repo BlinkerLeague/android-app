@@ -7,6 +7,7 @@ import com.example.blinkerleague.data.remote.dto.LeagueResponse
 import com.example.blinkerleague.data.remote.dto.LeagueSeasonDto
 import com.example.blinkerleague.data.remote.dto.LeagueVisibilityResponseDto
 import com.example.blinkerleague.data.remote.dto.ScoreStatus
+import com.example.blinkerleague.domain.config.LeagueConfig
 import com.example.blinkerleague.domain.region.LeagueRegions
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -25,13 +26,15 @@ interface LeagueApi {
 /**
  * Fake: 다른 운전자가 없으므로 지어낸 순위를 넣지 않음. 나 혼자인 리그 → 참여자 10명 미만이라 순위 비공개(서버 D11).
  * 시즌은 달력 월(D29), 리그 점수는 이번 달 점수 난 운행의 거리 가중 평균(D5·D19, P0은 깜빡이만 공통 항목),
- * 순위 자격은 시즌 50km 또는 10회(D13)
+ * 순위 자격은 기준값 `league`(D13 기본 시즌 50km 또는 10회)
  */
 class FakeLeagueApi(
     private val tripApi: FakeTripApi,
     private val regionCode: () -> String?,
     private val clock: () -> Long,
     private val zone: ZoneId,
+    /** 순위 자격 기준 (기준값 `league`) */
+    private val rule: () -> LeagueConfig = { LeagueConfig() },
 ) : LeagueApi {
 
     /** 순위 공개 설정 (서버 D8, 기본 공개). Fake는 앱이 살아 있는 동안만 기억 */
@@ -54,13 +57,14 @@ class FakeLeagueApi(
         val km = trips.sumOf { it.first.distanceKm }
         val score = if (km > 0) trips.sumOf { it.first.distanceKm * it.second.score!! } / km else null
         val name = regionCode()?.let(LeagueRegions::of)
+        val rule = rule()
         return ApiResult.Success(
             LeagueResponse(
                 season = LeagueSeasonDto(month.toString(), start.toOffsetDateTime().toString(), end.toOffsetDateTime().toString()),
                 league = name?.let { LeagueDto(leagueCode = it, name = it, participants = 1, rankingPublished = false) },
                 me = LeagueMeDto(
                     visible = visible,
-                    eligible = km >= 50 || trips.size >= 10, averageScore = score, score = score,
+                    eligible = km >= rule.minSeasonDistanceKm || trips.size >= rule.minSeasonTrips, averageScore = score, score = score,
                     trips = trips.size, distanceKm = km,
                 ),
                 regions = listOfNotNull(name?.let { LeagueRegionDto(it, it, null, null) }),

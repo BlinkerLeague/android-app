@@ -105,7 +105,7 @@ class AppContainer(context: Context) {
             val fakeRewards = FakeRewardApi(fakeTrips, fakeMissions, System::currentTimeMillis, zone)
             fakeTrips.earnedPointsLookup = fakeRewards::earnedPointsFor
             rewardApi = fakeRewards
-            leagueApi = FakeLeagueApi(fakeTrips, { tokens.profile()?.regionCode }, System::currentTimeMillis, zone)
+            leagueApi = FakeLeagueApi(fakeTrips, { tokens.profile()?.regionCode }, System::currentTimeMillis, zone) { config.league }
         }
     }
 
@@ -121,7 +121,7 @@ class AppContainer(context: Context) {
     /** 2차 보상: 포인트·연속 달성·배지·주간 리포트 */
     val rewardRepository = RewardRepository(rewardApi)
 
-    /** 지역 리그 (서버 4.4 미구현: 서버 모드에서는 API가 생길 때까지 불러오지 못함) */
+    /** 지역 리그 (서버 4.4, 순위 공개 설정 포함) */
     val leagueRepository = LeagueRepository(leagueApi) { tokens.profile()?.nickname }
 
     /** 운전자 등록과 등록 여부 (온보딩) */

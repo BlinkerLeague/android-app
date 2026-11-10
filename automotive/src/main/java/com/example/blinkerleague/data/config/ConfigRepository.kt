@@ -78,6 +78,13 @@ internal fun DetectionConfig.mergedWith(response: ThresholdsResponse): Detection
         ),
         grades = response.grades?.takeIf { it.isNotEmpty() }?.map { GradeThreshold(it.grade, it.minScore) } ?: grades,
         tips = tips + response.tips.orEmpty(),
+        league = response.league?.let { l ->
+            league.copy(
+                minParticipants = l.minParticipants ?: league.minParticipants,
+                minSeasonDistanceKm = l.minSeasonDistanceKm ?: league.minSeasonDistanceKm,
+                minSeasonTrips = l.minSeasonTrips ?: league.minSeasonTrips,
+            )
+        } ?: league,
     )
 }
 

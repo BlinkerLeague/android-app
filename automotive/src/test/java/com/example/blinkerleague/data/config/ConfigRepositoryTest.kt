@@ -5,6 +5,7 @@ import com.example.blinkerleague.data.remote.ConfigApi
 import com.example.blinkerleague.data.remote.dto.ThresholdsResponse
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.config.LeagueConfig
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
@@ -59,6 +60,21 @@ class ConfigRepositoryTest {
         assertEquals("회전 30m 전에 깜빡이를 켜 보세요.", merged.tips["TURN_SIGNAL"])
         assertEquals("출발 전에 안전벨트를 매 주세요.", merged.tips["SEAT_BELT"])
         assertEquals(DetectionConfig.DEFAULT_TIPS["NIGHT_HEADLIGHT"], merged.tips["NIGHT_HEADLIGHT"])
+    }
+
+    @Test
+    fun `서버 기준값의 league 그룹을 순위 자격 기준으로 읽는다`() {
+        // given
+        // 서버가 순위 자격을 30km 또는 5회, 공개 인원을 20명으로 바꿈
+        val changed = json.decodeFromString<ThresholdsResponse>(
+            """{"version":2,"league":{"commonItems":["TURN_SIGNAL"],"minParticipants":20,"minSeasonDistanceKm":30.0,"minSeasonTrips":5,"topN":10}}""",
+        )
+
+        // when
+        val merged = DetectionConfig.DEFAULT.mergedWith(changed)
+
+        // then
+        assertEquals(LeagueConfig(minParticipants = 20, minSeasonDistanceKm = 30.0, minSeasonTrips = 5), merged.league)
     }
 
     @Test

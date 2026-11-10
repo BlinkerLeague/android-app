@@ -42,11 +42,12 @@ import com.example.blinkerleague.domain.model.LeagueRegion
 import com.example.blinkerleague.domain.model.MyLeague
 import com.example.blinkerleague.ui.theme.BlinkerLeagueTheme
 import com.example.blinkerleague.ui.theme.OnSuccessContainer
+import kotlin.math.roundToInt
 
 private val LeagueViewModelFactory = viewModelFactory {
     initializer {
         val container = (this[APPLICATION_KEY] as BlinkerLeagueApplication).container
-        LeagueViewModel(container.leagueRepository::current, System::currentTimeMillis)
+        LeagueViewModel(container.leagueRepository::current, { container.config.league }, System::currentTimeMillis)
     }
 }
 
@@ -104,13 +105,13 @@ private fun MyLeaguePanel(state: LeagueUiState.Loaded, modifier: Modifier) {
             when {
                 my.rankPublic && my.myRank != null -> stringResource(R.string.league_rank, my.myRank, my.participants)
                 my.rankPublic -> stringResource(R.string.league_not_ranked, my.participants)
-                else -> stringResource(R.string.league_rank_hidden, my.participants)
+                else -> stringResource(R.string.league_rank_hidden, state.rule.minParticipants, my.participants)
             },
             style = MaterialTheme.typography.bodyLarge,
         )
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         Text(
-            if (my.qualified) stringResource(R.string.league_qualified) else stringResource(R.string.league_qualify_rule, QUALIFY_KM, QUALIFY_TRIPS),
+            if (my.qualified) stringResource(R.string.league_qualified) else stringResource(R.string.league_qualify_rule, state.rule.minSeasonDistanceKm.roundToInt(), state.rule.minSeasonTrips),
             style = MaterialTheme.typography.bodyMedium,
             color = if (my.qualified) OnSuccessContainer else MaterialTheme.colorScheme.onSurfaceVariant,
         )

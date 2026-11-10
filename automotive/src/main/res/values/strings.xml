@@ -135,7 +135,7 @@
     <string name="league_my_score">내 리그 점수</string>
     <string name="league_rank">%1$d위 / %2$d명</string>
     <string name="league_not_ranked">아직 순위가 없어요 · 참여자 %1$d명</string>
-    <string name="league_rank_hidden">참여자가 10명이 되면 순위가 공개돼요 (지금 %1$d명)</string>
+    <string name="league_rank_hidden">참여자가 %1$d명이 되면 순위가 공개돼요 (지금 %2$d명)</string>
     <string name="league_qualified">이번 시즌 순위 자격을 채웠어요</string>
     <string name="league_qualify_rule">이번 시즌 %1$dkm 또는 %2$d번 운행하면 순위에 올라요</string>
     <string name="league_season_progress">이번 시즌 %1$.1fkm · %2$d번 운행</string>

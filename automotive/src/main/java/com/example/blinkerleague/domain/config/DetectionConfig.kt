@@ -13,6 +13,7 @@ data class DetectionConfig(
     val grades: List<GradeThreshold> = GradeThreshold.DEFAULT,
     /** 항목별 팁 문구 (항목 상세 SCR-02b). 서버 기준값 `tips`가 오면 항목별로 덮어씀 */
     val tips: Map<String, String> = DEFAULT_TIPS,
+    val league: LeagueConfig = LeagueConfig(),
 ) {
     companion object {
         /** 서버 기본 기준값의 팁 문구. 깜빡이는 앱 판정 기준(회전 5초 전)에 맞춘 문구 */
@@ -66,6 +67,16 @@ data class TurnConfig(
     val signalLeadMs: Long get() = signalLeadSec * 1_000L
     val mergeGapMs: Long get() = mergeGapSec * 1_000L
 }
+
+/** 지역 리그 기준 (서버 기준값 `league`, 서버 D11 · D13). 앱은 화면 안내 문구와 Fake 판정에만 씀 */
+data class LeagueConfig(
+    /** 권역 참여자가 이 수 미만이면 순위 비공개 */
+    val minParticipants: Int = 10,
+    /** 순위 자격: 시즌 누적 거리 */
+    val minSeasonDistanceKm: Double = 50.0,
+    /** 순위 자격: 시즌 운행 횟수 (거리와 둘 중 하나만 채우면 됨) */
+    val minSeasonTrips: Int = 10,
+)
 
 /** 주행 안전 가드 기준 (docs/screen-plan.md 3장) */
 data class GuardConfig(
