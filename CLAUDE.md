@@ -84,12 +84,18 @@ com.example.blinkerleague
 ## 작업 방식
 
 - `feature/*` 브랜치에서 작업하고 `develop`으로 PR을 보냄.
-- 기능은 TDD(red → green → refactor)로 만듦. 역할별 서브에이전트 `.claude/agents/`(lead · tester · developer · reviewer)가 규칙의 원본임.
-- **기능 개발은 서브에이전트를 이 순서로 실행함:** lead(작업 분배 · TDD 사이클 목록) → tester(red: 실패 테스트 커밋) → developer(green · refactor) → reviewer(검토).
-  사이클마다 tester와 developer를 번갈아 부르고, 브랜치가 끝나면 reviewer를 부름. 메인 세션은 역할을 대신하지 않고 결과를 전달 · 확인만 함.
-  reviewer의 검토 결과는 `review/<YYYY-MM-DD>-<브랜치 이름의 / 를 - 로>.md`로 남기고 같은 브랜치에 커밋한 뒤 PR을 올림. 지적이 있으면 developer가 고치고 reviewer가 다시 검토함.
-  테스트 작성 규칙(한글 이름, `// given` · `// when` · `// then`)은 `tester.md`, green · refactor 규칙은 `developer.md`를 따름.
-  red(`test:`) · green(`feat:`/`fix:`) · refactor(`refactor:`)는 커밋을 나눔.
+- 동작이 바뀌는 코드는 TDD(red → green → refactor)로 만듦. 역할별 서브에이전트 `.claude/agents/`(lead · tester · developer · reviewer)가 규칙의 원본임.
+- **모든 개발 작업(기능, 버그 수정, 점검 · 마무리, 리뷰 지적 수정)은 서브에이전트로 함:** lead → tester → developer → reviewer.
+  1. **lead**: `plan.md` · screen-plan · 코드를 읽고(필요하면 lint · 테스트를 돌려 현황을 봄) 작업을 나눔. 결과는 TDD 사이클 목록과 "테스트 없이 고칠 것" 목록.
+  2. **tester(red)**: 동작이 바뀌는 사이클마다 실패 테스트 하나를 쓰고 실패를 확인해 `test:` 커밋.
+  3. **developer(green · refactor)**: 그 테스트를 통과시키고 `feat:` · `fix:` 커밋. 동작이 바뀌지 않는 일(lint 경고, 문구, 문서, Preview)은 테스트 없이 developer가 바로 고치고 `fix:` · `docs:` · `chore:` 커밋.
+  4. 2~3을 사이클마다 번갈아 반복하고, 끝나면 tester가 전체 단위 테스트 · 빌드(· lint)로 검증함.
+  5. **reviewer**: 브랜치 전체를 검토하고 결과를 `review/<YYYY-MM-DD>-<브랜치 이름의 / 를 - 로>.md`로 남김. "수정 후 머지"면 lead → tester → developer로 고친 뒤 reviewer가 같은 파일에 "재검토" 절을 덧붙임.
+  6. **메인 세션**: 역할을 대신하지 않음. 에이전트를 부르고, 결과를 다음 역할에 전달하고, 리뷰 파일 커밋 · push · PR · 머지만 함. 머지 전에 develop과 충돌 여부와 테스트 결과를 확인함.
+- 서브에이전트 호출: Agent 도구로 역할 이름(`lead` 등)을 부름. 세션 시작 뒤에 에이전트 파일이 생겨 이름으로 부를 수 없으면 general-purpose 에이전트에게 해당 `.claude/agents/<역할>.md`를 먼저 읽고 따르라고 지시함.
+  에이전트들은 같은 작업 트리를 쓰므로 한 번에 하나씩 순서대로 실행함(병렬 실행은 읽기만 하는 reviewer끼리만). 에이전트는 브랜치를 바꾸거나 push하지 않음.
+- 테스트 작성 규칙(한글 이름, `// given` · `// when` · `// then`)은 `tester.md`, green · refactor 규칙은 `developer.md`를 따름.
+  red(`test:`) · green(`feat:`/`fix:`) · refactor(`refactor:`)는 커밋을 나눔. develop에는 squash merge되므로 이 커밋들은 PR의 Commits 탭에 남음.
 - 서버 API 형식은 `docs/api/openapi.json`(서버 Swagger에서 받은 명세)이 기준. 화면과 API 대응은 `docs/api/README.md`.
 - 작업 전에 `plan.md`의 해당 단계를 확인하고, 끝나면 체크박스와 결정 기록을 갱신함.
 - MVP 기한(11.15)이 촉박함. P0 범위 밖의 기능은 먼저 제안하지 말고 `plan.md`의 2차 목록에 적어둠.
