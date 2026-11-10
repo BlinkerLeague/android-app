@@ -2,6 +2,7 @@ package com.example.blinkerleague.data.repository
 
 import com.example.blinkerleague.data.remote.ApiResult
 import com.example.blinkerleague.data.remote.LeagueApi
+import com.example.blinkerleague.domain.model.Championship
 import com.example.blinkerleague.domain.model.League
 import com.example.blinkerleague.domain.model.LeagueEntry
 import com.example.blinkerleague.domain.model.LeagueRegion
@@ -34,6 +35,7 @@ class LeagueRepository(private val api: LeagueApi) {
                 )
             },
             regions = body.regions.map { LeagueRegion(it.name ?: it.leagueCode, it.safetyIndex?.roundToInt(), it.rank) },
+            championships = me?.championships.orEmpty().map { Championship(it.seasonId, it.name ?: it.leagueCode) },
         )
     }
 }
