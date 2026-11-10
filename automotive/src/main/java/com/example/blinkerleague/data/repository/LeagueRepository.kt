@@ -29,6 +29,8 @@ class LeagueRepository(private val api: LeagueApi) {
                     seasonKm = me?.distanceKm ?: 0.0,
                     seasonTrips = me?.trips ?: 0,
                     top = l.rankings.map { LeagueEntry(it.rank, it.nickname, it.score.roundToInt(), false) },
+                    averageScore = me?.averageScore?.roundToInt(),
+                    points = me?.points ?: 0,
                 )
             },
             regions = body.regions.map { LeagueRegion(it.name ?: it.leagueCode, it.safetyIndex?.roundToInt(), it.rank) },
