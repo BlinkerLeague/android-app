@@ -154,3 +154,14 @@ private fun PlaysPreview() = BlinkerLeagueTheme {
         )
     }
 }
+
+@Preview(widthDp = 720, heightDp = 720)
+@Composable
+private fun PlaysNarrowEmptyPreview() = BlinkerLeagueTheme {
+    Surface(color = MaterialTheme.colorScheme.background) {
+        PlaysContent(
+            PlaysUiState(loading = false, startedAt = "08:10", endedAt = "08:42", distanceKm = 14.2, goals = 0, conceded = 0, plays = emptyList()),
+            onBack = {},
+        )
+    }
+}

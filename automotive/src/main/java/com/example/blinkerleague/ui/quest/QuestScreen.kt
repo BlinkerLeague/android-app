@@ -166,3 +166,11 @@ private fun QuestPreview() = BlinkerLeagueTheme {
         QuestContent(QuestUiState.Loaded(TodayMission("회전 깜빡이 완벽", MissionStatus.FAILED, 2, 1, 3, rewardPoint = 20)), onBack = {})
     }
 }
+
+@Preview(widthDp = 720, heightDp = 720)
+@Composable
+private fun QuestNarrowPreview() = BlinkerLeagueTheme {
+    Surface(color = MaterialTheme.colorScheme.background) {
+        QuestContent(QuestUiState.Loaded(TodayMission("회전 깜빡이 완벽", MissionStatus.IN_PROGRESS, 1, 1, 3, rewardPoint = 20)), onBack = {})
+    }
+}

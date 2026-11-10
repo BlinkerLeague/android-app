@@ -165,3 +165,14 @@ private fun MetricDetailPreview() = BlinkerLeagueTheme {
         )
     }
 }
+
+@Preview(widthDp = 720, heightDp = 720)
+@Composable
+private fun MetricDetailNarrowPreview() = BlinkerLeagueTheme {
+    Surface(color = MaterialTheme.colorScheme.background) {
+        MetricDetailContent(
+            MetricDetailUiState.Loaded(MetricItem.TURN_SIGNAL, MetricValue.NoTurn, null, TurnCounts(0, 0, 0, 0, false), emptyList(), null),
+            onBack = {},
+        )
+    }
+}
