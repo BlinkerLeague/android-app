@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<data-extraction-rules>
+<!--
+  lint FullBackupContent 검사는 data-extraction-rules의 device_* 도메인을 몰라 "Unexpected domain"으로 잡음(오탐).
+  프레임워크 FullBackup.java는 device_* 도메인을 해석하므로 그대로 둠.
+-->
+<data-extraction-rules xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="FullBackupContent">
     <!-- 토큰(Keystore 암호화) · 기준값 캐시 · 운행 DB는 클라우드에 백업하지 않음 (allowBackup=false와 같은 뜻) -->
     <cloud-backup>
         <exclude domain="root" path="." />
