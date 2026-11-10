@@ -6,7 +6,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.w3c.dom.Element
 import org.xmlpull.v1.XmlPullParser
+import java.io.File
+import javax.xml.parsers.DocumentBuilderFactory
 
 @RunWith(RobolectricTestRunner::class)
 class DataExtractionRulesTest {
@@ -56,7 +59,34 @@ class DataExtractionRulesTest {
         assertEquals(ALL_DOMAINS, excluded)
     }
 
+    @Test
+    fun `매니페스트가 백업·전송 규칙을 연결하고 백업을 끈다`() {
+        // given
+        // tools:ignore="DataExtractionRules" 때문에 연결이 지워져도 lint가 잡지 못하므로 매니페스트 원본을 직접 읽음
+        val manifest = listOf(
+            File("src/main/AndroidManifest.xml"),
+            File("automotive/src/main/AndroidManifest.xml"),
+        ).firstOrNull { it.isFile }
+            ?: throw AssertionError("src/main/AndroidManifest.xml을 찾지 못함 (작업 디렉터리: ${File("").absolutePath})")
+
+        // when
+        val application = DocumentBuilderFactory.newInstance()
+            .apply { isNamespaceAware = true }
+            .newDocumentBuilder()
+            .parse(manifest)
+            .getElementsByTagName("application")
+            .item(0) as Element
+
+        // then
+        assertEquals(
+            "@xml/data_extraction_rules",
+            application.getAttributeNS(ANDROID_NS, "dataExtractionRules"),
+        )
+        assertEquals("false", application.getAttributeNS(ANDROID_NS, "allowBackup"))
+    }
+
     private companion object {
+        const val ANDROID_NS = "http://schemas.android.com/apk/res/android"
         val ALL_DOMAINS = setOf(
             "root", "file", "database", "sharedpref", "external",
             "device_root", "device_file", "device_database", "device_sharedpref",
