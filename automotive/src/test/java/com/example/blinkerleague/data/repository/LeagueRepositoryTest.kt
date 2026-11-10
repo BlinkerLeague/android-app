@@ -10,6 +10,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -116,6 +117,19 @@ class LeagueRepositoryTest {
         assertEquals("/api/drivers/me/league-visibility", request.path)
         assertEquals("Bearer access-1", request.getHeader("Authorization"))
         assertEquals("""{"visible":false}""", request.body.readUtf8())
+    }
+
+    @Test
+    fun `리그 응답에서 내 순위 공개 설정을 읽는다`() = runTest {
+        // given
+        // 순위 공개를 끈 운전자
+        respond(SERVER_LEAGUE.replace("\"visible\": true", "\"visible\": false"))
+
+        // when
+        val league = repository.current()!!
+
+        // then
+        assertFalse(league.visible)
     }
 
     companion object {
