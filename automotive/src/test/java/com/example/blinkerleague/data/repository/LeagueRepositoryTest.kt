@@ -84,6 +84,23 @@ class LeagueRepositoryTest {
         )
     }
 
+    @Test
+    fun `상위 순위에서 내 닉네임 행을 나로 표시한다`() = runTest {
+        // given
+        // 나는 "깜빡왕"(2위)
+        respond(SERVER_LEAGUE)
+        val mine = LeagueRepository(
+            HttpLeagueApi(HttpClientFactory.create(server.url("/").toString(), tokens)),
+            myNickname = { tokens.profile()?.nickname },
+        )
+
+        // when
+        val top = mine.current()!!.myLeague!!.top
+
+        // then
+        assertEquals(listOf("안전왕" to false, "깜빡왕" to true), top.map { it.nickname to it.me })
+    }
+
     companion object {
         /** 서버 명세 `CurrentLeagueResponse` 예시 (서버 docs/app-team-changes-2026-11-10.md 형식) */
         val SERVER_LEAGUE = """

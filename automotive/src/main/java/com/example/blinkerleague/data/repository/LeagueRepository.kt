@@ -11,7 +11,11 @@ import java.time.OffsetDateTime
 import kotlin.math.roundToInt
 
 /** 지역 리그. 받지 못하면 null */
-class LeagueRepository(private val api: LeagueApi) {
+class LeagueRepository(
+    private val api: LeagueApi,
+    /** 내 닉네임. 서버 순위 목록은 닉네임만 주므로 내 행을 닉네임으로 찾음 */
+    private val myNickname: () -> String? = { null },
+) {
     suspend fun current(): League? {
         val body = (api.currentLeague() as? ApiResult.Success)?.body ?: return null
         val endsAt = runCatching { OffsetDateTime.parse(body.season.endsAt).toInstant().toEpochMilli() }.getOrNull() ?: return null
