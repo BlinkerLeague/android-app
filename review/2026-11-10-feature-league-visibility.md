@@ -51,3 +51,45 @@
 ## 검증
 - 메인 세션이 실행: 단위 테스트 179개 통과, assembleDebug 성공 (이 브랜치 시점).
 - 리뷰어는 `./gradlew`를 직접 실행하지 않았다(같은 작업 트리를 다른 리뷰어가 동시에 쓰고 있어 브랜치를 바꾸지 않고 `git show` · `git diff`로만 검토함).
+
+## 재검토 (2026-11-10)
+
+- 기준: ca391cc..95e7eb0 (7개 커밋: red/green 2쌍 + red/green 1쌍 + docs 1개)
+- 범위: 지적 1번(연속 토글 경합)과 4번(PUT 응답 `visible` 선택값) 수정, 2·3·5번 후속 기록
+- 판단: **머지 가능**
+
+### 1번 해결 여부: 해결됨
+- `SettingsViewModel.setLeagueVisible`이 `league.value.saving`이면 바로 반환하고, 코루틴을 띄우기 전에 메인 스레드에서 동기로 `saving = true`를 세운다. 두 번째 탭은 첫 저장이 끝나기 전까지 요청을 만들지 않으므로 PUT은 늘 하나이고, 응답 도착 순서 경합이 생기지 않는다.
+- `saving` 복귀: `try { saved = saveLeagueVisible(visible) } finally { ... }`에서 성공이면 `LeagueToggle(visible, failed = false)`(saving 기본값 false), 실패 · 예외 · 취소면 `copy(failed = true, saving = false)`로 모든 경로에서 false로 돌아온다. `saveLeagueVisible`은 `LeagueRepository.setVisible` → `apiCall`이라 HTTP · 직렬화 · IO 오류는 `false`로 오고, 취소는 ViewModel이 정리될 때뿐이라 남는 상태가 화면에 보이지 않는다.
+- UI: `SettingsUiState.leagueVisibilitySaving`을 `toggleable(enabled = !saving)`과 `Switch(enabled = !saving)`에 연결. 행 Modifier `fillMaxWidth().heightIn(min = 64.dp)`는 그대로라 비활성 상태에서도 64dp 행이 유지된다. 저장 중 미리보기(`SettingsSavingPreview`) 추가. 새 문구는 없음(미리보기 인자만 하드코딩, 기존 미리보기와 같은 방식).
+- 테스트: `저장 중에 토글을 다시 누르면 서버에 한 번만 저장을 요청한다`(`CompletableDeferred`로 저장을 붙잡고 두 번 호출 → `saved == [false]`), `저장하는 동안 토글을 저장 중으로 표시하고, 저장이 끝나면 푼다`(저장 중 true → 성공 후 false, 값 반영).
+
+### 4번 해결 여부: 해결됨
+- 요청 DTO `LeagueVisibilityDto(val visible: Boolean)`는 기본값이 없어 `encodeDefaults` 설정과 상관없이 true/false 모두 본문에 항상 들어간다(openapi `LeagueVisibilityRequest.required = [visible]`과 일치).
+- 응답 DTO `LeagueVisibilityResponseDto(val visible: Boolean? = null)`를 분리(openapi `LeagueVisibilityResponse`에 required 없음과 일치). `LeagueApi.setVisibility`, `FakeLeagueApi`, `BlinkerService.setLeagueVisibility`, `HttpLeagueApi` 반환 타입이 모두 `LeagueVisibilityResponseDto`로 맞음. 성공 판정은 `is ApiResult.Success`라 응답의 `visible` 값을 쓰지 않음.
+- 테스트: `순위 공개 저장 응답에 visible이 없어도 저장 성공으로 본다`(MockWebServer `{}` 응답 → true, 본문 `{"visible":false}`).
+
+### 남은 낮음 2 · 3 · 5번
+- `plan.md` "리그 순위 공개 후속 (리뷰 낮음, 11.10)" 줄에 세 항목 모두 기록됨. 결정 기록에 1번(저장 중 토글 막음)과 4번(응답 visible 선택값) 근거도 추가됨.
+
+### 새 지적 사항
+
+#### R1. 저장 실패 뒤 `saving`이 풀리는지 고정하는 테스트가 없음 (심각도: 낮음)
+- **위치:** `automotive/src/test/java/com/example/blinkerleague/ui/settings/SettingsViewModelTest.kt:96` (`서버 저장에 실패하면 토글은 그대로 두고 실패를 알린다`)
+- **문제:** 실패 경로의 `saving = false` 복귀는 코드(`finally`)로는 맞지만, 성공 경로만 `leagueVisibilitySaving == false`를 확인하고 실패 테스트는 `leagueVisible` · `leagueVisibilityFailed`만 본다.
+- **실패 시나리오:** 나중에 `finally` 분기를 손보다 실패 쪽 `saving = false`가 빠져도 테스트가 통과한다. 그러면 오프라인에서 한 번 저장에 실패한 뒤 토글이 영구 비활성이 되어 "다시 눌러 주세요" 안내를 따를 수 없다.
+- **제안:** 기존 실패 테스트에 `assertFalse(vm.uiState.value.leagueVisibilitySaving)` 한 줄을 추가한다(후속 처리로 충분, 머지를 막지 않음).
+
+### 확인한 것
+- **TDD 커밋 순서:** `888504a` red → `4564ae9` green, `ba6dbc0` red → `a8632b1` green, `001d9ee` red → `757db98` green, 이후 `95e7eb0` docs. 각 red는 이전 구현에서 실제로 실패하는 어서션 실패다(가드 없음 → 저장 2회, `leagueVisibilitySaving` 미연결 → false, 필수 `visible`에 `{}` → `SerializationException` → `HttpError` → false). `ba6dbc0`의 `SettingsUiState` 필드 추가는 tester 규칙상 허용되는 기본값 있는 골격.
+- **테스트 작성 규칙:** 새 테스트 3개 모두 한글 이름, `// given` / `// when` / `// then`(두 번째 when/then 단계 포함), 입력 설명은 구역 안 별도 주석, `StandardTestDispatcher` + `runCurrent()`로 실제 대기 없음. HTTP 응답은 명세 스키마(`LeagueVisibilityResponse`)에서 허용되는 `{}`.
+- **아키텍처:** ViewModel에 Android/SDK import 추가 없음, `StateFlow<SettingsUiState>` 하나, Screen / Content 분리 유지.
+- **주행 안전 원칙:** 설정 화면에 점수 · 알림 · 음성 추가 없음, 위험 운전 유도 문구 없음. 원시 위치 전송 · 토큰 로그 없음.
+
+### 검증
+- `./gradlew :automotive:testDebugUnitTest :automotive:assembleDebug --console=plain -q` (리뷰어 직접 실행, 결과 폴더를 지운 뒤 실행): 종료 코드 0.
+- `automotive/build/test-results/testDebugUnitTest/*.xml` 37개 합계: tests 182, failures 0, errors 0, skipped 0 (첫 검토 179개 + 새 테스트 3개).
+- `automotive/build/outputs/apk/debug/automotive-debug.apk` 생성 확인.
+
+### 최종 판단
+- **머지 가능.** 1번(중간)과 4번(낮음)이 테스트와 함께 해결됐고, 2 · 3 · 5번은 `plan.md` 후속으로 기록됨. 새 지적 R1은 낮음(테스트 보강)이라 후속으로 처리해도 된다.
