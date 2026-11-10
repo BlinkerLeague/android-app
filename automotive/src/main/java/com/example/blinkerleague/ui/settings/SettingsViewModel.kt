@@ -45,6 +45,7 @@ class SettingsViewModel(
             usesServer = usesServer,
             leagueVisible = toggle.visible,
             leagueVisibilityFailed = toggle.failed,
+            leagueVisibilitySaving = toggle.saving,
         )
     }.stateIn(
         viewModelScope,
@@ -54,10 +55,18 @@ class SettingsViewModel(
 
     /** "리그 순위 공개" 토글 */
     fun setLeagueVisible(visible: Boolean) {
+        // 저장 중에는 다시 요청하지 않음 (연속 토글 경합 방지)
+        if (league.value.saving) return
+        league.value = league.value.copy(saving = true)
         viewModelScope.launch {
-            league.value = if (saveLeagueVisible(visible)) LeagueToggle(visible, failed = false) else league.value.copy(failed = true)
+            var saved = false
+            try {
+                saved = saveLeagueVisible(visible)
+            } finally {
+                league.value = if (saved) LeagueToggle(visible, failed = false) else league.value.copy(failed = true, saving = false)
+            }
         }
     }
 
-    private data class LeagueToggle(val visible: Boolean?, val failed: Boolean)
+    private data class LeagueToggle(val visible: Boolean?, val failed: Boolean, val saving: Boolean = false)
 }

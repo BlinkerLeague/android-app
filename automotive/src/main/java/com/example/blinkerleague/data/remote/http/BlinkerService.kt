@@ -3,6 +3,7 @@ package com.example.blinkerleague.data.remote.http
 import com.example.blinkerleague.data.remote.dto.BadgeDto
 import com.example.blinkerleague.data.remote.dto.LeagueResponse
 import com.example.blinkerleague.data.remote.dto.LeagueVisibilityDto
+import com.example.blinkerleague.data.remote.dto.LeagueVisibilityResponseDto
 import com.example.blinkerleague.data.remote.dto.PointsResponse
 import com.example.blinkerleague.data.remote.dto.RecentTripDto
 import com.example.blinkerleague.data.remote.dto.RegisterDriverRequest
@@ -53,7 +54,7 @@ interface BlinkerService {
     suspend fun currentLeague(): LeagueResponse
 
     @PUT("api/drivers/me/league-visibility")
-    suspend fun setLeagueVisibility(@Body request: LeagueVisibilityDto): LeagueVisibilityDto
+    suspend fun setLeagueVisibility(@Body request: LeagueVisibilityDto): LeagueVisibilityResponseDto
 
     @GET("api/missions/today")
     suspend fun todayMission(): TodayMissionResponse

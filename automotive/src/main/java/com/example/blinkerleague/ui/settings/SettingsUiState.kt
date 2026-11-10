@@ -17,4 +17,6 @@ data class SettingsUiState(
     val leagueVisible: Boolean? = null,
     /** 순위 공개 설정을 서버에 저장하지 못함 */
     val leagueVisibilityFailed: Boolean = false,
+    /** 순위 공개 설정을 서버에 저장하는 중 (토글을 막음) */
+    val leagueVisibilitySaving: Boolean = false,
 )

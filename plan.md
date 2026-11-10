@@ -198,6 +198,8 @@
 | 9 | 리그 응답을 서버 형식으로 맞춤(서버 #48 · #49, `CurrentLeagueResponse`): `league` · `me` · `regions`, 리그 점수 = 평균 + 시즌 포인트(D34) 표시, 지난 시즌 우승 칭호, 순위 목록의 내 행은 닉네임으로 찾음 | 완료(11.10, `feature/league-server-format`) |
 | 10 | 리그 순위 자격(시즌 50km 또는 10회)·순위 공개 인원(10명)을 하드코딩 대신 기준값 `league`(`minSeasonDistanceKm`·`minSeasonTrips`·`minParticipants`)에서 읽음. 화면 문구와 Fake 판정 모두 | 완료(11.10, `feature/league-qualify-config`) |
 
+- 리그 순위 공개 후속 (리뷰 낮음, 11.10): 공개를 끈 상태를 리그 화면에 안내 · 오프라인으로 설정을 열면 토글이 숨겨지고 다시 불러오지 않음 · 화면을 떠나면 진행 중 저장이 취소될 수 있음(다시 들어오면 서버 값으로 맞춰짐)
+
 ## 서버와 맞춰야 할 항목
 서버 `plan.md` 7장과 같은 목록입니다. 서버 작업은 우리가 하지 않으므로, 서버에 필요한 내용은 [`docs/server-requests.md`](docs/server-requests.md)에 정리해 전달합니다.
 
@@ -262,4 +264,6 @@
 | 2026-11-09 | 토큰은 Keystore 키로 암호화해 SharedPreferences에 저장 (`KeystoreTokenCipher`) | 서버 인증 결정(D2) 전제. androidx security-crypto는 지원 종료라 쓰지 않고 Keystore를 직접 씀 |
 | 2026-11-10 | 리그 순위 목록의 "나"는 닉네임이 같은 행으로 표시 | 서버 `rankings`는 닉네임만 줌(4.4). 닉네임은 등록 때 중복이 막혀 권역 안에서 유일 |
 | 2026-11-10 | 순위 공개 토글의 현재 값은 리그 조회(`me.visible`)에서 읽고, 저장에 실패하면 토글을 바꾸지 않고 안내 | 서버에 조회 전용 API가 없음. 기기에 따로 저장하면 서버 값과 어긋날 수 있음 |
+| 2026-11-10 | 순위 공개 저장 중에는 토글을 막음(leagueVisibilitySaving) | 앞 요청을 취소해도 이미 보낸 PUT은 서버에서 처리돼 순서를 보장할 수 없음. 요청이 늘 하나라 단순하고 저장 중임이 보임 (review/2026-11-10-feature-league-visibility.md 1번) |
+| 2026-11-10 | PUT /api/drivers/me/league-visibility 응답의 visible은 선택값으로 읽고 성공 응답이면 저장 성공 | openapi LeagueVisibilityResponse에 required 없음 (리뷰 4번) |
 | 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |

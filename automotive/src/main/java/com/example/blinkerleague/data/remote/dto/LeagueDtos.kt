@@ -73,6 +73,10 @@ data class LeagueRegionDto(
     val rank: Int? = null,
 )
 
-/** `PUT /api/drivers/me/league-visibility` 요청 · 응답 (서버 D8, 기본 공개) */
+/** `PUT /api/drivers/me/league-visibility` 요청 (서버 D8, 기본 공개). docs/api/openapi.json `LeagueVisibilityRequest`, visible 필수 */
 @Serializable
 data class LeagueVisibilityDto(val visible: Boolean)
+
+/** `PUT /api/drivers/me/league-visibility` 응답. docs/api/openapi.json `LeagueVisibilityResponse`, required 없음 */
+@Serializable
+data class LeagueVisibilityResponseDto(val visible: Boolean? = null)

@@ -103,11 +103,16 @@ fun SettingsContent(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Label(R.string.settings_league)
                 Row(
-                    Modifier.fillMaxWidth().heightIn(min = 64.dp).toggleable(value = visible, role = Role.Switch, onValueChange = onLeagueVisibleChange),
+                    Modifier.fillMaxWidth().heightIn(min = 64.dp).toggleable(
+                        value = visible,
+                        enabled = !state.leagueVisibilitySaving,
+                        role = Role.Switch,
+                        onValueChange = onLeagueVisibleChange,
+                    ),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(stringResource(R.string.settings_league_visible), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                    Switch(checked = visible, onCheckedChange = null)
+                    Switch(checked = visible, onCheckedChange = null, enabled = !state.leagueVisibilitySaving)
                 }
                 Text(stringResource(R.string.settings_league_visible_note), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (state.leagueVisibilityFailed) {
@@ -185,6 +190,22 @@ private fun SettingsPreview() = BlinkerLeagueTheme {
         Box {
             SettingsContent(
                 SettingsUiState("깜빡이장인", "서울 마포구", PermissionStatus.DENIED, RecordingStatus.WAITING, "1.0", false, leagueVisible = true),
+                {}, {},
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 1280, heightDp = 720)
+@Composable
+private fun SettingsSavingPreview() = BlinkerLeagueTheme {
+    Surface(color = MaterialTheme.colorScheme.background) {
+        Box {
+            SettingsContent(
+                SettingsUiState(
+                    "깜빡이장인", "서울 마포구", PermissionStatus.DENIED, RecordingStatus.WAITING, "1.0", false,
+                    leagueVisible = true, leagueVisibilitySaving = true,
+                ),
                 {}, {},
             )
         }
