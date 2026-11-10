@@ -200,6 +200,7 @@
 
 - 리그 순위 공개 후속 (리뷰 낮음, 11.10): 공개를 끈 상태를 리그 화면에 안내 · 오프라인으로 설정을 열면 토글이 숨겨지고 다시 불러오지 않음 · 화면을 떠나면 진행 중 저장이 취소될 수 있음(다시 들어오면 서버 값으로 맞춰짐)
 - 9b에서 미룬 것 (11.10): 라이브러리 버전 올리기(GradleDependency 12) · Compose BOM 올려 Compose lint 다시 켜기 · dataExtractionRules xml(기기 간 전송에서 토큰 · 설정 제외) · TripCollectionService API 34 미만 SPECIAL_USE 분기 · 2차 화면 5개(업적 · 리그 · 주간 리포트 · 설정 · 지갑) 좁은 폭 Preview
+- 좁은 폭(720dp) 레이아웃 (리뷰 낮음, 11.10, 실제 앱 영역 1682dp에서는 문제없음): 온보딩 측정 가능 항목 행에서 상태 문구가 항목 이름을 눌러 버림(OnboardingScreen CapabilityLine) · 결과 화면 항목 행 이름 칸 고정 width(200.dp)로 상태 문구가 여러 줄로 접힘(ResultScreen) · NO_TURN · EXCLUDED_SHORT 좁은 폭 Preview
 
 ## 서버와 맞춰야 할 항목
 서버 `plan.md` 7장과 같은 목록입니다. 서버 작업은 우리가 하지 않으므로, 서버에 필요한 내용은 [`docs/server-requests.md`](docs/server-requests.md)에 정리해 전달합니다.
