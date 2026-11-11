@@ -30,4 +30,16 @@ class HttpClientFactoryTest {
         // then
         assertEquals(listOf(ConnectionSpec.CLEARTEXT), specs)
     }
+
+    @Test
+    fun `스킴이 대문자여도 https 주소면 TLS 연결 사양을 쓴다`() {
+        // given
+        val baseUrl = "HTTPS://api.example.com/"
+
+        // when
+        val specs = HttpClientFactory.connectionSpecsFor(baseUrl)
+
+        // then
+        assertEquals(listOf(ConnectionSpec.MODERN_TLS), specs)
+    }
 }
