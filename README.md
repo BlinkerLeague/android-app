@@ -22,7 +22,7 @@
 
 ## ✅ 해야 할 일 (1차 제출 전)
 
-- [ ] **출시 키 만들기·보관**: 아래 "6. 출시용(release) APK"의 `keytool` 명령으로 키를 만들고 `local.properties`에 4줄을 적습니다. 키 파일과 비밀번호는 저장소에 올리지 말고 따로 보관합니다(잃어버리면 같은 앱으로 업데이트할 수 없음).
+- [ ] **출시 키 만들기·보관**: 아래 "6. 출시용(release) APK"의 6-1~6-5를 순서대로 따라 합니다(키 만들기 → `local.properties` 4줄 → 빌드 → 서명 확인 → 설치). 키 파일과 비밀번호는 저장소에 올리지 말고 따로 보관합니다(잃어버리면 같은 앱으로 업데이트할 수 없음).
 - [ ] 시연 영상: "좌회전 깜빡이 성공 → 우회전 실패 → 운행 종료 → 점수·퀘스트 화면" — `python3 scripts/record_demo.py`로 에뮬레이터 화면을 자동 녹화할 수 있음(약 2분 30초, `automotive/build/demo/blinker_demo_1.mp4` — 3분을 넘으면 `_2.mp4`로 이어짐). 편집·자막은 직접
 - [ ] 공모전 제출 양식 작성
 - [ ] Pleos 앱 보안 가이드 남은 항목: [`docs/security-checklist.md`](docs/security-checklist.md) "남은 일" (운행 기록 암호화 여부, 운영 서버 HTTPS 주소, 제출 직전 `scripts/check_dependency_advisories.sh`)
@@ -149,36 +149,93 @@ Android Studio에서는 상단 기기 목록에서 `Pleos_Connect_v2.1.0_API_34`
 
 ### 6. 출시용(release) APK
 
+출시 키 만들기(한 번만) → `local.properties`에 4줄 → 빌드 → 서명 확인 → 설치 순서로 합니다.
+
+#### 6-1. 출시 키 만들기 (한 번만)
+
+비밀번호를 입력해야 하므로 Android Studio 안의 터미널이 아니라 **macOS 터미널 앱**에서 실행합니다.
+
 ```bash
-./gradlew :automotive:assembleRelease   # automotive/build/outputs/apk/release/
+mkdir -p ~/keys
+keytool -genkeypair -v -keystore ~/keys/blinkerleague-release.jks -alias blinkerleague -keyalg RSA -keysize 2048 -validity 10000
 ```
 
-- 서명 키는 저장소에 넣지 않습니다. `local.properties`에 아래 4줄이 있으면 그 키로 서명하고, 없으면 서명하지 않은 APK가 나옵니다.
+| 질문 | 입력 |
+| --- | --- |
+| 키 저장소 비밀번호 (2번) | 6자 이상. 입력한 글자가 화면에 안 보이는 것이 정상입니다 |
+| 이름·조직 단위·조직·구/군/시·시/도 | 엔터로 건너뛰어도 됨 |
+| 국가 코드(2자) | `KR` |
+| 맞습니까? | `y` (영어로 나오면 `yes`) |
+| 키 비밀번호 | 엔터 (키 저장소 비밀번호와 같게 함) |
 
-  ```properties
-  blinker.release.storeFile=/절대/경로/blinkerleague-release.jks
-  blinker.release.storePassword=…
-  blinker.release.keyAlias=blinkerleague
-  blinker.release.keyPassword=…
-  ```
-- 키 만들기: `keytool -genkeypair -v -keystore blinkerleague-release.jks -alias blinkerleague -keyalg RSA -keysize 2048 -validity 10000`
+- 키 파일(`blinkerleague-release.jks`)과 비밀번호는 **저장소에 넣지 말고** 따로 백업합니다. 잃어버리면 같은 앱으로 업데이트할 수 없습니다.
+
+#### 6-2. `local.properties`에 서명 정보 4줄
+
+프로젝트 폴더의 `local.properties`(git에 올라가지 않음) 끝에 적습니다. `storeFile`은 절대 경로로 적습니다(`~` 대신 `/Users/<사용자>/keys/...`).
+
+```properties
+blinker.release.storeFile=/절대/경로/blinkerleague-release.jks
+blinker.release.storePassword=…
+blinker.release.keyAlias=blinkerleague
+blinker.release.keyPassword=…
+```
+
+- 파일 끝에 줄바꿈이 없으면 첫 줄이 기존 마지막 줄(`sdk.dir=…`)에 붙어 버립니다. 반드시 새 줄에서 시작합니다.
 - 4줄 중 하나라도 있으면 4줄을 모두 적어야 합니다. 일부만 있거나 `storeFile` 파일이 없으면 빌드가 실패합니다(빠진 키 이름만 알려 줌). 4줄이 하나도 없으면 서명 없이 빌드합니다.
-- 서명 키가 없으면 `automotive-release-unsigned.apk`가 나옵니다. **서명하지 않은 APK는 설치할 수 없습니다.**
-  에뮬레이터에서 확인만 할 때는 debug 키로 서명합니다 (`BT`는 Android SDK의 `build-tools/<버전>`. Windows는 `%LOCALAPPDATA%\Android\Sdk\build-tools\<버전>`).
 
-  ```bash
-  BT=~/Library/Android/sdk/build-tools/34.0.0
-  cd automotive/build/outputs/apk/release
-  $BT/zipalign -p -f 4 automotive-release-unsigned.apk aligned.apk
-  $BT/apksigner sign --ks ~/.android/debug.keystore --ks-key-alias androiddebugkey \
-    --ks-pass pass:android --key-pass pass:android --out automotive-release-debugsigned.apk aligned.apk
-  adb install -r automotive-release-debugsigned.apk
-  ```
-- release를 로컬 서버에 연결하려면 `./gradlew :automotive:assembleRelease -Pblinker.serverUrl=http://10.0.2.2:8080` (또는 `local.properties`의 `blinker.serverUrl`).
+#### 6-3. 빌드
+
+터미널에서 프로젝트 폴더로 가서 실행합니다.
+
+```bash
+cd <프로젝트 폴더>
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)   # 새 터미널 창마다 한 번 (Windows는 "2. JDK 17 지정" 참고)
+./gradlew :automotive:assembleRelease -Pblinker.serverUrl=http://10.0.2.2:8080
+```
+
+- 결과: `automotive/build/outputs/apk/release/automotive-release.apk` (서명 키가 없으면 `automotive-release-unsigned.apk`)
+- 서버 주소(`-Pblinker.serverUrl`, 또는 `local.properties`의 `blinker.serverUrl`)를 빼면 Fake 모드로 동작합니다.
   - 평문(http)은 그 주소의 호스트에만 허용됩니다 (빌드 때 `network_security_config` 생성, 나머지는 평문 금지).
-  - 주소가 없으면 Fake 모드로 동작하고, https 주소면 평문이 전혀 허용되지 않습니다. 형식이 틀린 주소는 빌드가 실패합니다.
+  - https 주소면 평문이 전혀 허용되지 않습니다. 형식이 틀린 주소는 빌드가 실패합니다.
   - `10.0.2.2`는 에뮬레이터에서 본 "그 에뮬레이터를 띄운 PC"입니다. 같은 PC에서 서버를 띄운 에뮬레이터에서만 연결됩니다.
-- 릴리스에는 조사용 코드·권한(`src/debug`)이 들어가지 않고, 시나리오 재생 버튼은 숨겨집니다(`BuildConfig.DEBUG`).
+- Android Studio의 **Build → Generate Signed App Bundle / APK**에서 6-1의 키 파일을 골라 만들어도 됩니다.
+
+#### 6-4. 서명 확인
+
+`BT`는 Android SDK의 `build-tools/<버전>`입니다 (Windows는 `%LOCALAPPDATA%\Android\Sdk\build-tools\<버전>`).
+
+```bash
+BT=~/Library/Android/sdk/build-tools/34.0.0
+$BT/apksigner verify --print-certs automotive/build/outputs/apk/release/automotive-release.apk
+```
+
+출력의 `Signer #1 certificate DN`에 6-1에서 넣은 정보(예: `C=KR`)가 보이면 출시 키로 서명된 것입니다.
+
+#### 6-5. 에뮬레이터에 설치
+
+debug 앱과 서명이 달라 그대로는 설치되지 않습니다. 먼저 지우고 설치합니다(**앱 데이터가 지워짐**).
+
+```bash
+adb uninstall com.example.blinkerleague
+adb install automotive/build/outputs/apk/release/automotive-release.apk
+```
+
+#### 출시 키 없이 확인만 할 때
+
+서명 키가 없으면 `automotive-release-unsigned.apk`가 나옵니다. **서명하지 않은 APK는 설치할 수 없습니다.**
+에뮬레이터에서 확인만 할 때는 debug 키로 서명합니다 (`BT`는 6-4와 같음).
+
+```bash
+BT=~/Library/Android/sdk/build-tools/34.0.0
+cd automotive/build/outputs/apk/release
+$BT/zipalign -p -f 4 automotive-release-unsigned.apk aligned.apk
+$BT/apksigner sign --ks ~/.android/debug.keystore --ks-key-alias androiddebugkey \
+  --ks-pass pass:android --key-pass pass:android --out automotive-release-debugsigned.apk aligned.apk
+adb install -r automotive-release-debugsigned.apk
+```
+
+> 릴리스에는 조사용 코드·권한(`src/debug`)이 들어가지 않고, 시나리오 재생 버튼은 숨겨집니다(`BuildConfig.DEBUG`).
 
 ## 📁 프로젝트 구조
 
