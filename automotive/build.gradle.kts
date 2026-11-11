@@ -34,6 +34,49 @@ val serverUri: URI? = serverUrl.takeIf { it.isNotBlank() }?.let { url ->
     uri
 }
 
+// release용 network_security_config를 빌드 때 만듦 (src/release/AndroidManifest.xml이 참조).
+// base-config는 평문 금지. 서버 주소가 http면 그 호스트 하나만 평문 허용 (보안 가이드: 평문 전체 허용 금지)
+abstract class GenerateNetworkSecurityConfig : DefaultTask() {
+    @get:Input
+    abstract val serverUrl: Property<String>
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun generate() {
+        val url = serverUrl.get()
+        val uri = url.takeIf { it.isNotBlank() }?.let { URI(it) }
+        val cleartextHost = uri?.takeIf { it.scheme.equals("http", ignoreCase = true) }?.host
+        val lines = buildList {
+            add("""<?xml version="1.0" encoding="utf-8"?>""")
+            add("<!-- 빌드 때 만들어진 파일 (build.gradle.kts generateReleaseNetworkSecurityConfig). 직접 고치지 않음.")
+            add("     평문(http)은 blinker.serverUrl이 http일 때 그 호스트에만 허용하고, 나머지는 모두 막음 -->")
+            add("<network-security-config>")
+            add("""    <base-config cleartextTrafficPermitted="false" />""")
+            if (cleartextHost != null) {
+                add("""    <domain-config cleartextTrafficPermitted="true">""")
+                add("""        <domain includeSubdomains="false">$cleartextHost</domain>""")
+                add("    </domain-config>")
+            }
+            add("</network-security-config>")
+        }
+        val file = outputDir.get().file("xml/network_security_config.xml").asFile
+        file.parentFile.mkdirs()
+        file.writeText(lines.joinToString("\n", postfix = "\n"))
+    }
+}
+
+val releaseNetworkSecurityDir = layout.buildDirectory.dir("generated/networkSecurity/release")
+val releaseServerUrl = serverUrl
+val generateReleaseNetworkSecurityConfig = tasks.register<GenerateNetworkSecurityConfig>("generateReleaseNetworkSecurityConfig") {
+    serverUrl.set(releaseServerUrl)
+    outputDir.set(releaseNetworkSecurityDir)
+}
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    dependsOn(generateReleaseNetworkSecurityConfig)
+}
+
 android {
     namespace = "com.example.blinkerleague"
     compileSdk = 34
@@ -94,6 +137,11 @@ android {
     testOptions {
         // Robolectric으로 Room DAO를 JVM 단위 테스트에서 실행
         unitTests.isIncludeAndroidResources = true
+    }
+    sourceSets {
+        getByName("release") {
+            res.srcDir(releaseNetworkSecurityDir)
+        }
     }
     packaging {
         resources {
