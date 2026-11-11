@@ -162,7 +162,23 @@ Android Studio에서는 상단 기기 목록에서 `Pleos_Connect_v2.1.0_API_34`
   blinker.release.keyPassword=…
   ```
 - 키 만들기: `keytool -genkeypair -v -keystore blinkerleague-release.jks -alias blinkerleague -keyalg RSA -keysize 2048 -validity 10000`
-- 릴리스에는 조사용 코드·권한(`src/debug`)과 시나리오 재생 버튼이 들어가지 않습니다.
+- 4줄 중 하나라도 있으면 4줄을 모두 적어야 합니다. 일부만 있거나 `storeFile` 파일이 없으면 빌드가 실패합니다(빠진 키 이름만 알려 줌). 4줄이 하나도 없으면 서명 없이 빌드합니다.
+- 서명 키가 없으면 `automotive-release-unsigned.apk`가 나옵니다. **서명하지 않은 APK는 설치할 수 없습니다.**
+  에뮬레이터에서 확인만 할 때는 debug 키로 서명합니다 (`BT`는 Android SDK의 `build-tools/<버전>`. Windows는 `%LOCALAPPDATA%\Android\Sdk\build-tools\<버전>`).
+
+  ```bash
+  BT=~/Library/Android/sdk/build-tools/34.0.0
+  cd automotive/build/outputs/apk/release
+  $BT/zipalign -p -f 4 automotive-release-unsigned.apk aligned.apk
+  $BT/apksigner sign --ks ~/.android/debug.keystore --ks-key-alias androiddebugkey \
+    --ks-pass pass:android --key-pass pass:android --out automotive-release-debugsigned.apk aligned.apk
+  adb install -r automotive-release-debugsigned.apk
+  ```
+- release를 로컬 서버에 연결하려면 `./gradlew :automotive:assembleRelease -Pblinker.serverUrl=http://10.0.2.2:8080` (또는 `local.properties`의 `blinker.serverUrl`).
+  - 평문(http)은 그 주소의 호스트에만 허용됩니다 (빌드 때 `network_security_config` 생성, 나머지는 평문 금지).
+  - 주소가 없으면 Fake 모드로 동작하고, https 주소면 평문이 전혀 허용되지 않습니다. 형식이 틀린 주소는 빌드가 실패합니다.
+  - `10.0.2.2`는 에뮬레이터에서 본 "그 에뮬레이터를 띄운 PC"입니다. 같은 PC에서 서버를 띄운 에뮬레이터에서만 연결됩니다.
+- 릴리스에는 조사용 코드·권한(`src/debug`)이 들어가지 않고, 시나리오 재생 버튼은 숨겨집니다(`BuildConfig.DEBUG`).
 
 ## 📁 프로젝트 구조
 

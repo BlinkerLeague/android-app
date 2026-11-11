@@ -28,8 +28,8 @@
 
 | 구분 | 항목 | 상태 | 앱 |
 | --- | --- | :-: | --- |
-| 필수 | 암호화 프로토콜 | ✅ | 릴리스는 평문(http) 차단(network security config 기본값). http는 디버그 빌드의 로컬 서버(10.0.2.2·localhost)만 허용 |
-| 필수 | TLS 1.2 이상 | ✅ | OkHttp `ConnectionSpec.MODERN_TLS`(TLS 1.3·1.2)만 사용 |
+| 필수 | 암호화 프로토콜 | ⚠️ | **조건부**: https 서버 주소로 빌드하면 충족, 1차 제출 빌드(로컬 http 서버)는 그 호스트에 평문 허용(11.11 사용자 결정). 릴리스는 기본적으로 평문(http)을 막고, http 서버 주소로 빌드한 경우에만 그 호스트에 평문을 허용 (`network_security_config`를 빌드 때 생성, base-config는 평문 금지). 서버 주소가 없거나 https면 평문 없음. 형식이 틀린 주소는 빌드 실패. 디버그 빌드는 로컬 서버(10.0.2.2·localhost)만 허용 |
+| 필수 | TLS 1.2 이상 | ⚠️ | **조건부**: https 서버 주소로 빌드하면 충족, 1차 제출 빌드(로컬 http 서버)는 그 호스트에 평문 허용(11.11 사용자 결정). https 주소면 OkHttp `ConnectionSpec.MODERN_TLS`(TLS 1.3·1.2)만, http 주소면 `CLEARTEXT`만 사용 (`HttpClientFactory.connectionSpecsFor`, `HttpClientFactoryTest`) |
 | 권장 | TLS 1.3·Cipher Suite | ✅ | OkHttp MODERN_TLS 기본 Cipher Suite. 서버 쪽 설정은 서버 팀(서버 plan.md 9.4) |
 | 필수 | 신뢰 서버 | ✅ | 빌드 설정의 서버 하나(`blinker.serverUrl`)와만 통신. 인증서 검증을 끄지 않음 |
 | 필수 | 서버 원격 명령 | ➖ | 서버가 앱에 명령을 보내지 않음. 받는 것은 기준값(숫자)뿐이고, 서버가 주는 항목만 덮어씀 |
@@ -38,7 +38,7 @@
 
 | 구분 | 항목 | 상태 | 앱 |
 | --- | --- | :-: | --- |
-| 필수 | 권한 최소화 | ✅ | 릴리스 권한: CAR_LIGHTS, CAR_DRIVE, FUSED_LOCATION, TTS_SERVICE, CAR_SPEED, INTERNET, 포그라운드 서비스·부팅. 사전 승인은 [`pleos-inquiries.md`](pleos-inquiries.md) 1번 |
+| 필수 | 권한 최소화 | ✅ | 릴리스 권한: CAR_LIGHTS, CAR_DRIVE, FUSED_LOCATION, TTS_SERVICE, CAR_SPEED, INTERNET, 포그라운드 서비스·부팅. 사전 승인은 [`pleos-inquiries.md`](pleos-inquiries.md) 1번. 라이브러리가 병합해 넣는 권한 5개: `ai.pleos.playground.service.vehicle.VEHICLE_BINDING`(Vehicle SDK), `ai.pleos.playground.service.location.fused.FUSED_LOCATION_BINDING`(FusedLocation SDK), `WAKE_LOCK`·`ACCESS_NETWORK_STATE`(WorkManager), `com.example.blinkerleague.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`(androidx.core, signature) |
 | 필수 | 컴포넌트 외부 노출 제한 | ✅ | 외부 노출은 런처 `MainActivity`뿐. `TripCollectionService`·`BootReceiver`는 `exported=false`. 라이브러리 컴포넌트(WorkManager 등)는 `BIND_JOB_SERVICE`·`DUMP` 권한으로 보호 |
 | 필수 | 민감정보 전달 | ✅ | 브로드캐스트로 민감정보를 보내지 않음 |
 | 필수 | 접근 제어 | ➖ | 외부에 공개하는 데이터·기능 없음 (ContentProvider 없음) |
@@ -60,5 +60,6 @@
 ## 남은 일
 - ⚠️ 운행 기록(Room)을 민감정보로 보고 암호화할지 결정
 - ⚠️ CarPropertyManager(속도) 사용 허용 여부 — Pleos 답변
-- ⏳ 운영 서버 도메인(HTTPS)으로 릴리스 빌드, 출시 키 서명
+- ⏳ 운영 서버(HTTPS)가 생기면 그 주소로 release를 빌드. 1차 제출은 로컬 서버(http)에 연결하는 빌드 (11.11 결정)
+- ⏳ 출시 키 서명
 - ⏳ 제출 직전 `scripts/check_dependency_advisories.sh` 다시 실행
