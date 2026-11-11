@@ -28,8 +28,8 @@
 
 | 구분 | 항목 | 상태 | 앱 |
 | --- | --- | :-: | --- |
-| 필수 | 암호화 프로토콜 | ✅ | 릴리스는 기본적으로 평문(http)을 막고, http 서버 주소로 빌드한 경우에만 그 호스트에 평문을 허용 (`network_security_config`를 빌드 때 생성, base-config는 평문 금지). 서버 주소가 없거나 https면 평문 없음. 형식이 틀린 주소는 빌드 실패. 디버그 빌드는 로컬 서버(10.0.2.2·localhost)만 허용 |
-| 필수 | TLS 1.2 이상 | ✅ | https 주소면 OkHttp `ConnectionSpec.MODERN_TLS`(TLS 1.3·1.2)만, http 주소면 `CLEARTEXT`만 사용 (`HttpClientFactory.connectionSpecsFor`, `HttpClientFactoryTest`) |
+| 필수 | 암호화 프로토콜 | ⚠️ | **조건부**: https 서버 주소로 빌드하면 충족, 1차 제출 빌드(로컬 http 서버)는 그 호스트에 평문 허용(11.11 사용자 결정). 릴리스는 기본적으로 평문(http)을 막고, http 서버 주소로 빌드한 경우에만 그 호스트에 평문을 허용 (`network_security_config`를 빌드 때 생성, base-config는 평문 금지). 서버 주소가 없거나 https면 평문 없음. 형식이 틀린 주소는 빌드 실패. 디버그 빌드는 로컬 서버(10.0.2.2·localhost)만 허용 |
+| 필수 | TLS 1.2 이상 | ⚠️ | **조건부**: https 서버 주소로 빌드하면 충족, 1차 제출 빌드(로컬 http 서버)는 그 호스트에 평문 허용(11.11 사용자 결정). https 주소면 OkHttp `ConnectionSpec.MODERN_TLS`(TLS 1.3·1.2)만, http 주소면 `CLEARTEXT`만 사용 (`HttpClientFactory.connectionSpecsFor`, `HttpClientFactoryTest`) |
 | 권장 | TLS 1.3·Cipher Suite | ✅ | OkHttp MODERN_TLS 기본 Cipher Suite. 서버 쪽 설정은 서버 팀(서버 plan.md 9.4) |
 | 필수 | 신뢰 서버 | ✅ | 빌드 설정의 서버 하나(`blinker.serverUrl`)와만 통신. 인증서 검증을 끄지 않음 |
 | 필수 | 서버 원격 명령 | ➖ | 서버가 앱에 명령을 보내지 않음. 받는 것은 기준값(숫자)뿐이고, 서버가 주는 항목만 덮어씀 |
