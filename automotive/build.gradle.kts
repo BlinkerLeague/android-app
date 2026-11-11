@@ -1,3 +1,5 @@
+import java.net.URI
+import java.net.URISyntaxException
 import java.util.Properties
 
 plugins {
@@ -5,6 +7,31 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.serialization")
     id("com.google.devtools.ksp")
+}
+
+val localProps = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+
+// 서버 주소. 비어 있으면 Fake API로 동작(시연·화면 개발용).
+// local.properties에 `blinker.serverUrl=http://10.0.2.2:8080` (에뮬레이터 → 내 PC) 또는 -Pblinker.serverUrl=…
+val serverUrl: String = (project.findProperty("blinker.serverUrl") as String?)
+    ?: localProps.getProperty("blinker.serverUrl")
+    ?: ""
+
+// 형식이 틀린 주소는 빌드를 실패시킴 (앱에서 연결이 안 되는 것을 실행 전에 알 수 있게)
+val serverUri: URI? = serverUrl.takeIf { it.isNotBlank() }?.let { url ->
+    val uri = try {
+        URI(url)
+    } catch (e: URISyntaxException) {
+        null
+    }
+    val scheme = uri?.scheme
+    val validScheme = scheme != null && (scheme.equals("http", ignoreCase = true) || scheme.equals("https", ignoreCase = true))
+    if (uri == null || !validScheme || uri.host.isNullOrBlank()) {
+        throw GradleException("blinker.serverUrl은 http(s)://호스트[:포트] 형식이어야 합니다: $serverUrl")
+    }
+    uri
 }
 
 android {
@@ -20,14 +47,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // 서버 주소. 비어 있으면 Fake API로 동작(시연·화면 개발용).
-        // local.properties에 `blinker.serverUrl=http://10.0.2.2:8080` (에뮬레이터 → 내 PC) 또는 -Pblinker.serverUrl=…
-        val localProps = Properties().apply {
-            rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
-        }
-        val serverUrl = (project.findProperty("blinker.serverUrl") as String?)
-            ?: localProps.getProperty("blinker.serverUrl")
-            ?: ""
         buildConfigField("String", "SERVER_URL", "\"$serverUrl\"")
     }
 
