@@ -17,4 +17,17 @@ class HttpClientFactoryTest {
         // then
         assertEquals(listOf(ConnectionSpec.MODERN_TLS), specs)
     }
+
+    @Test
+    fun `http 주소면 평문 연결 사양만 쓴다`() {
+        // given
+        // 디버그 빌드의 로컬 서버(에뮬레이터에서 본 호스트)
+        val baseUrl = "http://10.0.2.2:8080/"
+
+        // when
+        val specs = HttpClientFactory.connectionSpecsFor(baseUrl)
+
+        // then
+        assertEquals(listOf(ConnectionSpec.CLEARTEXT), specs)
+    }
 }
