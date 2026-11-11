@@ -142,9 +142,11 @@
 - [ ] release APK 빌드
   - [x] 서명 설정(`local.properties`의 `blinker.release.*`, 키는 저장소에 넣지 않음), README 6절
   - [ ] 출시 키 만들기·보관 (사용자, README "해야 할 일"에 남김)
-  - [ ] release 점검(권한·디버그 기능·서명 없음 빌드)
-  - [ ] release 로컬 서버 연결(호스트 제한 평문)
-  - [ ] release APK 에뮬레이터 설치 확인
+  - [x] release 점검(권한·디버그 기능·서명 없음 빌드)
+    - 홈 "시나리오 재생" 숨김과 guardBypass 무시는 코드로만 확인 (서버가 꺼져 있어 홈에 들어갈 수 없었음)
+  - [x] release 로컬 서버 연결(호스트 제한 평문)
+    - 실서버 연결 E2E는 아직 확인하지 않음
+  - [x] release APK 에뮬레이터 설치 확인
 - [x] README의 TODO 채우기 (소개, 스크린샷 5장 `docs/screenshots`, 기술 스택, 구조, 화면 확인·출시 빌드 방법)
 - [ ] 공모전 제출 양식 작성
 
