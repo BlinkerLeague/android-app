@@ -57,7 +57,7 @@ object HttpClientFactory {
     }
 
     internal fun connectionSpecsFor(baseUrl: String): List<ConnectionSpec> =
-        if (baseUrl.startsWith("https://")) listOf(ConnectionSpec.MODERN_TLS) else listOf(ConnectionSpec.CLEARTEXT)
+        if (baseUrl.startsWith("https://", ignoreCase = true)) listOf(ConnectionSpec.MODERN_TLS) else listOf(ConnectionSpec.CLEARTEXT)
 
     /** 새 토큰 쌍. 서버가 거부(401 등)하면 null, 연결 실패면 예외(→ 원래 요청도 연결 실패로 끝남) */
     private fun refresh(client: OkHttpClient, baseUrl: String, refreshToken: String): TokenResponse? {
