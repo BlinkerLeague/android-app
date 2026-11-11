@@ -57,7 +57,7 @@ object HttpClientFactory {
             .create(BlinkerService::class.java)
     }
 
-    internal fun connectionSpecsFor(baseUrl: String): List<ConnectionSpec> = emptyList()
+    internal fun connectionSpecsFor(baseUrl: String): List<ConnectionSpec> = listOf(ConnectionSpec.MODERN_TLS)
 
     /** 새 토큰 쌍. 서버가 거부(401 등)하면 null, 연결 실패면 예외(→ 원래 요청도 연결 실패로 끝남) */
     private fun refresh(client: OkHttpClient, baseUrl: String, refreshToken: String): TokenResponse? {
