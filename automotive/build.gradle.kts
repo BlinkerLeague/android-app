@@ -94,17 +94,25 @@ android {
     }
 
     // 출시용 서명: 키는 저장소에 넣지 않고 local.properties(blinker.release.*)에서 읽음. 없으면 서명 없이 빌드
-    val releaseProps = Properties().apply {
-        rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+    val releaseStoreFile = localProps.getProperty("blinker.release.storeFile")
+    if (releaseStoreFile != null) {
+        // 일부만 적혀 있으면 서명 없는 APK가 조용히 나오지 않게 실패시킴 (비밀번호 값은 메시지에 넣지 않음)
+        if (!file(releaseStoreFile).isFile) {
+            throw GradleException("blinker.release.storeFile 파일이 없습니다: $releaseStoreFile")
+        }
+        val missing = listOf("storePassword", "keyAlias", "keyPassword")
+            .filter { localProps.getProperty("blinker.release.$it").isNullOrEmpty() }
+        if (missing.isNotEmpty()) {
+            throw GradleException("local.properties에 서명 정보가 빠졌습니다: " + missing.joinToString { "blinker.release.$it" })
+        }
     }
-    val releaseStoreFile = releaseProps.getProperty("blinker.release.storeFile")
     signingConfigs {
         if (releaseStoreFile != null) {
             create("release") {
                 storeFile = file(releaseStoreFile)
-                storePassword = releaseProps.getProperty("blinker.release.storePassword")
-                keyAlias = releaseProps.getProperty("blinker.release.keyAlias")
-                keyPassword = releaseProps.getProperty("blinker.release.keyPassword")
+                storePassword = localProps.getProperty("blinker.release.storePassword")
+                keyAlias = localProps.getProperty("blinker.release.keyAlias")
+                keyPassword = localProps.getProperty("blinker.release.keyPassword")
             }
         }
     }
