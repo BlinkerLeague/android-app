@@ -153,9 +153,11 @@ Android Studio에서는 상단 기기 목록에서 `Pleos_Connect_v2.1.0_API_34`
 
 #### 6-1. 출시 키 만들기 (한 번만)
 
-비밀번호를 입력해야 하므로 Android Studio 안의 터미널이 아니라 **macOS 터미널 앱**에서 실행합니다.
+비밀번호를 입력해야 하므로 대화형 터미널에서 실행합니다. `keytool`은 JDK에 들어 있어 JDK 17을 먼저 지정합니다(Windows는 "2. JDK 17 지정" 참고).
 
 ```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+export PATH="$JAVA_HOME/bin:$PATH"
 mkdir -p ~/keys
 keytool -genkeypair -v -keystore ~/keys/blinkerleague-release.jks -alias blinkerleague -keyalg RSA -keysize 2048 -validity 10000
 ```
@@ -166,13 +168,13 @@ keytool -genkeypair -v -keystore ~/keys/blinkerleague-release.jks -alias blinker
 | 이름·조직 단위·조직·구/군/시·시/도 | 엔터로 건너뛰어도 됨 |
 | 국가 코드(2자) | `KR` |
 | 맞습니까? | `y` (영어로 나오면 `yes`) |
-| 키 비밀번호 | 엔터 (키 저장소 비밀번호와 같게 함) |
+| 키 비밀번호 | (나오면) 엔터 — 키 저장소 비밀번호와 같게 함 |
 
 - 키 파일(`blinkerleague-release.jks`)과 비밀번호는 **저장소에 넣지 말고** 따로 백업합니다. 잃어버리면 같은 앱으로 업데이트할 수 없습니다.
 
 #### 6-2. `local.properties`에 서명 정보 4줄
 
-프로젝트 폴더의 `local.properties`(git에 올라가지 않음) 끝에 적습니다. `storeFile`은 절대 경로로 적습니다(`~` 대신 `/Users/<사용자>/keys/...`).
+프로젝트 폴더의 `local.properties`(git에 올라가지 않음) 끝에 적습니다. `storeFile`은 절대 경로로 적습니다(`~` 대신 `/Users/<사용자>/keys/...`). Windows 경로도 `/`로 적습니다(예: `C:/keys/blinkerleague-release.jks`).
 
 ```properties
 blinker.release.storeFile=/절대/경로/blinkerleague-release.jks
@@ -181,6 +183,7 @@ blinker.release.keyAlias=blinkerleague
 blinker.release.keyPassword=…
 ```
 
+- `keyPassword`는 `storePassword`와 같은 값입니다.
 - 파일 끝에 줄바꿈이 없으면 첫 줄이 기존 마지막 줄(`sdk.dir=…`)에 붙어 버립니다. 반드시 새 줄에서 시작합니다.
 - 4줄 중 하나라도 있으면 4줄을 모두 적어야 합니다. 일부만 있거나 `storeFile` 파일이 없으면 빌드가 실패합니다(빠진 키 이름만 알려 줌). 4줄이 하나도 없으면 서명 없이 빌드합니다.
 
@@ -199,7 +202,6 @@ export JAVA_HOME=$(/usr/libexec/java_home -v 17)   # 새 터미널 창마다 한
   - 평문(http)은 그 주소의 호스트에만 허용됩니다 (빌드 때 `network_security_config` 생성, 나머지는 평문 금지).
   - https 주소면 평문이 전혀 허용되지 않습니다. 형식이 틀린 주소는 빌드가 실패합니다.
   - `10.0.2.2`는 에뮬레이터에서 본 "그 에뮬레이터를 띄운 PC"입니다. 같은 PC에서 서버를 띄운 에뮬레이터에서만 연결됩니다.
-- Android Studio의 **Build → Generate Signed App Bundle / APK**에서 6-1의 키 파일을 골라 만들어도 됩니다.
 
 #### 6-4. 서명 확인
 
@@ -217,7 +219,7 @@ $BT/apksigner verify --print-certs automotive/build/outputs/apk/release/automoti
 debug 앱과 서명이 달라 그대로는 설치되지 않습니다. 먼저 지우고 설치합니다(**앱 데이터가 지워짐**).
 
 ```bash
-adb uninstall com.example.blinkerleague
+adb uninstall com.example.blinkerleague   # 앱이 없어서 Failure가 나와도 괜찮음
 adb install automotive/build/outputs/apk/release/automotive-release.apk
 ```
 
