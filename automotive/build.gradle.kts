@@ -93,33 +93,35 @@ android {
         buildConfigField("String", "SERVER_URL", "\"$serverUrl\"")
     }
 
-    // 출시용 서명: 키는 저장소에 넣지 않고 local.properties(blinker.release.*)에서 읽음. 없으면 서명 없이 빌드
-    val releaseStoreFile = localProps.getProperty("blinker.release.storeFile")
-    if (releaseStoreFile != null) {
-        // 일부만 적혀 있으면 서명 없는 APK가 조용히 나오지 않게 실패시킴 (비밀번호 값은 메시지에 넣지 않음)
-        if (!file(releaseStoreFile).isFile) {
-            throw GradleException("blinker.release.storeFile 파일이 없습니다: $releaseStoreFile")
-        }
-        val missing = listOf("storePassword", "keyAlias", "keyPassword")
-            .filter { localProps.getProperty("blinker.release.$it").isNullOrEmpty() }
+    // 출시용 서명: 키는 저장소에 넣지 않고 local.properties(blinker.release.*)에서 읽음. 4개가 하나도 없으면 서명 없이 빌드.
+    // 하나라도 있으면 4개를 모두 요구함 (서명 없는 APK가 조용히 나오지 않게. 비밀번호 값은 메시지에 넣지 않음)
+    val signingKeys = listOf("storeFile", "storePassword", "keyAlias", "keyPassword").map { "blinker.release.$it" }
+    val signing = signingKeys.associateWith { localProps.getProperty(it)?.takeIf { value -> value.isNotEmpty() } }
+    val hasSigning = signing.values.any { it != null }
+    if (hasSigning) {
+        val missing = signing.filterValues { it == null }.keys
         if (missing.isNotEmpty()) {
-            throw GradleException("local.properties에 서명 정보가 빠졌습니다: " + missing.joinToString { "blinker.release.$it" })
+            throw GradleException("local.properties에 서명 정보가 빠졌습니다: " + missing.joinToString())
+        }
+        val storePath = signing.getValue("blinker.release.storeFile")!!
+        if (!file(storePath).isFile) {
+            throw GradleException("blinker.release.storeFile 파일이 없습니다: $storePath")
         }
     }
     signingConfigs {
-        if (releaseStoreFile != null) {
+        if (hasSigning) {
             create("release") {
-                storeFile = file(releaseStoreFile)
-                storePassword = localProps.getProperty("blinker.release.storePassword")
-                keyAlias = localProps.getProperty("blinker.release.keyAlias")
-                keyPassword = localProps.getProperty("blinker.release.keyPassword")
+                storeFile = file(signing.getValue("blinker.release.storeFile")!!)
+                storePassword = signing.getValue("blinker.release.storePassword")
+                keyAlias = signing.getValue("blinker.release.keyAlias")
+                keyPassword = signing.getValue("blinker.release.keyPassword")
             }
         }
     }
 
     buildTypes {
         release {
-            if (releaseStoreFile != null) signingConfig = signingConfigs.getByName("release")
+            if (hasSigning) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }

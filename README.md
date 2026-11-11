@@ -162,7 +162,7 @@ Android Studio에서는 상단 기기 목록에서 `Pleos_Connect_v2.1.0_API_34`
   blinker.release.keyPassword=…
   ```
 - 키 만들기: `keytool -genkeypair -v -keystore blinkerleague-release.jks -alias blinkerleague -keyalg RSA -keysize 2048 -validity 10000`
-- 4줄 중 일부만 있거나 `storeFile` 파일이 없으면 빌드가 실패합니다.
+- 4줄 중 하나라도 있으면 4줄을 모두 적어야 합니다. 일부만 있거나 `storeFile` 파일이 없으면 빌드가 실패합니다(빠진 키 이름만 알려 줌). 4줄이 하나도 없으면 서명 없이 빌드합니다.
 - 서명 키가 없으면 `automotive-release-unsigned.apk`가 나옵니다. **서명하지 않은 APK는 설치할 수 없습니다.**
   에뮬레이터에서 확인만 할 때는 debug 키로 서명합니다 (`build-tools`는 Android SDK의 `build-tools/<버전>`).
 
