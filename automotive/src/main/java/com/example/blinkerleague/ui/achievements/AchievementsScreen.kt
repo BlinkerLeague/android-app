@@ -41,8 +41,9 @@ import java.time.ZoneId
 
 private val AchievementsViewModelFactory = viewModelFactory {
     initializer {
-        val rewards = (this[APPLICATION_KEY] as BlinkerLeagueApplication).container.rewardRepository
-        AchievementsViewModel(rewards::streak, rewards::badges, ZoneId.systemDefault())
+        val container = (this[APPLICATION_KEY] as BlinkerLeagueApplication).container
+        val rewards = container.rewardRepository
+        AchievementsViewModel(rewards::streak, rewards::badges, ZoneId.systemDefault(), { container.config.point })
     }
 }
 
@@ -99,7 +100,7 @@ private fun StreakPanel(streak: StreakCard, modifier: Modifier) {
             style = MaterialTheme.typography.bodyLarge,
         )
         Text(
-            stringResource(R.string.achievements_reward_in, streak.daysToReward),
+            stringResource(R.string.achievements_reward_in, streak.daysToReward, streak.rewardPoint),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

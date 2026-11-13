@@ -35,7 +35,7 @@ class AchievementsViewModel(
                 s == null && b == null ->
                     if (_uiState.value is AchievementsUiState.Loaded) _uiState.value else AchievementsUiState.Unavailable
                 else -> AchievementsUiState.Loaded(
-                    streak = s?.let { StreakCard(it.days, it.todayAchieved, daysToReward(it.days)) },
+                    streak = s?.let { rule().let { r -> StreakCard(it.days, it.todayAchieved, daysToReward(it.days, r.streakRewardDays), r.streakRewardPoint) } },
                     badges = b.orEmpty().map {
                         BadgeCard(it.name, it.condition, it.earned, it.awardedAtMs?.let { ms -> DATE.format(Instant.ofEpochMilli(ms).atZone(zone)) })
                     },

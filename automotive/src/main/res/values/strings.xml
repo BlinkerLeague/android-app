@@ -153,7 +153,7 @@
     <string name="achievements_streak_days">%1$d일</string>
     <string name="achievements_today_done">오늘 퀘스트를 달성했어요</string>
     <string name="achievements_today_todo">오늘 퀘스트를 달성하면 이어져요</string>
-    <string name="achievements_reward_in">%1$d일 더 달성하면 +50P</string>
+    <string name="achievements_reward_in">%1$d일 더 달성하면 +%2$dP</string>
     <string name="achievements_badges">배지</string>
     <string name="achievements_locked">잠김</string>
     <string name="achievements_earned">획득</string>
