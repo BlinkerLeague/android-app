@@ -229,4 +229,22 @@ class TripRepositoryTest {
         // then
         assertNull(ordinal)
     }
+
+    @Test
+    fun `짧은 이동도 그날 몇 번째인지 셀 때 포함한다`() = runTest {
+        // given
+        // 1km 미만이라 서버가 EXCLUDED_SHORT로 판정하는 08:00 운행
+        repository.saveFinishedTrip(trip("short", kst(13, 8, 0), listOf(true), distanceKm = 0.4))
+        repository.saveFinishedTrip(trip("noon", kst(13, 12, 0), listOf(true)))
+        // 지금은 한국 시간 2026-11-13 18:00
+        now = kst(13, 18, 0)
+        repository.uploadPending()
+
+        // when
+        val ordinal = repository.dayOrdinal("noon", seoul)
+
+        // then
+        assertEquals(ScoreStatus.EXCLUDED_SHORT, stored("short").trip.scoreStatus)
+        assertEquals(2, ordinal)
+    }
 }
