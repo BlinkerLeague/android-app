@@ -37,11 +37,10 @@ object HttpClientFactory {
 
     fun create(baseUrl: String, tokens: TokenStore): BlinkerService {
         val url = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
-        // Pleos 앱 보안 가이드: TLS 1.2 이상만(MODERN_TLS = TLS 1.3·1.2). http는 디버그 빌드의 로컬 서버(10.0.2.2)뿐이고
-        // 릴리스는 network security config 기본값이 평문을 막음
-        val specs = if (url.startsWith("https://")) listOf(ConnectionSpec.MODERN_TLS) else listOf(ConnectionSpec.CLEARTEXT)
+        // Pleos 앱 보안 가이드: TLS 1.2 이상만(MODERN_TLS = TLS 1.3·1.2). http는 빌드 설정의 서버 주소가 http일 때뿐이고,
+        // OS 평문 허용은 그 호스트 하나로 제한(release는 빌드 때 만든 network_security_config)
         val plain = OkHttpClient.Builder()
-            .connectionSpecs(specs)
+            .connectionSpecs(connectionSpecsFor(url))
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .build()
@@ -56,6 +55,9 @@ object HttpClientFactory {
             .build()
             .create(BlinkerService::class.java)
     }
+
+    internal fun connectionSpecsFor(baseUrl: String): List<ConnectionSpec> =
+        if (baseUrl.startsWith("https://", ignoreCase = true)) listOf(ConnectionSpec.MODERN_TLS) else listOf(ConnectionSpec.CLEARTEXT)
 
     /** 새 토큰 쌍. 서버가 거부(401 등)하면 null, 연결 실패면 예외(→ 원래 요청도 연결 실패로 끝남) */
     private fun refresh(client: OkHttpClient, baseUrl: String, refreshToken: String): TokenResponse? {

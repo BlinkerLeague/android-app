@@ -12,7 +12,7 @@
 | 필수 | 저장 데이터 암호화 (운행 기록) | ⚠️ | Room DB에 운행 시각·거리·회전(방향, 깜빡이 여부)이 평문으로 남음. 원시 위치 좌표·식별자는 저장하지 않음. 민감정보로 볼지 판단 필요 (암호화하려면 SQLCipher 등 도입) |
 | 필수 | 로그 관리 | ✅ | 토큰·좌표는 어디서도 로그로 찍지 않음. 릴리스 빌드는 정보 로그를 남기지 않고 경고·오류만 남김 (`AppLog`). HTTP 로그 인터셉터 없음 |
 | 권장 | 캐시 | ✅ | 민감정보를 캐시에 두지 않음 |
-| 권장 | 자동 백업 비활성화 | ✅ | `android:allowBackup="false"` |
+| 권장 | 자동 백업 비활성화 | ✅ | `android:allowBackup="false"` + `android:dataExtractionRules`(`res/xml/data_extraction_rules.xml`). API 31+ 클라우드 백업 · 기기 간 전송 모두 모든 도메인 제외, API 28~30은 allowBackup=false로 꺼짐. 토큰은 Keystore 키가 기기 밖으로 나가지 않아 이중 보호 |
 | 권장 | 외부 저장소 | ✅ | 외부 저장소를 쓰지 않음 (앱 전용 내부 저장소만) |
 | 필수 | URL 노출 방지 | ✅ | 토큰은 `Authorization: Bearer` 헤더로만 보냄 |
 
@@ -28,8 +28,8 @@
 
 | 구분 | 항목 | 상태 | 앱 |
 | --- | --- | :-: | --- |
-| 필수 | 암호화 프로토콜 | ✅ | 릴리스는 평문(http) 차단(network security config 기본값). http는 디버그 빌드의 로컬 서버(10.0.2.2·localhost)만 허용 |
-| 필수 | TLS 1.2 이상 | ✅ | OkHttp `ConnectionSpec.MODERN_TLS`(TLS 1.3·1.2)만 사용 |
+| 필수 | 암호화 프로토콜 | ⚠️ | **조건부**: https 서버 주소로 빌드하면 충족, 1차 제출 빌드(로컬 http 서버)는 그 호스트에 평문 허용(11.11 사용자 결정). 릴리스는 기본적으로 평문(http)을 막고, http 서버 주소로 빌드한 경우에만 그 호스트에 평문을 허용 (`network_security_config`를 빌드 때 생성, base-config는 평문 금지). 서버 주소가 없거나 https면 평문 없음. 형식이 틀린 주소는 빌드 실패. 디버그 빌드는 로컬 서버(10.0.2.2·localhost)만 허용 |
+| 필수 | TLS 1.2 이상 | ⚠️ | **조건부**: https 서버 주소로 빌드하면 충족, 1차 제출 빌드(로컬 http 서버)는 그 호스트에 평문 허용(11.11 사용자 결정). https 주소면 OkHttp `ConnectionSpec.MODERN_TLS`(TLS 1.3·1.2)만, http 주소면 `CLEARTEXT`만 사용 (`HttpClientFactory.connectionSpecsFor`, `HttpClientFactoryTest`) |
 | 권장 | TLS 1.3·Cipher Suite | ✅ | OkHttp MODERN_TLS 기본 Cipher Suite. 서버 쪽 설정은 서버 팀(서버 plan.md 9.4) |
 | 필수 | 신뢰 서버 | ✅ | 빌드 설정의 서버 하나(`blinker.serverUrl`)와만 통신. 인증서 검증을 끄지 않음 |
 | 필수 | 서버 원격 명령 | ➖ | 서버가 앱에 명령을 보내지 않음. 받는 것은 기준값(숫자)뿐이고, 서버가 주는 항목만 덮어씀 |
@@ -38,7 +38,7 @@
 
 | 구분 | 항목 | 상태 | 앱 |
 | --- | --- | :-: | --- |
-| 필수 | 권한 최소화 | ✅ | 릴리스 권한: CAR_LIGHTS, CAR_DRIVE, FUSED_LOCATION, TTS_SERVICE, CAR_SPEED, INTERNET, 포그라운드 서비스·부팅. 사전 승인은 [`pleos-inquiries.md`](pleos-inquiries.md) 1번 |
+| 필수 | 권한 최소화 | ✅ | 릴리스 권한: CAR_LIGHTS, CAR_DRIVE, FUSED_LOCATION, TTS_SERVICE, CAR_SPEED, INTERNET, 포그라운드 서비스·부팅. 사전 승인은 [`pleos-inquiries.md`](pleos-inquiries.md) 1번. 라이브러리가 병합해 넣는 권한 5개: `ai.pleos.playground.service.vehicle.VEHICLE_BINDING`(Vehicle SDK), `ai.pleos.playground.service.location.fused.FUSED_LOCATION_BINDING`(FusedLocation SDK), `WAKE_LOCK`·`ACCESS_NETWORK_STATE`(WorkManager), `com.example.blinkerleague.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`(androidx.core, signature) |
 | 필수 | 컴포넌트 외부 노출 제한 | ✅ | 외부 노출은 런처 `MainActivity`뿐. `TripCollectionService`·`BootReceiver`는 `exported=false`. 라이브러리 컴포넌트(WorkManager 등)는 `BIND_JOB_SERVICE`·`DUMP` 권한으로 보호 |
 | 필수 | 민감정보 전달 | ✅ | 브로드캐스트로 민감정보를 보내지 않음 |
 | 필수 | 접근 제어 | ➖ | 외부에 공개하는 데이터·기능 없음 (ContentProvider 없음) |
@@ -54,11 +54,11 @@
 | 권장 | 서버 주소 | ⏳ | 빌드 설정(`blinker.serverUrl`)으로 주입. 운영 도메인이 정해지면 그 값으로 릴리스 빌드 |
 | 권장 | 네이티브 라이브러리 | ➖ | 앱 자체 네이티브 코드 없음 |
 | 권장 | SDK·라이브러리 점검 | ✅ | 2026-11-09: 릴리스에 들어가는 라이브러리 148개를 GitHub 보안 권고 DB와 대조 → **권고 0건** (`scripts/check_dependency_advisories.sh`, 제출 직전에 다시 실행). Pleos SDK는 공개 DB에 없어 Pleos 배포 최신 버전 사용으로 관리 |
-| 필수 | 배포용 인증서 | ⏳ | 출시 키로 서명 (README "해야 할 일") |
+| 필수 | 배포용 인증서 | ✅ | 출시 키로 서명, 만들기·서명 확인·백업 완료(11.11) |
 | 필수 | 디버깅 비활성화 | ✅ | 릴리스 `debuggable` 꺼짐, WebView 없음, 조사용 코드·디버그 옵션(`DebugTools`)은 릴리스에서 빈 구현 |
 
 ## 남은 일
 - ⚠️ 운행 기록(Room)을 민감정보로 보고 암호화할지 결정
 - ⚠️ CarPropertyManager(속도) 사용 허용 여부 — Pleos 답변
-- ⏳ 운영 서버 도메인(HTTPS)으로 릴리스 빌드, 출시 키 서명
+- ⏳ 운영 서버(HTTPS)가 생기면 그 주소로 release를 빌드. 1차 제출은 로컬 서버(http)에 연결하는 빌드 (11.11 결정)
 - ⏳ 제출 직전 `scripts/check_dependency_advisories.sh` 다시 실행

@@ -1,3 +1,5 @@
+import java.net.URI
+import java.net.URISyntaxException
 import java.util.Properties
 
 plugins {
@@ -5,6 +7,74 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.serialization")
     id("com.google.devtools.ksp")
+}
+
+val localProps = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+
+// 서버 주소. 비어 있으면 Fake API로 동작(시연·화면 개발용).
+// local.properties에 `blinker.serverUrl=http://10.0.2.2:8080` (에뮬레이터 → 내 PC) 또는 -Pblinker.serverUrl=…
+val serverUrl: String = (project.findProperty("blinker.serverUrl") as String?)
+    ?: localProps.getProperty("blinker.serverUrl")
+    ?: ""
+
+// 형식이 틀린 주소는 빌드를 실패시킴 (앱에서 연결이 안 되는 것을 실행 전에 알 수 있게)
+val serverUri: URI? = serverUrl.takeIf { it.isNotBlank() }?.let { url ->
+    val uri = try {
+        URI(url)
+    } catch (e: URISyntaxException) {
+        null
+    }
+    val scheme = uri?.scheme
+    val validScheme = scheme != null && (scheme.equals("http", ignoreCase = true) || scheme.equals("https", ignoreCase = true))
+    if (uri == null || !validScheme || uri.host.isNullOrBlank()) {
+        throw GradleException("blinker.serverUrl은 http(s)://호스트[:포트] 형식이어야 합니다: $serverUrl")
+    }
+    uri
+}
+
+// release용 network_security_config를 빌드 때 만듦 (src/release/AndroidManifest.xml이 참조).
+// base-config는 평문 금지. 서버 주소가 http면 그 호스트 하나만 평문 허용 (보안 가이드: 평문 전체 허용 금지)
+abstract class GenerateNetworkSecurityConfig : DefaultTask() {
+    @get:Input
+    abstract val serverUrl: Property<String>
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun generate() {
+        val url = serverUrl.get()
+        val uri = url.takeIf { it.isNotBlank() }?.let { URI(it) }
+        val cleartextHost = uri?.takeIf { it.scheme.equals("http", ignoreCase = true) }?.host
+        val lines = buildList {
+            add("""<?xml version="1.0" encoding="utf-8"?>""")
+            add("<!-- 빌드 때 만들어진 파일 (build.gradle.kts generateReleaseNetworkSecurityConfig). 직접 고치지 않음.")
+            add("     평문(http)은 blinker.serverUrl이 http일 때 그 호스트에만 허용하고, 나머지는 모두 막음 -->")
+            add("<network-security-config>")
+            add("""    <base-config cleartextTrafficPermitted="false" />""")
+            if (cleartextHost != null) {
+                add("""    <domain-config cleartextTrafficPermitted="true">""")
+                add("""        <domain includeSubdomains="false">$cleartextHost</domain>""")
+                add("    </domain-config>")
+            }
+            add("</network-security-config>")
+        }
+        val file = outputDir.get().file("xml/network_security_config.xml").asFile
+        file.parentFile.mkdirs()
+        file.writeText(lines.joinToString("\n", postfix = "\n"))
+    }
+}
+
+val releaseNetworkSecurityDir = layout.buildDirectory.dir("generated/networkSecurity/release")
+val releaseServerUrl = serverUrl
+val generateReleaseNetworkSecurityConfig = tasks.register<GenerateNetworkSecurityConfig>("generateReleaseNetworkSecurityConfig") {
+    serverUrl.set(releaseServerUrl)
+    outputDir.set(releaseNetworkSecurityDir)
+}
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    dependsOn(generateReleaseNetworkSecurityConfig)
 }
 
 android {
@@ -20,36 +90,38 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // 서버 주소. 비어 있으면 Fake API로 동작(시연·화면 개발용).
-        // local.properties에 `blinker.serverUrl=http://10.0.2.2:8080` (에뮬레이터 → 내 PC) 또는 -Pblinker.serverUrl=…
-        val localProps = Properties().apply {
-            rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
-        }
-        val serverUrl = (project.findProperty("blinker.serverUrl") as String?)
-            ?: localProps.getProperty("blinker.serverUrl")
-            ?: ""
         buildConfigField("String", "SERVER_URL", "\"$serverUrl\"")
     }
 
-    // 출시용 서명: 키는 저장소에 넣지 않고 local.properties(blinker.release.*)에서 읽음. 없으면 서명 없이 빌드
-    val releaseProps = Properties().apply {
-        rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+    // 출시용 서명: 키는 저장소에 넣지 않고 local.properties(blinker.release.*)에서 읽음. 4개가 하나도 없으면 서명 없이 빌드.
+    // 하나라도 있으면 4개를 모두 요구함 (서명 없는 APK가 조용히 나오지 않게. 비밀번호 값은 메시지에 넣지 않음)
+    val signingKeys = listOf("storeFile", "storePassword", "keyAlias", "keyPassword").map { "blinker.release.$it" }
+    val signing = signingKeys.associateWith { localProps.getProperty(it)?.takeIf { value -> value.isNotEmpty() } }
+    val hasSigning = signing.values.any { it != null }
+    if (hasSigning) {
+        val missing = signing.filterValues { it == null }.keys
+        if (missing.isNotEmpty()) {
+            throw GradleException("local.properties에 서명 정보가 빠졌습니다: " + missing.joinToString())
+        }
+        val storePath = signing.getValue("blinker.release.storeFile")!!
+        if (!file(storePath).isFile) {
+            throw GradleException("blinker.release.storeFile 파일이 없습니다: $storePath")
+        }
     }
-    val releaseStoreFile = releaseProps.getProperty("blinker.release.storeFile")
     signingConfigs {
-        if (releaseStoreFile != null) {
+        if (hasSigning) {
             create("release") {
-                storeFile = file(releaseStoreFile)
-                storePassword = releaseProps.getProperty("blinker.release.storePassword")
-                keyAlias = releaseProps.getProperty("blinker.release.keyAlias")
-                keyPassword = releaseProps.getProperty("blinker.release.keyPassword")
+                storeFile = file(signing.getValue("blinker.release.storeFile")!!)
+                storePassword = signing.getValue("blinker.release.storePassword")
+                keyAlias = signing.getValue("blinker.release.keyAlias")
+                keyPassword = signing.getValue("blinker.release.keyPassword")
             }
         }
     }
 
     buildTypes {
         release {
-            if (releaseStoreFile != null) signingConfig = signingConfigs.getByName("release")
+            if (hasSigning) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
@@ -75,6 +147,11 @@ android {
     testOptions {
         // Robolectric으로 Room DAO를 JVM 단위 테스트에서 실행
         unitTests.isIncludeAndroidResources = true
+    }
+    sourceSets {
+        getByName("release") {
+            res.srcDir(releaseNetworkSecurityDir)
+        }
     }
     packaging {
         resources {
