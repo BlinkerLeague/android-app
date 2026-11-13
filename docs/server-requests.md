@@ -1,7 +1,7 @@
 # 서버 요청 사항 (앱 → 서버)
 
 > 앱 팀이 서버 팀에 전달하는 문서입니다. 서버 저장소 `plan.md` 3장(P0 API)을 기준으로, 앱 구현 중에 바뀌었거나 정해야 하는 것만 적었습니다.
-> 마지막 갱신: 2026-11-09 (10번 결정: 1km, 11~14번 추가, 로컬 서버 develop `5d1ad9c`로 상태 확인)
+> 마지막 갱신: 2026-11-13 (15번 추가) · 2026-11-09 (10번 결정: 1km, 11~14번 추가, 로컬 서버 develop `5d1ad9c`로 상태 확인)
 
 ## 처리 상태 (2026-11-09, 서버 develop `5d1ad9c` plan.md 9장·실행 중인 서버로 확인)
 
@@ -18,6 +18,7 @@
 | **12** | **새로 추가(2차)**: 점수 응답에 이 운행의 적립 포인트 `earnedPoints` |
 | **13** | **새로 추가**: 깜빡이 팁 문구가 앱 판정 기준과 다름 ("30m 전" vs 앱 "5초 전") |
 | 14 | 해소(서버 #48 · #49): 서버가 다른 형식(`season` · `league` · `me` · `regions`, `docs/api/openapi.json` `CurrentLeagueResponse`)으로 구현 → 11.10 앱이 서버 형식에 맞춤(`feature/league-server-format`). 순위 공개는 `PUT /api/drivers/me/league-visibility` |
+| **15** | **새로 추가(11.13)**: 배지 `STREAK_7` 설명 문구를 "오늘의 퀘스트"로 |
 
 ## 요약
 
@@ -37,6 +38,7 @@
 | 12 | 점수 응답에 이 운행의 적립 포인트 `earnedPoints` 추가 | `GET /api/trips/{id}/score`, `POST /api/trips` | 3.5, 4.2 | 2차 PT(12.2) 전 | **변경** |
 | 13 | 기준값 `tips.TURN_SIGNAL` 문구를 앱 판정 기준(회전 5초 전)에 맞춤 | `GET /api/config/thresholds` | 3.3, D18 | 2차 PT(12.2) 전 | **변경** |
 | 14 | 지역 리그 응답 형식 제안 | `GET /api/leagues/current` | 4.4, D5·D8·D11·D13·D19·D29·D31 | 2차 PT(12.2) 전 | 제안 |
+| 15 | 배지 `STREAK_7` 설명 문구를 퀘스트 용어로 | `GET /api/badges` | — | 2차 PT(12.2) 전 | **변경** |
 
 ---
 
@@ -290,3 +292,16 @@
 
 - 순위 비공개 운전자(D8)는 `myLeague.rankPublic`과 별개로 `myRank` 없이 `top`에서 빠지면 됩니다. 공개 여부를 바꾸는 API가 생기면 앱 설정 화면에 토글을 붙입니다(제안: `PATCH /api/drivers/me` `{ "rankPublic": false }`).
 - 등록 지역이 매핑표에 없으면 `myLeague: null`
+
+## 15. 배지 `STREAK_7` 설명 문구를 퀘스트 용어로 (변경)
+
+**배경**: 앱은 11.13에 화면과 음성의 "오늘의 미션"을 기획서 용어인 **"오늘의 퀘스트"** 로 바꿨습니다. 그런데 업적 화면(SCR-05)의 배지 설명은 `GET /api/badges`의 `BadgeResponse.condition`을 그대로 보여 주므로, `STREAK_7` 배지에는 아직 **"오늘의 미션 7일 연속 달성"** 이 남아 화면 안에서 용어가 섞입니다.
+
+**요청**: `STREAK_7`의 `condition`을 **"오늘의 퀘스트 7일 연속 달성"** 으로 바꿔 주세요.
+
+**바꾸지 않을 것**: 배지 코드 `STREAK_7`, 포인트 적립 사유 `DAILY_MISSION`, `/api/missions/*` 경로, 응답 필드 이름. 앱은 이 이름들을 그대로 씁니다.
+
+- 다른 배지의 `condition`에도 "미션"이 들어 있으면(예: `SEASON_CHAMPION`) 같은 방식으로 "퀘스트"로 바꿔 주세요.
+- 주간 리포트의 "맞춤 미션"(`lastMission`, `nextMission`)은 이 요청 대상이 아닙니다. 앱 화면도 "맞춤 미션"을 그대로 씁니다.
+
+앱은 서버 문구를 그대로 보여 주므로 앱 쪽 추가 작업은 없습니다(앱의 Fake 서버와 Preview 문구는 먼저 바꿨습니다).
