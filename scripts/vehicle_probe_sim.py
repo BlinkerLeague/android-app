@@ -144,7 +144,7 @@ def scenario_demo(car):
     car.turn("Off"); time.sleep(8)
     car.steer_to(120); time.sleep(4)   # 우회전, 깜빡이 없음
     car.steer_to(0); time.sleep(4)
-    car.speed_to(100); time.sleep(int(os.environ.get("DEMO_CRUISE_SEC", "45")))  # 약 1.25km
+    car.speed_to(100); time.sleep(int(os.environ.get("DEMO_CRUISE_SEC", "45")))  # 약 1.25km. record_demo.py는 70을 넘김(회전 구간 포함 약 2.2km)
     car.speed_to(0); time.sleep(3)
     car.gear("Park")
     car.c.mark("scenario demo end")

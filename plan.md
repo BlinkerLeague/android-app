@@ -137,7 +137,7 @@
 
 ### 5. 1차 제출 (11.13 ~ 11.15)
 - [ ] 시연 영상: "좌회전 깜빡이 성공 → 우회전 실패 → 운행 종료 → 점수·미션 화면"
-  - [x] 녹화 도구 `scripts/record_demo.py` (디버그 `--ei parkEndSec`로 P단 종료 대기 단축, 화면은 글자로 찾아 누름). 에뮬레이터에서 2분 30초 녹화 확인. 11.14: 업적(배지) 화면까지, 주행 약 2.2km(+1P 보이게, `DEMO_CRUISE_SEC` 기본 70)
+  - [x] 녹화 도구 `scripts/record_demo.py` (디버그 `--ei parkEndSec`로 P단 종료 대기 단축, 화면은 글자로 찾아 누름). 에뮬레이터에서 2분 30초 녹화 확인. 11.14: 업적(배지) 화면까지, 주행 약 2.2km(+1P 보이게, `DEMO_CRUISE_SEC` 기본 70). 11.14: Windows adb 출력 인코딩 수정(UTF-8, replace), 화면 대기 4초로 녹화 약 2분 40초
   - [ ] 편집·자막·제출 (사용자)
 - [x] release APK 빌드
   - [x] 서명 설정(`local.properties`의 `blinker.release.*`, 키는 저장소에 넣지 않음), README 6절
