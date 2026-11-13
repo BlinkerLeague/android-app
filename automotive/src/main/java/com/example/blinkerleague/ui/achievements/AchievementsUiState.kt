@@ -18,7 +18,7 @@ sealed interface AchievementsUiState {
 data class StreakCard(
     val days: Int,
     val todayAchieved: Boolean,
-    /** 다음 연속 보상까지 남은 날 (7일마다 50P) */
+    /** 다음 연속 보상까지 남은 날 (기준값 point.streakRewardDays마다 streakRewardPoint) */
     val daysToReward: Int,
     /** 연속 보상 포인트 (서버 기준값 point.streakRewardPoint) */
     val rewardPoint: Int = PointConfig().streakRewardPoint,
@@ -32,8 +32,5 @@ data class BadgeCard(
     val awardedOn: String?,
 )
 
-/** 연속 보상 주기 (서버 기준값 point.streakRewardDays 기본 7) */
-internal const val STREAK_REWARD_DAYS = 7
-
 /** 다음 보상까지 남은 날: 0일·7일째면 7, 3일째면 4 */
-internal fun daysToReward(days: Int, period: Int = STREAK_REWARD_DAYS): Int = period - days % period
+internal fun daysToReward(days: Int, period: Int = PointConfig().streakRewardDays): Int = period - days % period
