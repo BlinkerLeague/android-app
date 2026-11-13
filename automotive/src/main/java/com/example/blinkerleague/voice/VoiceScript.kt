@@ -10,12 +10,12 @@ import com.example.blinkerleague.domain.model.TripResult
  */
 object VoiceScript {
 
-    /** 시동 시 1회: 오늘의 미션 안내 */
+    /** 시동 시 1회: 오늘의 퀘스트 안내 */
     fun tripStart(mission: TodayMission?): String = when {
         mission == null -> "회전할 때 깜빡이를 미리 켜 주세요."
-        mission.status == MissionStatus.ACHIEVED -> "오늘의 미션은 이미 달성했어요. 오늘도 깜빡이 잊지 마세요."
-        // 진행 중·지난 날 미달성 모두: 미션은 운행 1건 안에서 판정하므로(서버 D25) 이번 운행에서 처음부터 셈
-        else -> "오늘의 미션, ${mission.title}. 이번 운행에서 회전 ${count(mission.requiredTurns)} 모두 깜빡이를 미리 켜 보세요."
+        mission.status == MissionStatus.ACHIEVED -> "오늘의 퀘스트는 이미 달성했어요. 오늘도 깜빡이 잊지 마세요."
+        // 진행 중·지난 날 미달성 모두: 퀘스트는 운행 1건 안에서 판정하므로(서버 D25) 이번 운행에서 처음부터 셈
+        else -> "오늘의 퀘스트, ${mission.title}. 이번 운행에서 회전 ${count(mission.requiredTurns)} 모두 깜빡이를 미리 켜 보세요."
     }
 
     /** 운행 종료 시 1회: 이번 운행 결과 (기기에서 판정한 회전 기준, 서버 점수를 기다리지 않음) */
