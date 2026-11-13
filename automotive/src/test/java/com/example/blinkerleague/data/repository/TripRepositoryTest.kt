@@ -61,6 +61,11 @@ class TripRepositoryTest {
 
     private suspend fun stored(id: String) = db.tripDao().trip(id)!!
 
+    private val seoul = ZoneId.of("Asia/Seoul")
+
+    private fun kst(day: Int, hour: Int, minute: Int) =
+        ZonedDateTime.of(2026, 11, day, hour, minute, 0, 0, seoul).toInstant().toEpochMilli()
+
     @Test
     fun `저장한 운행을 올리면 UPLOADED와 서버 점수가 남음`() = runTest {
         repository.saveFinishedTrip(trip("a", 0, listOf(true, true, true, false)))
@@ -196,9 +201,6 @@ class TripRepositoryTest {
     @Test
     fun `오늘 운행이 그날 몇 번째인지 시작 시각 순으로 센다`() = runTest {
         // given
-        val seoul = ZoneId.of("Asia/Seoul")
-        fun kst(day: Int, hour: Int, minute: Int) =
-            ZonedDateTime.of(2026, 11, day, hour, minute, 0, 0, seoul).toInstant().toEpochMilli()
         // 어제 23:50에 시작한 운행은 오늘로 세지 않음
         repository.saveFinishedTrip(trip("yesterday", kst(12, 23, 50), listOf(true)))
         repository.saveFinishedTrip(trip("morning", kst(13, 8, 0), listOf(true)))
@@ -211,5 +213,20 @@ class TripRepositoryTest {
 
         // then
         assertEquals(2, ordinal)
+    }
+
+    @Test
+    fun `오늘이 아닌 운행은 몇 번째인지 세지 않는다`() = runTest {
+        // given
+        // 한국 시간 2026-11-12 23:50에 시작한 운행
+        repository.saveFinishedTrip(trip("yesterday", kst(12, 23, 50), listOf(true)))
+        // 지금은 한국 시간 2026-11-13 18:00
+        now = kst(13, 18, 0)
+
+        // when
+        val ordinal = repository.dayOrdinal("yesterday", seoul)
+
+        // then
+        assertNull(ordinal)
     }
 }
