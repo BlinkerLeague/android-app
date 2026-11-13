@@ -53,7 +53,7 @@
 | 필수 | 하드코딩 금지 | ✅ | 토큰·비밀 키를 코드에 넣지 않음. 서명 키 정보는 `local.properties`(저장소 밖) |
 | 권장 | 서버 주소 | ⏳ | 빌드 설정(`blinker.serverUrl`)으로 주입. 운영 도메인이 정해지면 그 값으로 릴리스 빌드 |
 | 권장 | 네이티브 라이브러리 | ➖ | 앱 자체 네이티브 코드 없음 |
-| 권장 | SDK·라이브러리 점검 | ✅ | 2026-11-09: 릴리스에 들어가는 라이브러리 148개를 GitHub 보안 권고 DB와 대조 → **권고 0건** (`scripts/check_dependency_advisories.sh`, 제출 직전에 다시 실행). Pleos SDK는 공개 DB에 없어 Pleos 배포 최신 버전 사용으로 관리 |
+| 권장 | SDK·라이브러리 점검 | ✅ | 릴리스에 들어가는 라이브러리 148개를 GitHub 보안 권고 DB와 대조 → **권고 0건** (2026-11-09, 제출 전 2026-11-14 재실행도 148개·0건. `scripts/check_dependency_advisories.sh`). 알려진 취약 버전(okhttp 3.12.0, protobuf-javalite 3.21.0)으로 조회하면 권고가 나와 조회가 동작함을 확인. Pleos SDK는 공개 DB에 없어 Pleos 배포 최신 버전 사용으로 관리 |
 | 필수 | 배포용 인증서 | ✅ | 출시 키로 서명, 만들기·서명 확인·백업 완료(11.11) |
 | 필수 | 디버깅 비활성화 | ✅ | 릴리스 `debuggable` 꺼짐, WebView 없음, 조사용 코드·디버그 옵션(`DebugTools`)은 릴리스에서 빈 구현 |
 
@@ -61,4 +61,4 @@
 - ⚠️ 운행 기록(Room)을 민감정보로 보고 암호화할지 결정
 - ⚠️ CarPropertyManager(속도) 사용 허용 여부 — Pleos 답변
 - ⏳ 운영 서버(HTTPS)가 생기면 그 주소로 release를 빌드. 1차 제출은 로컬 서버(http)에 연결하는 빌드 (11.11 결정)
-- ⏳ 제출 직전 `scripts/check_dependency_advisories.sh` 다시 실행
+- ✅ 제출 직전 `scripts/check_dependency_advisories.sh` 다시 실행 → 148개, 권고 0건 (11.14). 제출 전에 의존성이 바뀌면 다시 실행 (Windows Git Bash에서도 그대로 실행됨, 11.14 수정)
