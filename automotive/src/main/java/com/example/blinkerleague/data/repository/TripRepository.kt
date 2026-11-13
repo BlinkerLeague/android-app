@@ -93,8 +93,10 @@ class TripRepository(
      */
     suspend fun dayOrdinal(tripId: String, zone: ZoneId): Int? {
         val startedAtMs = dao.trip(tripId)?.trip?.startedAtMs ?: return null
-        val dayStartMs = Instant.ofEpochMilli(startedAtMs).atZone(zone).toLocalDate()
-            .atStartOfDay(zone).toInstant().toEpochMilli()
+        val startDate = Instant.ofEpochMilli(startedAtMs).atZone(zone).toLocalDate()
+        val today = Instant.ofEpochMilli(clock()).atZone(zone).toLocalDate()
+        if (startDate != today) return null
+        val dayStartMs = startDate.atStartOfDay(zone).toInstant().toEpochMilli()
         return dao.countStartedBetween(dayStartMs, startedAtMs)
     }
 
