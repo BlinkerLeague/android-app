@@ -1,5 +1,7 @@
 package com.example.blinkerleague.ui.achievements
 
+import com.example.blinkerleague.domain.config.PointConfig
+
 /** 업적 (SCR-05): 연속 달성 + 배지 진열장 */
 sealed interface AchievementsUiState {
     data object Loading : AchievementsUiState
@@ -18,6 +20,8 @@ data class StreakCard(
     val todayAchieved: Boolean,
     /** 다음 연속 보상까지 남은 날 (7일마다 50P) */
     val daysToReward: Int,
+    /** 연속 보상 포인트 (서버 기준값 point.streakRewardPoint) */
+    val rewardPoint: Int = PointConfig().streakRewardPoint,
 )
 
 data class BadgeCard(
