@@ -212,6 +212,7 @@ P0 목표는 fake `demo_full`을 재생한 뒤 정차하면 SCR-02에 득점 1·
 - **구성:** 연속 달성(일수 · 오늘 달성 여부 · 다음 보상까지 남은 날), 배지 진열장(잠금 · 조건 · 획득일), "주간 리포트" 버튼
 - **데이터:** `GET /api/streak`, `GET /api/badges`
 - **연속 보상(11.13):** 주기와 보상 포인트를 기준값 `point.streakRewardDays` · `streakRewardPoint`에서 읽음(받지 못하면 기본 7일 · 50P)
+- **배지 설명 문구:** 서버 `condition`을 그대로 표시. `STREAK_7`의 "오늘의 미션" → "오늘의 퀘스트"는 `docs/server-requests.md` 15번으로 요청(11.13)
 - **남은 것:** 연승 7일 진행 점(기획서 8장)
 
 ### 4.10 SCR-06 지갑 (`ui/wallet`, 2차 #53)

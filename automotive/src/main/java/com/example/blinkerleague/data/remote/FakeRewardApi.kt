@@ -124,7 +124,7 @@ class FakeRewardApi(
         return ApiResult.Success(
             listOf(
                 BadgeDto("FIRST_TRIP", "첫 경기", "점수가 난 첫 운행", scored.isNotEmpty(), scored.firstOrNull()?.at?.let(::iso)),
-                BadgeDto("STREAK_7", "7일 연속", "오늘의 미션 7일 연속 달성", bestStreak >= STREAK_DAYS, null),
+                BadgeDto("STREAK_7", "7일 연속", "오늘의 퀘스트 7일 연속 달성", bestStreak >= STREAK_DAYS, null),
                 BadgeDto("SIGNAL_100", "깜빡이 100회", "깜빡이를 켠 회전 누적 100회", signalOn >= 100, null),
             ),
         )

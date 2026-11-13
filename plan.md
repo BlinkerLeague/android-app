@@ -218,7 +218,7 @@
 
 | # | 내용 | 기획서 | 코드 위치 | 시기 | 크기 |
 | --- | --- | --- | --- | --- | --- |
-| 1 | 용어 "미션" → "퀘스트" 통일 ("오늘의 미션" · 일일 미션 계열: 화면 · 시동 음성 · 지갑 적립 사유 · 업적 "미션 연속 달성"). 제외: 주간 리포트 "맞춤 미션"(`strings.xml` 172 · 176, 서버 주간 미션 개념), 서버가 주는 배지 조건 문구 | 전반 | `voice/VoiceScript.kt:15-18`, `strings.xml` 64 · 70 · 72 · 73 · 152 · 154 · 155 · 219 | 완료 (11.13, feature/plan-gap-fixes): 화면 · 음성 문구만, 식별자 · 리소스 키 · 서버 API 이름은 mission 유지 | 소 |
+| 1 | 용어 "미션" → "퀘스트" 통일 ("오늘의 미션" · 일일 미션 계열: 화면 · 시동 음성 · 지갑 적립 사유 · 업적 "미션 연속 달성"). 제외: 주간 리포트 "맞춤 미션"(`strings.xml` 172 · 176, 서버 주간 미션 개념), 서버가 주는 배지 조건 문구 → server-requests 15로 요청(11.13, feature/badge-quest-wording) | 전반 | `voice/VoiceScript.kt:15-18`, `strings.xml` 64 · 70 · 72 · 73 · 152 · 154 · 155 · 219 | 완료 (11.13, feature/plan-gap-fixes): 화면 · 음성 문구만, 식별자 · 리소스 키 · 서버 API 이름은 mission 유지 | 소 |
 | 2 | SCR-02 머리말 "오늘의 N번째 경기 종료" (지금 "경기 종료 · N km") | 3장 | `strings.xml:15` `result_header`, `ui/result` | 완료 (11.13, feature/plan-gap-fixes): 기기 기록으로 그날 시작 순서를 셈. 오늘이 아닌 운행 · 짧은 이동은 N 없이 | 소 |
 | 3 | SCR-02b 적용 가중치 표시 (`metrics[].weight`를 받지만 `MetricDetail`에서 버림) | 5장 | `TripRepository.metricDetails`, `domain/model/MetricDetail.kt`, `MetricDetailScreen` | 완료 (11.13, feature/plan-gap-fixes): "적용 가중치 N%", 항목이 SCORED이고 가중치가 0보다 클 때만 표시, 아니면 줄 숨김 | 소 |
 | 4 | 연속 보상 하드코딩 제거: 주기 `STREAK_REWARD_DAYS = 7`과 보상 문구 "+50P" → 기준값 `point.streakRewardDays` · `streakRewardPoint` (지갑 사유 "7일 연속 달성"(`strings.xml:220`)은 서버 사유 코드 `STREAK_7`의 이름표이고 과거 적립 행에 붙으므로 제외) | (코드 규칙) | `ui/achievements/AchievementsUiState.kt:19 · 32`, `ConfigDtos.kt`(`ThresholdsResponse`에 `point` 없음), `strings.xml:156` | 완료 (11.13, feature/plan-gap-fixes): `PointConfig`(기본 7일 · 50P), `STREAK_REWARD_DAYS` 삭제 | 소 |
@@ -388,6 +388,7 @@
 | 2026-11-11 | MVP release는 R8(minify·난독화)을 끔 | 기한 4일, Pleos SDK keep 규칙 미확인, 보안 가이드에 난독화 필수 항목 없음. 2차에 검토 |
 | 2026-11-11 | 1차 제출 release는 로컬 서버(http, -Pblinker.serverUrl)에 연결할 수 있게 함. 평문은 그 호스트에만 빌드 때 허용 | 사용자 결정. 보안 가이드(TLS) 때문에 평문 전체 허용은 하지 않음 |
 | 2026-11-13 | 용어는 화면 · 음성 문구만 "미션"→"퀘스트". 코드 식별자 · 리소스 키 · 서버 API 이름(`mission`)은 유지. 주간 리포트 "맞춤 미션", 지갑 사유 "7일 연속 달성"(`STREAK_7`), 서버가 주는 배지 문구는 바꾸지 않음 | 기획서 용어와 맞춤. 이름을 바꾸면 서버 형식 · DB와 어긋남 |
+| 2026-11-13 | 배지 `STREAK_7` 설명은 서버에 퀘스트 용어로 바꿔 달라고 요청함(server-requests 15). 앱 Fake · Preview는 먼저 바꿈. 앱은 여전히 서버 문구를 덮어쓰지 않음(위 결정 유지) | 배지 설명은 서버 문구를 그대로 보여 주므로 화면 용어를 맞추려면 서버 변경이 필요함 |
 | 2026-11-13 | SCR-02b 적용 가중치는 서버 `metrics[].weight`를 백분율 정수로 표시("적용 가중치 N%"). 항목이 SCORED이고 가중치가 0보다 클 때만 보이고, 아니면(값 없음 · 0 · 미측정) 줄을 숨김 | 가중치는 서버 계산 규칙이라 앱이 셈하지 않음 |
 | 2026-11-13 | "오늘의 N번째 경기"는 기기(Room)에 있는 그날 운행을 시작 시각 순으로, 짧은 이동도 포함해 셈. 자정을 넘긴 운행은 시작한 날로 셈. 오늘이 아닌 운행 · 짧은 이동 결과는 N 없이 기존 머리말 | 사용자 결정. 결과 화면은 업로드 전 · 오프라인에도 열리므로 기기 기록으로 셈 |
 | 2026-11-13 | point 기준값 검사: streakRewardDays는 1 이상, streakRewardPoint는 0 이상만 받고 아니면 로컬 기본값 | 리뷰 지적 1. 주기 0은 나눗셈 오류, 음수 보상은 잘못된 문구가 됨 |

@@ -19,7 +19,7 @@ class RewardRepositoryTest {
     private val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
 
     private val points = """{"balance":32,"todayEarned":32,"dailyCap":150,"entries":[{"amount":20,"reason":"DAILY_MISSION","description":null,"createdAt":"2026-11-09T21:13:50.589919+09:00"},{"amount":12,"reason":"TRIP","description":{"distanceKm":12.3,"score":100},"createdAt":"2026-11-09T21:13:50.560524+09:00"}]}"""
-    private val badges = """[{"code":"FIRST_TRIP","name":"첫 경기","condition":"점수가 난 첫 운행","earned":true,"awardedAt":"2026-11-09T21:13:50.596091+09:00"},{"code":"STREAK_7","name":"7일 연속","condition":"오늘의 미션 7일 연속 달성","earned":false,"awardedAt":null}]"""
+    private val badges = """[{"code":"FIRST_TRIP","name":"첫 경기","condition":"점수가 난 첫 운행","earned":true,"awardedAt":"2026-11-09T21:13:50.596091+09:00"},{"code":"STREAK_7","name":"7일 연속","condition":"오늘의 퀘스트 7일 연속 달성","earned":false,"awardedAt":null}]"""
     private val report = """{"week":"2026-W45","trips":0,"distanceKm":0.0,"metrics":[],"weakestMetric":null,"lastMission":null,"nextMission":null}"""
 
     private fun repository(fail: Boolean = false) = RewardRepository(object : RewardApi {
