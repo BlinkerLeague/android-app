@@ -60,17 +60,17 @@
     <string name="plays_hint">좌우로 넘겨 전체 플레이 보기</string>
     <string name="plays_back">돌아가기</string>
 
-    <!-- 오늘의 미션 -->
-    <string name="mission_label">오늘의 미션</string>
+    <!-- 오늘의 퀘스트 -->
+    <string name="mission_label">오늘의 퀘스트</string>
     <string name="mission_progress">회전 %1$d / %2$d · 모두 제때 켜기</string>
     <string name="mission_status_in_progress">진행 중</string>
     <string name="mission_status_achieved">달성</string>
     <string name="mission_status_failed">지난 퀘스트 미달성</string>
     <string name="mission_hint_in_progress">한 번의 운행에서 회전 세 번 모두 깜빡이를 켜면 달성이에요</string>
-    <string name="mission_hint_achieved">오늘 미션을 달성했어요</string>
+    <string name="mission_hint_achieved">오늘 퀘스트를 달성했어요</string>
     <string name="mission_hint_failed">지난 퀘스트는 달성하지 못했어요. 오늘 운행에서 다시 도전해요</string>
-    <string name="mission_unavailable">미션을 불러오지 못했어요</string>
-    <string name="mission_open">오늘의 미션</string>
+    <string name="mission_unavailable">퀘스트를 불러오지 못했어요</string>
+    <string name="mission_open">오늘의 퀘스트</string>
     <string name="mission_back">돌아가기</string>
 
     <!-- 온보딩 (SCR-00) -->
@@ -149,10 +149,10 @@
     <string name="league_unavailable">리그를 불러오지 못했어요\n서버에 리그가 열리면 볼 수 있어요</string>
 
     <!-- 업적 (SCR-05) -->
-    <string name="achievements_streak">미션 연속 달성</string>
+    <string name="achievements_streak">퀘스트 연속 달성</string>
     <string name="achievements_streak_days">%1$d일</string>
-    <string name="achievements_today_done">오늘 미션을 달성했어요</string>
-    <string name="achievements_today_todo">오늘 미션을 달성하면 이어져요</string>
+    <string name="achievements_today_done">오늘 퀘스트를 달성했어요</string>
+    <string name="achievements_today_todo">오늘 퀘스트를 달성하면 이어져요</string>
     <string name="achievements_reward_in">%1$d일 더 달성하면 +50P</string>
     <string name="achievements_badges">배지</string>
     <string name="achievements_locked">잠김</string>
@@ -216,7 +216,7 @@
     <string name="wallet_empty">아직 적립한 포인트가 없어요\n운행을 마치면 쌓여요</string>
     <string name="wallet_unavailable">포인트를 불러오지 못했어요</string>
     <string name="wallet_reason_trip">운행 적립</string>
-    <string name="wallet_reason_mission">오늘의 미션 달성</string>
+    <string name="wallet_reason_mission">오늘의 퀘스트 달성</string>
     <string name="wallet_reason_streak">7일 연속 달성</string>
     <string name="wallet_reason_other">적립</string>
     <string name="wallet_trip_detail">%1$s · %2$.1fkm × 평점 %3$d</string>
