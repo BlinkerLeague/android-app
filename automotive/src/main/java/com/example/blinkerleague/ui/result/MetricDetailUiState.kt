@@ -23,7 +23,7 @@ sealed interface MetricDetailUiState {
         /** 이번 운행의 회전 (깜빡이 항목만) */
         val turns: List<PlayCard>,
         val tip: String?,
-        /** 서버가 이번 점수에 적용한 가중치 (백분율). 서버가 주지 않으면 null */
+        /** 서버가 이번 점수에 적용한 가중치 (백분율). 서버 항목이 SCORED이고 가중치가 0보다 클 때만 값, 아니면 null(줄 숨김) */
         val weightPercent: Int? = null,
     ) : MetricDetailUiState
 }

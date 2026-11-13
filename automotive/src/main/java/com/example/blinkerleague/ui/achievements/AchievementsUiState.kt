@@ -32,5 +32,8 @@ data class BadgeCard(
     val awardedOn: String?,
 )
 
-/** 다음 보상까지 남은 날: 0일·7일째면 7, 3일째면 4 */
+/**
+ * 다음 보상까지 남은 날: 0일·7일째면 7, 3일째면 4
+ * period는 1 이상(ConfigRepository.mergedWith에서 보장)
+ */
 internal fun daysToReward(days: Int, period: Int = PointConfig().streakRewardDays): Int = period - days % period
