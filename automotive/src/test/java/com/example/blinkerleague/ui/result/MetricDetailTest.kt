@@ -78,7 +78,7 @@ class MetricDetailTest {
     }
 
     @Test
-    fun `가중치가 0이면 0%로 보이지 않고 숨긴다`() {
+    fun `가중치가 0이면 0퍼센트로 보이지 않고 숨긴다`() {
         // given
         val server = listOf(
             MetricDetail("TURN_SIGNAL", "SCORED", null, 67, mapOf("turns" to 3, "onTime" to 1, "late" to 1, "missed" to 1), weight = 0.0),
