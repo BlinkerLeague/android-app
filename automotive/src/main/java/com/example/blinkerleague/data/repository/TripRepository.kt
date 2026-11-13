@@ -73,6 +73,7 @@ class TripRepository(
                 status = m.status,
                 reason = m.reason,
                 score = m.score,
+                weight = m.weight,
                 counts = m.detail.orEmpty().mapNotNull { (k, v) -> (v as? JsonPrimitive)?.intOrNull?.let { k to it } }.toMap(),
             )
         }
