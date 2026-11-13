@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import java.time.ZoneId
@@ -63,5 +64,26 @@ class ResultViewModelTest {
 
         // then
         assertEquals(2, (vm.uiState.value as ResultUiState.Loaded).dayOrdinal)
+    }
+
+    @Test
+    fun `짧은 이동은 머리말에 몇 번째 경기인지 담지 않는다`() = runTest(dispatcher) {
+        // given
+        // 1km 미만이라 경기에서 제외된 오늘 두 번째 운행
+        val short = scored.copy(distanceKm = 0.6, scoreState = ScoreState.EXCLUDED_SHORT, score = null, turns = emptyList())
+        val vm = ResultViewModel(
+            result = flowOf(short),
+            sync = {},
+            loadMission = { null },
+            grades = GradeThreshold.DEFAULT,
+            loadDayOrdinal = { 2 },
+        )
+
+        // when
+        backgroundScope.launch { vm.uiState.collect {} }
+        advanceUntilIdle()
+
+        // then
+        assertNull((vm.uiState.value as ResultUiState.Loaded).dayOrdinal)
     }
 }
