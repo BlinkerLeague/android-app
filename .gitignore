@@ -17,3 +17,6 @@ local.properties
 /.idea/deploymentTargetSelector.xml
 __pycache__/
 *.pyc
+
+# 시연 녹화 도구는 로컬 전용 (저장소에 올리지 않음)
+scripts/record_demo.py
