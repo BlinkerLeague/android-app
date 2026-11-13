@@ -61,6 +61,6 @@ internal fun TripResult.toMetricDetail(
         turnCounts = counts,
         turns = if (item == MetricItem.TURN_SIGNAL) toPlaysUiState(zone).plays else emptyList(),
         tip = tips[item.name],
-        weightPercent = fromServer?.takeIf { it.status == METRIC_SCORED }?.weight?.let { (it * 100).roundToInt() },
+        weightPercent = fromServer?.takeIf { it.status == METRIC_SCORED }?.weight?.takeIf { it > 0 }?.let { (it * 100).roundToInt() },
     )
 }
