@@ -62,4 +62,18 @@ class MetricDetailTest {
         // then
         assertEquals(40, detail.weightPercent)
     }
+
+    @Test
+    fun `UNSUPPORTED 항목은 서버가 가중치를 줘도 보이지 않는다`() {
+        // given
+        val server = listOf(
+            MetricDetail("SMOOTH_DRIVING", "UNSUPPORTED", "SIGNAL_NOT_SUPPORTED", null, emptyMap(), weight = 0.3),
+        )
+
+        // when
+        val detail = trip.toMetricDetail(MetricItem.SMOOTH_DRIVING, server, GradeThreshold.DEFAULT, tips, zone)
+
+        // then
+        assertNull(detail.weightPercent)
+    }
 }
