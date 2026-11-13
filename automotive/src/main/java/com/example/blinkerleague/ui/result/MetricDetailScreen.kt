@@ -91,6 +91,9 @@ private fun Loaded(state: MetricDetailUiState.Loaded, onBack: () -> Unit) {
                     Text(stringResource(R.string.detail_counts_local), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
+            state.weightPercent?.let {
+                Text(stringResource(R.string.metric_detail_weight, it), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             state.tip?.let {
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 Text(stringResource(R.string.detail_tip), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -160,6 +163,7 @@ private fun MetricDetailPreview() = BlinkerLeagueTheme {
                 MetricItem.TURN_SIGNAL, MetricValue.Score(67), null, TurnCounts(3, 2, 0, 1, true),
                 listOf(PlayCard("08:15", TurnDirection.LEFT, true), PlayCard("08:27", TurnDirection.RIGHT, false)),
                 "회전 5초 전에 깜빡이를 켜 보세요.",
+                weightPercent = 100,
             ),
             onBack = {},
         )
@@ -171,7 +175,7 @@ private fun MetricDetailPreview() = BlinkerLeagueTheme {
 private fun MetricDetailNarrowPreview() = BlinkerLeagueTheme {
     Surface(color = MaterialTheme.colorScheme.background) {
         MetricDetailContent(
-            MetricDetailUiState.Loaded(MetricItem.TURN_SIGNAL, MetricValue.NoTurn, null, TurnCounts(0, 0, 0, 0, false), emptyList(), null),
+            MetricDetailUiState.Loaded(MetricItem.TURN_SIGNAL, MetricValue.NoTurn, null, TurnCounts(0, 0, 0, 0, false), emptyList(), null, weightPercent = 100),
             onBack = {},
         )
     }

@@ -4,6 +4,7 @@ import com.example.blinkerleague.domain.model.MetricDetail
 import com.example.blinkerleague.domain.model.TripResult
 import com.example.blinkerleague.domain.config.GradeThreshold
 import java.time.ZoneId
+import kotlin.math.roundToInt
 
 /** 항목 상세 (SCR-02b) */
 sealed interface MetricDetailUiState {
@@ -57,5 +58,6 @@ internal fun TripResult.toMetricDetail(
         turnCounts = counts,
         turns = if (item == MetricItem.TURN_SIGNAL) toPlaysUiState(zone).plays else emptyList(),
         tip = tips[item.name],
+        weightPercent = fromServer?.weight?.let { (it * 100).roundToInt() },
     )
 }

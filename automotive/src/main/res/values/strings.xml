@@ -43,6 +43,7 @@
     <string name="detail_score">%1$d점</string>
     <string name="detail_counts">회전 %1$d번 · 제때 %2$d · 늦게 %3$d · 안 켬 %4$d</string>
     <string name="detail_counts_local">서버 판정을 받기 전이라 기기 기록으로 셌어요</string>
+    <string name="metric_detail_weight">적용 가중치 %1$d%%</string>
     <string name="detail_tip">이렇게 해 보세요</string>
     <string name="detail_turns">이번 운행의 회전</string>
     <string name="summary_turn_left_short">좌회전</string>
