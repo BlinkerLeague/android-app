@@ -132,7 +132,7 @@ def scenario_trip(car):
 
 
 def scenario_demo(car):
-    """시연 영상용(scripts/record_demo.py): 좌회전 깜빡이 켬(득점) → 우회전 깜빡이 없음(실점) → 1km 넘게 주행 → P.
+    """시연 영상용(로컬 녹화 도구에서도 부름): 좌회전 깜빡이 켬(득점) → 우회전 깜빡이 없음(실점) → 1km 넘게 주행 → P.
     짧은 운행 기준(앱 기본 1km)을 넘김. 서버 기준값이 3km이면 DEMO_CRUISE_SEC=115 (100km/h × 115초 ≈ 3.2km)
     콘솔 조향 +는 오른쪽. 앱을 --ei parkEndSec 10으로 띄우면 P단 10초 뒤 운행이 끝남"""
     car.c.mark("scenario demo start")
@@ -144,7 +144,7 @@ def scenario_demo(car):
     car.turn("Off"); time.sleep(8)
     car.steer_to(120); time.sleep(4)   # 우회전, 깜빡이 없음
     car.steer_to(0); time.sleep(4)
-    car.speed_to(100); time.sleep(int(os.environ.get("DEMO_CRUISE_SEC", "45")))  # 약 1.25km. record_demo.py는 70을 넘김(회전 구간 포함 약 2.2km)
+    car.speed_to(100); time.sleep(int(os.environ.get("DEMO_CRUISE_SEC", "45")))  # 약 1.25km. 70이면 회전 구간 포함 약 2.2km
     car.speed_to(0); time.sleep(3)
     car.gear("Park")
     car.c.mark("scenario demo end")

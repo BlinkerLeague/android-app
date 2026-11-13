@@ -31,7 +31,7 @@ object DebugTools {
      * - `--es requestPermission speed|location` : 런타임 권한 요청 창 띄우기 (온보딩 화면 전 시험용)
      * - `--ez guardBypass true|false` : 주행 안전 가드 우회 (기어와 상관없이 정차 화면). 시연 녹화용
      * - `--es speak "문장"` : 음성 안내를 바로 재생 (내비 음성과 겹칠 때 포커스 동작 조사, 스파이크 10)
-     * - `--ei parkEndSec N` : P단 N초면 운행 종료 (기본 3분). 시연 녹화용 (`scripts/record_demo.sh`)
+     * - `--ei parkEndSec N` : P단 N초면 운행 종료 (기본 3분). 시연 녹화용 (`scripts/vehicle_probe_sim.py demo`와 함께 씀)
      */
     fun onActivityCreated(activity: Activity) {
         val intent = activity.intent
