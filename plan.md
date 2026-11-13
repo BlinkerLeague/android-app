@@ -131,7 +131,7 @@
   - [x] 적립 포인트 (2차): 점수 응답 `earnedPoints`(서버 요청 12번)로 "+NP 적립" / 상한이면 안내
   - [x] 11.08 SCR-02로 교체(`ui/summary` → `ui/result`): 상태별 표시, 항목별 점수(P1은 "준비 중", 미지원은 "이 차량 미지원"), SCR-02a 타임라인(`result/{tripId}/plays`)
 - [x] 시나리오 재생 화면 (`ui/demo`): Fake 신호로 운행을 1·5·10배속 재생 → 결과 화면. 시연·화면 테스트용
-- [x] 미션 화면 (MVP에서는 오늘의 미션 1종만, `ui/missions`)
+- [x] 미션 화면 (MVP에서는 오늘의 미션 1종만) → SCR-03 퀘스트 상세 `ui/quest`로 교체 (#34)
 - [x] 정차·P단 상태에서만 화면 진입 허용 — `DrivingGuard`(순수 함수) + `DrivingGuardViewModel` + 주행 중 화면(`ui/driving`), `MainActivity` 최상위에서 덮음. 디버그 우회 `--ez guardBypass true`
 - [x] 음성: 시동 시 미션 안내, 운행 종료 시 결과 한마디 (`voice/`, `service/TripVoiceGuide`). 운행당 1회씩, 오디오 포커스를 받은 뒤에만 재생
 
@@ -168,7 +168,7 @@
 | SCR-02a | 급가속·급감속 카드 | 회전 카드만 (4.5) |
 | SCR-03 | "+20 코인" | "+20P" (P1 표시는 #61에서 제거) |
 
-## 남은 작업 (11.8 기준, MVP 11.15)
+## 남은 작업 (11.10 기준, MVP 11.15)
 
 화면 작업 순서는 screen-plan 7장을 따릅니다.
 
@@ -185,14 +185,106 @@
 | 9 | HTTP 구현체 (`TripApi`·`MissionApi`·등록) | 신호 | — | 완료: Retrofit, 토큰 재발급, `DriverRepository`. 서버 주소 설정 시 사용 |
 | 9b | 마무리 (7장 6): 예외 문구 점검, 실제 앱 폭 측정(1682×1210dp), 시연 리허설, lint 오류 0 | 신호(혼자 개발) | 4~8 | 완료 (11.10, feature/p0-finish): lint 오류 0(경고 16은 2차), 예외 문구 7종 확인, 좁은 폭 Preview, 시연 결과 회귀 테스트(C · 50 · 득점 1 · 실점 1 · 카드 2장) |
 | 10 | 시연 영상, release APK, README, 제출 양식 (5장) | 함께 | 4~8 | 11.13~ |
+| 11 | 기획서 정합성 수정 ("현황 점검" 미구현 1~4): 용어 퀘스트 통일, SCR-02 머리말 "오늘의 N번째 경기", SCR-02b 적용 가중치, 연속 보상 주기 · 보상 포인트를 기준값 `point.streakRewardDays` · `streakRewardPoint`로 | 신호(혼자 개발) | — | 예정 |
 
 - 권한 사용법(화면 쪽): 상태는 `container.permissions.status(RuntimePermission.SPEED)`(`GRANTED`/`DENIED`/`NOT_REQUESTED`), 요청은 `rememberPermissionRequester(container.permissions, RuntimePermission.SPEED)`. 허용되면 운행 수집이 재시작 없이 속도를 받기 시작함
 - **주의(온보딩 문구)**: `CAR_SPEED` 시스템 요청 창은 "이 기기의 **위치 정보**에 액세스하도록 허용하시겠습니까?"로 뜸(에뮬레이터). 요청 전 앱 화면에서 "속도를 쓰기 위해 묻는 것"이라고 먼저 설명해야 함
 - 11.08부터 앱 개발은 1인. 화면(4~8)도 screen-plan 7장 순서대로 진행
 
+## 현황 점검 (2026-11-10, 기획서 · 코드 대조)
+
+기획서 원본과 `develop`(`ad8c2c7`, #67) 코드를 대조한 결과입니다. 화면별로 나눈 표는 [`docs/screen-plan.md`](docs/screen-plan.md) 10장에 있습니다.
+
+### 화면 구현 현황
+
+| 구분 | 화면 | 상태 | PR |
+| --- | --- | --- | --- |
+| P0 | DRV 주행 중 화면 | 완료 | #31 |
+| P0 | SCR-00 온보딩 | 완료 (지역은 서울 25개 구만) | #35 |
+| P0 | SCR-01 홈 | 완료 (연승 카드 #54) | #32 |
+| P0 | SCR-02 경기 결과 | 완료 (적립 포인트 #56) | #33 |
+| P0 | SCR-02a 플레이 타임라인 | 완료 | #33 |
+| P0 | SCR-03 퀘스트 상세 | 완료 (보상 P 표시 정리 #61) | #34 |
+| P1 | SCR-02b 항목 상세 | 완료 | #58 |
+| P1 | SCR-04 리그 | 완료 (서버 형식 #64, 자격 기준값 #66) | #60 |
+| P1 | SCR-05 업적 | 완료 | #54 |
+| P1 | SCR-06 지갑 | 완료 | #53 |
+| P1 | SCR-07 주간 리포트 | 완료 | #55 |
+| P1 | SCR-08 설정 | 완료 (순위 공개 토글 #65) | #59 |
+
+기획서의 화면은 모두 있습니다. 남은 것은 화면 안의 일부 요소와 2차 측정 항목입니다.
+
+### 미구현 — 지금 할 수 있음
+
+| # | 내용 | 기획서 | 코드 위치 | 시기 | 크기 |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 용어 "미션" → "퀘스트" 통일 ("오늘의 미션" · 일일 미션 계열: 화면 · 시동 음성 · 지갑 적립 사유 · 업적 "미션 연속 달성"). 제외: 주간 리포트 "맞춤 미션"(`strings.xml` 172 · 176, 서버 주간 미션 개념), 서버가 주는 배지 조건 문구 | 전반 | `voice/VoiceScript.kt:15-18`, `strings.xml` 64 · 70 · 72 · 73 · 152 · 154 · 155 · 219 | MVP 전 | 소 |
+| 2 | SCR-02 머리말 "오늘의 N번째 경기 종료" (지금 "경기 종료 · N km") | 3장 | `strings.xml:15` `result_header`, `ui/result` | MVP 전 | 소 |
+| 3 | SCR-02b 적용 가중치 표시 (`metrics[].weight`를 받지만 `MetricDetail`에서 버림) | 5장 | `TripRepository.metricDetails`, `domain/model/MetricDetail.kt`, `MetricDetailScreen` | MVP 전 | 소 |
+| 4 | 연속 보상 하드코딩 제거: 주기 `STREAK_REWARD_DAYS = 7`과 보상 문구 "+50P" → 기준값 `point.streakRewardDays` · `streakRewardPoint` (지갑 사유 "7일 연속 달성"(`strings.xml:220`)은 서버 사유 코드 `STREAK_7`의 이름표이고 과거 적립 행에 붙으므로 제외) | (코드 규칙) | `ui/achievements/AchievementsUiState.kt:19 · 32`, `ConfigDtos.kt`(`ThresholdsResponse`에 `point` 없음), `strings.xml:156` | MVP 전 | 소 |
+| 5 | SCR-08 음성 안내 끄기 토글 | 5 · 10장 | `ui/settings`, `service/TripVoiceGuide` | 2차 | 중 |
+| 6 | SCR-08 내 차량 측정 항목 목록 (`CapabilityReport`, 온보딩 3단계 재사용) | 2 · 5장 | `ui/settings` | 2차 | 소 |
+| 7 | SCR-05 연승 7일 진행 점 | 8장 | `ui/achievements` | 2차 | 소 |
+| 8 | SCR-03 연승 영향 문구 ("달성하면 연승 N일째") | 6장 | `ui/quest` | 2차 | 소 |
+| 9 | VOC-02 종료 음성: "퀘스트 달성! 연승 N일째"를 먼저 말하기, 퍼펙트(모든 회전 득점) 문구 | 10장 | `VoiceScript.tripEnd` | 2차 | 중 |
+| 10 | SCR-01 퀘스트 진행 링 (지금 막대, 낮음) | 6장 | `ui/quest/MissionCard.kt:65` | 2차 | 소 |
+| 11 | SCR-04 육각 타일 지역 지도 (지금은 지역 안전지수 목록) | 8장 | `ui/league` `RegionsPanel` | 2차 | 대 |
+| 12 | 2차 측정 판정 엔진: 급가속 · 급감속(`HARSH_*`), 야간 전조등(`NIGHT_SEGMENT`), 안전 경고(`SAFETY_WARNING`). 지금은 신호 `SignalType`(`BRAKE` · `HEADLIGHT` · `SAFETY_WARNING`)에 정의만 있고 이벤트(`TripEvent`)는 `TurnEvent`뿐이며 결과 행은 항상 "준비 중"(`ResultUiState.kt:110-112`). 서버는 이벤트 종류를 이미 받음 | 2 · 4장 | `domain/detection`, `data/vehicle`, `ScoreItem`, `ui/result` | 2차 | 대 (항목별, "2차 앱 작업" 11~13) |
+
+### 미구현 — 막힘
+
+| 내용 | 막힌 이유 |
+| --- | --- |
+| 지역 전국 확장 (지금 서울 25개 구) | 법정동 코드 자료 필요 (코드를 추측해 넣지 않음) |
+| 결과 화면 적립 포인트 실서버 표시 | 서버 요청 12번(`earnedPoints`) 미반영 |
+| 깜빡이 팁 문구 "30m 전" ↔ 앱 "5초 전" | 서버 요청 13번 미반영 |
+| 리그 상위 지역 보상 표시 | 서버 응답에 필드 없음 |
+| 위치 실차 출처, Brake · Light · Safety 실차 값, 시동 · Resume, capability 실차 비교, TBT 갱신 주기 | 실차 · Pleos 문의 (스파이크 4 · 5 · 6 · 7 · 8 · 9 · 14, "시동 Resume 경로") |
+| 실차 시계 오차 (서버 미래 5분 · 과거 7일 밖이면 400 → REJECTED) | 실차 확인 (서버 요청 11번) |
+| 깜빡이 4단계 판정(`signalTiming`), 2차 반칙 성격 카드 색, `CAR_SPEED` 거부 시 처리, 터치 영역 기준, 백그라운드 측정 누락 안내 | 사용자 결정 ("결정 필요") |
+| 게임 요소 확장, 점수 항목 추가(확장안), DI, ktlint · detekt | 사용자 결정 (기존 "결정 필요") |
+
+### 사용하지 않는 API · 필드
+
+엔드포인트 13개는 모두 호출합니다(`POST /api/auth/refresh`는 401 때 `HttpClientFactory`에서 호출). 아래는 받거나 보낼 수 있는데 쓰지 않는 필드입니다.
+
+| API | 필드 | 분류 | 이유 · 계획 |
+| --- | --- | --- | --- |
+| `TripResult` (업로드 · 점수) | `metrics[].weight` | 쓸 계획 | 미구현 3 (SCR-02b 가중치) |
+| 〃 | `metrics[].value` | 안 씀 | 점수 `score`와 근거 `detail`로 표시 |
+| 〃 | `grade` | 안 씀 | 앱이 `config.grades`로 계산 (결정 11.08) |
+| 〃 | `turns`, `summary`(`goals` · `conceded` · `fouls`) | 안 씀 | 기기 회전 기록으로 셈. `fouls`는 "반칙" 용어를 쓰지 않아서 |
+| 〃 | `plays` | 2차 검토 | SCR-02a는 기기 `TurnRecord`만 씀. 2차 항목 카드가 생길 때 서버 `plays`를 쓸지 정함 |
+| 〃 | `mission` | 안 씀 | 결과 화면은 `GET /api/missions/today`로 받음 |
+| 〃 | `earnedPoints` | 서버 대기 | 앱 DTO에만 있음. openapi에 없음 (서버 요청 12번) |
+| `GET /api/trips` | `grade` · `endedAt` · `distanceKm` | 안 씀 | 기기 기록을 먼저 보여 주고 `status` · `score`만 갱신 (결정 11.08) |
+| `GET /api/missions/today` | `missionId` · `periodKey` | 안 씀 | 화면에 필요 없음 (`rewardPoint`는 SCR-03에서 씀) |
+| `GET /api/config/thresholds` | `point.streakRewardDays` · `streakRewardPoint` | 쓸 계획 | 미구현 4 (하드코딩 7 · +50P 제거) |
+| 〃 | `point.dailyCap` · `tripMaxKm`, `weights`, `minSamples`, `league.commonItems` · `topN`, `harsh.penaltyPer10Km`, `safetyWarning.penaltyPer100Km` | 안 씀 | 서버 계산용. 하루 상한은 `GET /api/points`의 `dailyCap`, 가중치는 `metrics[].weight`로 받음 |
+| 〃 | `harsh.deltaKmhPerSec` | 쓸 계획 | 2차 앱 작업 11 (급가속 · 급감속) |
+| 〃 | `safetyWarning.mergeWindowSec` | 쓸 계획 | 2차 앱 작업 13 (안전 경고) |
+| 〃 | `turn.signalLeadDistanceM` · `lateSignalScore` | 결정 대기 | 깜빡이 4단계(`signalTiming`) 결정 뒤 |
+| 〃 | `turn.turnSpeedKmh`, `signalCancel`, `seatBelt`, `rain` | 안 씀 | 점수 확장안(`docs/scoring-criteria.md`) 팀 확정 전 |
+| 〃 | `trip.maxEvents` · `maxFutureMinutes` · `maxPastDays` | 안 씀 | 서버 검증용. 실차 시계 확인 뒤 업로드 전 안내에 쓸지 검토 |
+| 〃 | `turn.windowSec` · `minAngleDeg` · `uTurnAngleDeg` | 읽기만 함 | 진행 방향 감지(`HeadingTurnDetector`, 미사용)용 |
+| `GET /api/leagues/current` | `league.safetyIndex` · `league.rank`, `rankings[].averageScore` · `points`, `season.startsAt` | 안 씀 | 내 권역 지수는 `regions` 목록에 같은 값. 상위 순위는 리그 점수 `score`만 표시 |
+| `GET /api/reports/weekly` | `metrics[].lastWeek`, `lastMission` · `nextMission`의 `week` · `metric` | 안 씀 | 화면은 이번 주 값과 증감 `change`만 표시 |
+| `POST /api/trips` 요청 | 이벤트 `HARSH_ACCEL` · `HARSH_BRAKE` · `NIGHT_SEGMENT` · `SAFETY_WARNING` | 쓸 계획 | 2차 앱 작업 11~13. 서버 enum에는 있음. payload 형식은 보내기 전에 서버와 확인 (D21) |
+| 〃 | 이벤트 `SIGNAL_LEFT_ON` · `SEAT_BELT` · `RAIN_SEGMENT`, `supported`의 `SIGNAL_CANCEL` · `TURN_SPEED` · `SEAT_BELT` · `RAIN_DRIVING` | 안 씀 | 점수 확장안 팀 확정 전 |
+| 〃 | 이벤트 `LANE_CHANGE` | 안 씀 | 차로 변경 측정은 "이후"(ADAS SDK) |
+| 〃 | `TURN` payload `signalTiming` · `leadDistanceM` · `maxSpeedKmh` | 결정 대기 | 깜빡이 4단계 결정 뒤. `uTurn`은 알 수 없어 보내지 않음 (서버 요청 3번) |
+
+주의: 업로드 `supported`는 지금 `TURN_SIGNAL`만 보냅니다(`CapabilityReport.supportedSignals`). 2차에서 전조등 · 안전 경고를 지원 신호에 넣을 때는 판정 이벤트도 같은 PR에서 함께 보내야 합니다(지원만 보내면 서버가 이벤트 0건을 위반 없음으로 채점할 수 있음).
+
+### 의도적으로 다름
+
+색(득점 파랑 · 실점 주황), "반칙" 용어 없음, 코인 → P, 짧은 운행 1km, 달력 월 시즌, 위치 동의 화면 없음, 오토라이트 · 비상등 API 없음. 자세한 내용은 위 "목업 개정과의 차이" 표와 결정 기록에 있습니다.
+
+적용 중(결정 기록 없음, screen-plan 9장): 회전 0회 평점 없음, 50점 미만 등급 비움, 정차 = P단만.
+
 ## 2차 (12.2 PT) 앱 작업
 
-11.09 결정: P0 앱 작업이 끝나 2차 화면을 시작. 서버 2차 API(포인트·연속 달성·배지·주간 리포트)는 이미 있음. 리그(4.4)는 서버 미완료라 나중에.
+11.09 결정: P0 앱 작업이 끝나 2차 화면을 시작. 서버 2차 API(포인트·연속 달성·배지·주간 리포트)는 이미 있음. 리그(4.4)는 11.10 서버 #48 · #49 형식에 맞춰 연결함(9번).
 
 | # | 작업 | 상태 |
 | --- | --- | --- |
@@ -203,9 +295,17 @@
 | 5 | 결과 화면 적립 포인트(4장 "적립 포인트") | 완료(앱): 점수 응답 `earnedPoints`를 표시. 서버 요청 12번 반영 전에는 실서버에서 표시 안 됨, Fake는 표시 |
 | 6 | SCR-02b 항목 상세(결과 항목 행·타임라인 카드에서 진입): 점수·판정 근거(서버 `metrics.detail` 제때·늦게·안 켬, 없으면 기기 기록)·회전 목록·팁(기준값 `tips`) | 완료. 서버 팁 문구 불일치는 서버 요청 13번 |
 | 7 | SCR-08 설정: 내 정보(닉네임·지역), 속도 권한 다시 요청(거부가 반복되면 시스템 설정 열기), 운행 기록 상태, 앱 정보(버전·연결 모드), "리그 순위 공개" 토글(서버 D8: 기본 공개, `PUT /api/drivers/me/league-visibility`, 현재 값은 리그 조회 `me.visible`) | 완료(토글 11.10, `feature/league-visibility`) |
-| 8 | SCR-04 리그(하단 탭 두 번째): 시즌·D-day, 내 리그(권역)·리그 점수·순위(10명 미만 비공개)·순위 자격 진행, 상위 순위, 지역 안전지수. 서버 4.4 미구현 → 응답 형식을 서버 요청 14번으로 제안, Fake는 나 혼자(순위 비공개) | 완료(앱). 서버 API가 생기면 형식 확인 |
+| 8 | SCR-04 리그(하단 탭 두 번째): 시즌·D-day, 내 리그(권역)·리그 점수·순위(10명 미만 비공개)·순위 자격 진행, 상위 순위, 지역 안전지수. 서버 4.4 미구현 → 응답 형식을 서버 요청 14번으로 제안, Fake는 나 혼자(순위 비공개) | 완료(앱). 서버 형식 연결은 9번 |
 | 9 | 리그 응답을 서버 형식으로 맞춤(서버 #48 · #49, `CurrentLeagueResponse`): `league` · `me` · `regions`, 리그 점수 = 평균 + 시즌 포인트(D34) 표시, 지난 시즌 우승 칭호, 순위 목록의 내 행은 닉네임으로 찾음 | 완료(11.10, `feature/league-server-format`) |
 | 10 | 리그 순위 자격(시즌 50km 또는 10회)·순위 공개 인원(10명)을 하드코딩 대신 기준값 `league`(`minSeasonDistanceKm`·`minSeasonTrips`·`minParticipants`)에서 읽음. 화면 문구와 Fake 판정 모두 | 완료(11.10, `feature/league-qualify-config`) |
+| 11 | 급가속 · 급감속 판정(`HARSH_ACCEL` · `HARSH_BRAKE`): 차량 속도 시계열에서 기준값 `harsh.deltaKmhPerSec`로 판정(순수 함수 + 테스트), 이벤트 업로드, `supported`에 `SMOOTH_DRIVING`, 결과 · 항목 상세 행 연결. 속도 권한(`CAR_SPEED`)이 없으면 측정에서 제외 | 예정 |
+| 12 | 야간 전조등 판정(`NIGHT_SEGMENT`): 하향등 `LightState`로 야간 구간의 전조등 꺼짐 시간 판정, `supported`에 `NIGHT_HEADLIGHT`, 결과 행 연결. 야간 판단 기준(시각 · 일몰)은 기준값으로. 오토라이트 API 없음 | 예정 |
+| 13 | 안전 경고 판정(`SAFETY_WARNING`): Safety 경고등(`registerTelltales`) 켜짐을 `safetyWarning.mergeWindowSec`로 묶어 이벤트로, `supported`에 `SAFETY_WARNING`, 결과 행 연결. 실차 경고등 종류는 스파이크 7 확인 필요 | 예정 |
+| 14 | 11~13의 이벤트 payload 형식을 서버와 확인(`docs/server-requests.md` 새 항목, 서버 D21: 서버 반영 확인 뒤에만 보냄) | 예정 |
+| 15 | SCR-08 음성 안내 끄기 토글 · 내 차량 측정 항목 목록 ("현황 점검" 미구현 5 · 6) | 예정 |
+| 16 | 연승 표시 보강: SCR-05 7일 진행 점, SCR-03 연승 영향 문구, SCR-01 퀘스트 진행 링 (미구현 7 · 8 · 10) | 예정 |
+| 17 | VOC-02 종료 음성: 퀘스트 달성 · 연승을 먼저 말하고, 퍼펙트 문구 추가 (미구현 9). 음성은 종료 시 1회 원칙 유지 | 예정 |
+| 18 | SCR-04 육각 타일 지역 지도 (미구현 11) | 예정 |
 
 - 리그 순위 공개 후속 (리뷰 낮음, 11.10): 공개를 끈 상태를 리그 화면에 안내 · 오프라인으로 설정을 열면 토글이 숨겨지고 다시 불러오지 않음 · 화면을 떠나면 진행 중 저장이 취소될 수 있음(다시 들어오면 서버 값으로 맞춰짐)
 - 9b에서 미룬 것 (11.10): 라이브러리 버전 올리기(GradleDependency 12) · Compose BOM 올려 Compose lint 다시 켜기 · dataExtractionRules xml(기기 간 전송에서 토큰 · 설정 제외) (완료 11.10, `feature/data-extraction-rules`) · TripCollectionService API 34 미만 SPECIAL_USE 분기 · 2차 화면 5개(업적 · 리그 · 주간 리포트 · 설정 · 지갑) 좁은 폭 Preview
@@ -219,11 +319,11 @@
 | 인증 방식과 토큰 보관 | 등록할 때 토큰 발급, 이후 Bearer 헤더 | 서버 `driver-register` 전 |
 | `TURN` 이벤트 payload | `direction`(LEFT/RIGHT), `signalOn`, 필요하면 `uTurn`. 핸들 감지는 유턴을 몰라서 앱은 `uTurn`을 보내지 않음 | 서버 `trip-upload` 전 |
 | `POST /api/trips` 요청 형식 | 앱 DTO(`data/remote/dto/TripDtos.kt`): `tripId`, `startedAt`, `endedAt`, `distanceKm`, `supported`, `events[{eventId, type, occurredAt, payload}]`. 시각은 `2026-11-03T08:00:00+09:00` 형식. 서버 plan.md 3.4 테이블 기준으로 만듦 → 기획서 8.2와 대조 필요 | 서버 `trip-upload` 전 |
-| `supported` 신호 이름 목록 | 예: `TURN_SIGNAL`, `BRAKE` (전체 목록은 스파이크 9번 결과로 확정) | 서버 `trip-upload` 전 |
+| `supported` 신호 이름 목록 | ~~예: `TURN_SIGNAL`, `BRAKE`~~ → 신호 이름이 아니라 서버 `ScoreItem` 이름으로 보냄(결정 11.08, 서버 요청 2번 철회) | 서버 `trip-upload` 전 |
 | 기준값 JSON 형식 | 서버 plan.md 3.3 (`trip`, `turn`, `harsh`, `weights`, `point`) | 서버 `threshold-config` 전 |
-| 기준값 `turn` 항목 (핸들 각도 전환) | 앱 `TurnConfig`에 `steeringEnterDeg`(90), `steeringExitDeg`(20), `mergeGapSec`(3) 추가. 서버 plan.md 3.3의 `windowSec`·`minAngleDeg`·`uTurnAngleDeg`는 진행 방향 기준이라 MVP에서 안 씀 → **서버 plan.md 3.3 갱신 필요** | 서버 `threshold-config` 전 |
-| `supported` 신호 이름 | 앱에 `STEERING_ANGLE` 추가. 회전 측정은 `TURN_SIGNAL`과 `STEERING_ANGLE`이 모두 있어야 가능 | 서버 `trip-upload` 전 |
-| `HARSH_*`, `SAFETY_WARNING`, `NIGHT_SEGMENT` payload | 스파이크 5~7번 결과 반영 | 2차 |
+| 기준값 `turn` 항목 (핸들 각도 전환) | 앱 `TurnConfig`에 `steeringEnterDeg`(90), `steeringExitDeg`(20), `mergeGapSec`(3) 추가. 서버 plan.md 3.3의 `windowSec`·`minAngleDeg`·`uTurnAngleDeg`는 진행 방향 기준이라 MVP에서 안 씀 → 반영됨(서버 #43, 서버 요청 1 · 7번) | 서버 `threshold-config` 전 |
+| `supported` 신호 이름 | ~~앱에 `STEERING_ANGLE` 추가~~ → 철회(서버 요청 2번). 회전 측정은 앱 안에서 방향지시등 + 핸들 각도가 모두 있을 때만 `TURN_SIGNAL`을 넣음 | 서버 `trip-upload` 전 |
+| `HARSH_*`, `SAFETY_WARNING`, `NIGHT_SEGMENT` payload | 스파이크 5~7번 결과 반영. 서버 enum에는 이미 있음 → payload 형식은 2차 앱 작업 14번에서 확인 | 2차 |
 
 ## 결정 필요
 
@@ -238,6 +338,11 @@
 - [x] **API 클라이언트**: Retrofit + OkHttp + kotlinx.serialization (11.08)
 - [ ] **DI**: Hilt 또는 수동 DI (MVP 일정을 생각하면 수동 DI도 고려)
 - [ ] **정적 분석**: ktlint·detekt 사용 여부
+- [ ] **깜빡이 4단계 판정**: 제때 · 늦게 · 반대 방향 · 안 켬(`signalTiming`, 30m 기준 `turn.signalLeadDistanceM`)을 2차에 도입할지. 지금은 성공/실패 2단계(결정 11.01). 도입하면 서버 요청 13번 팁 문구도 함께 바꿈
+- [ ] **2차 플레이 카드 색 · 이름**: 급가속 · 급감속 같은 "반칙" 성격 카드를 실점(주황)과 같게 할지 별도 색으로 할지. "반칙" 용어는 쓰지 않는 결정은 유지
+- [ ] **`CAR_SPEED` 거부 시 처리**: 제안은 기어 D일 때만 회전으로 보고 "판정 정확도 제한"을 표시하는 것(screen-plan 9장). 급가속 · 급감속(2차 11번)은 측정 제외
+- [ ] **터치 영역 기준**: 기획서 76px와 CLAUDE.md 64dp 이상 중 무엇을 따를지 (지금 코드는 64dp)
+- [ ] **백그라운드 측정 누락 안내**: 기록 서비스가 꺼져 있던 동안의 운행이 빠졌을 때 알릴지와 문구 (screen-plan 5장)
 
 ## 결정 기록
 
