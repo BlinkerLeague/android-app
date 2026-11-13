@@ -6,6 +6,7 @@ import com.example.blinkerleague.data.remote.dto.ThresholdsResponse
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.config.GradeThreshold
 import com.example.blinkerleague.domain.config.LeagueConfig
+import com.example.blinkerleague.domain.config.PointConfig
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
@@ -75,6 +76,21 @@ class ConfigRepositoryTest {
 
         // then
         assertEquals(LeagueConfig(minParticipants = 20, minSeasonDistanceKm = 30.0, minSeasonTrips = 5), merged.league)
+    }
+
+    @Test
+    fun `서버 기준값 point의 연속 보상 주기를 읽고 보상 포인트가 없으면 기본값을 쓴다`() {
+        // given
+        // 서버가 연속 보상 주기를 5일로 바꾸고 보상 포인트는 주지 않음
+        val changed = json.decodeFromString<ThresholdsResponse>(
+            """{"version":2,"point":{"dailyCap":150,"streakRewardDays":5,"tripMaxKm":50}}""",
+        )
+
+        // when
+        val merged = DetectionConfig.DEFAULT.mergedWith(changed)
+
+        // then
+        assertEquals(PointConfig(streakRewardDays = 5, streakRewardPoint = 50), merged.point)
     }
 
     @Test
