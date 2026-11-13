@@ -36,7 +36,6 @@
     <string name="result_metric_coming_soon">준비 중</string>
     <string name="result_open_plays">플레이 보기</string>
     <string name="result_points">+%1$dP 적립</string>
-    <string name="result_points_capped">오늘 적립 한도를 채워 포인트는 쌓이지 않았어요</string>
     <string name="result_quest">퀘스트 · %1$s</string>
     <string name="result_done">확인</string>
 

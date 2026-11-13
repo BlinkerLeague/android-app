@@ -164,9 +164,9 @@ private fun Headline(state: ResultUiState.Loaded) {
             Goals(state)
             state.earnedPoints?.let { points ->
                 Text(
-                    if (points > 0) stringResource(R.string.result_points, points) else stringResource(R.string.result_points_capped),
+                    stringResource(R.string.result_points, points),
                     style = MaterialTheme.typography.titleLarge,
-                    color = if (points > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center,
                 )
             }
