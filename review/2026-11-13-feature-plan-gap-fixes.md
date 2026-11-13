@@ -43,3 +43,35 @@
 
 - `./gradlew :automotive:testDebugUnitTest :automotive:assembleDebug` 성공. 단위 테스트 201개, 실패 0 · 건너뜀 0 (test-results XML 합계).
 - lint · assembleRelease는 다시 돌리지 않음(tester 보고: lintDebug 오류 0 · 경고 15(develop과 같음), assembleRelease(서명 없음) 성공).
+
+## 재검토 (2026-11-13)
+
+- 기준: 9cb849e..8e5a65c (13개 커밋, 이전 리뷰 이후)
+- 범위: 지적 1~3 반영, KDoc · plan.md · screen-plan 4.7 갱신
+- 판단: **머지 가능**
+
+### 지적 1 (연속 보상 주기 0 → 크래시): 해결
+- `ConfigRepository.kt:89-90` `mergedWith`가 `streakRewardDays`는 `takeIf { it > 0 }`, `streakRewardPoint`는 `takeIf { it >= 0 }`일 때만 서버 값을 쓰고, 아니면 `PointConfig` 기본값(7 · 50)을 씀.
+- 캐시 경로: 시작할 때 `base`는 `cache.load()` → 디코드 → `defaults.mergedWith(it)`이고, `refresh()`도 `defaults.mergedWith(response)`임. 저장되는 것은 원본 응답 JSON이라, 이미 저장된 `streakRewardDays: 0` 캐시도 다음 시작 때 같은 검사를 거쳐 기본값으로 복구됨. `daysToReward`로 가는 다른 경로는 없음(`AchievementsViewModel.kt:38`은 `container.config` 값만 읽음). `overrideForDebug`는 debug 전용이라 범위 밖.
+- 테스트: 0 · -3 → 기본 주기(a4e7c6d → 7b32bad), 포인트 -10 → 기본값, 0 → 0 그대로(67b48eb → 69d12ce). red · fix 커밋이 나뉘었고 red 커밋에 main 변경 없음.
+- 참고(낮음, 머지를 막지 않음): 캐시 복구 경로를 직접 확인하는 테스트(잘못된 캐시 → 새 `ConfigRepository` → 기본값)는 없음. `mergedWith`가 순수 함수이고 두 경로 모두 이를 부르는 것을 코드로 확인했으므로 필수는 아님.
+
+### 지적 2 (적용 가중치 0% · 미측정 항목): 해결
+- `MetricDetailUiState.kt:64` `fromServer?.takeIf { it.status == METRIC_SCORED }?.weight?.takeIf { it > 0 }` → SCORED이고 0보다 클 때만 값, 아니면 null(줄 숨김).
+- `METRIC_SCORED`를 ui 파일 private 상수로 둔 것은 타당함. `dto.ScoreStatus`는 운행 상태(openapi `TripResult.status` enum: UPLOADED · SCORED · NO_TURN · EXCLUDED_SHORT)이고, 항목 상태(openapi `MetricResult.status`)는 enum 없는 별도 문자열이라 값이 우연히 같을 뿐 개념이 다름. 또 ui 패키지는 `data.remote.dto`를 import하지 않음(이번 확인에서 import 0건). 나중에 항목 상태 비교가 더 생기면 `domain/model/MetricDetail` 쪽으로 옮기는 정도면 됨(지금은 사용처 한 곳).
+- 테스트: UNSUPPORTED + 0.3 → null(ebab3fc → 63f2944), SCORED + 0.0 → null(56c96ae → 45fbc93), SCORED + null → null(5d7828e, 특성 테스트로 바로 통과하는 것이 맞음). 9ed2c11은 테스트 이름의 `%`를 "퍼센트"로 바꾼 것뿐.
+
+### 지적 3 (짧은 이동 포함 N): 해결
+- `TripRepositoryTest` `짧은 이동도 그날 몇 번째인지 셀 때 포함한다`(8e5a65c): 08:00 0.4km 운행 + 12:00 운행, 고정 시계 18:00(KST), 업로드 뒤 전제 어서션 `scoreStatus == EXCLUDED_SHORT`로 짧은 이동임을 확인하고 정오 운행이 2번째인지 확인. 쿼리에 상태 조건이 들어가면 실패하므로 회귀를 잡음. 특성 테스트라 `test:` 커밋 하나로 충분함.
+
+### 문서
+- KDoc: `AchievementsUiState.daysToReward`에 "period는 1 이상(mergedWith에서 보장)", `weightPercent`에 SCORED · 0 초과 조건 — 코드와 일치(0a79eb5).
+- `plan.md` 현황 점검 3번 표 갱신, 결정 기록 2건 추가(point 검사, 가중치 표시 조건), 기존 가중치 결정 행 갱신. `docs/screen-plan.md` 4.7 "업로드 전 · 가중치 0 · 미측정 항목은 숨김" — 코드와 일치.
+- 서버 형식 변경 없음, `docs/server-requests.md` 추가 필요 없음.
+
+### 새 지적
+- 없음. 이번 변경은 위 파일들에 한정되고, 주행 안전 원칙 · 아키텍처 · 권한 · 보안에 영향 없음.
+
+### 검증
+- `./gradlew :automotive:testDebugUnitTest :automotive:assembleDebug` 성공. 단위 테스트 207개, 실패 0 · 건너뜀 0 (test-results XML 합계). 새 테스트 6개(연속 보상 2, 가중치 3, 짧은 이동 1)가 결과에 있음.
+- lintDebug는 다시 돌리지 않음(tester 보고: 오류 0 · 경고 15, 이전과 같음).
