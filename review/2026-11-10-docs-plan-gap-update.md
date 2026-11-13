@@ -55,3 +55,56 @@
   - `docs/api/openapi.json` 스키마 · 경로 목록을 python으로 출력
   - 세 문서의 마크다운 표 열 수 검사(python)
   - `docs/server-requests.md` 처리 상태 · 2번 철회, `plan.md` 결정 기록 · 목업 차이 표 확인
+
+## 재검토 (2026-11-13)
+
+- 기준: develop(`e34119e`)...docs/plan-gap-update(`d6eca58`). 브랜치 커밋 4개: `3c390b7`(본 작업), `2a46572`(리뷰), `3019027`(리뷰 반영), `d6eca58`(develop 머지, #68~#72)
+- 범위: 이전 지적 4건이 `3019027`에 반영됐는지, 그리고 develop 머지 뒤 `plan.md` · `docs/screen-plan.md` · `docs/api/README.md`가 서로, 또 develop의 최신 상태(release 점검 완료, README "해야 할 일")와 맞는지
+- 판단: **머지 가능** (아래 새 지적 3건은 모두 낮음. 머지 전에 바로 고치거나 다음 문서 PR로 넘겨도 됨)
+
+### 이전 지적 반영 확인
+
+| # | 지적 | 반영 | 확인 내용 |
+| --- | --- | --- | --- |
+| 1 | `streakRewardPoint` 분류 모순 (중간) | 반영됨 | "사용하지 않는 API" 표: `point.streakRewardDays` · `streakRewardPoint`를 합쳐 "쓸 계획 · 미구현 4 (하드코딩 7 · +50P 제거)", "안 씀" 행에서 `streakRewardPoint`를 뺌. 미구현 4에 `AchievementsUiState.kt:19 · 32`, `ConfigDtos.kt`(`ThresholdsResponse`에 `point` 없음), `strings.xml:156`을 적었고, `strings.xml:220`("7일 연속 달성")은 서버 사유 코드 `STREAK_7` 이름표라 제외한다고 이유를 적음. 남은 작업 11, screen-plan 4.9 · 10장, `docs/api/README.md` 연속 달성 행도 둘 다 적음. 줄 번호는 지금 코드와 일치(`AchievementsUiState.kt:19` "(7일마다 50P)", `:32` `STREAK_REWARD_DAYS = 7`, `strings.xml:156` "+50P", `:220` "7일 연속 달성"). 빠진 곳 한 군데는 새 지적 2 |
+| 2 | "의도적으로 다름"에 적용 중 항목이 섞임 (낮음) | 반영됨 | plan.md "의도적으로 다름"에서 회전 0회 · 50점 미만 · 정차 = P단을 빼고 "적용 중(결정 기록 없음, screen-plan 9장)" 줄로 따로 적음. screen-plan 10장 마지막 문장과 3장 정차 판정 문장("결정 기록에는 아직 없음, 9장 '적용 중'")도 같이 고침 |
+| 3 | 회전 0회의 이전 제안이 사라짐 (낮음) | 반영됨 | screen-plan 9장 "회전 0회" 행에 "이전 제안(미결정): P1부터 나머지 항목으로 재분배. 점수 계산은 서버 몫이라 2차 항목을 연결할 때 서버와 확인"을 남김 |
+| 4 | 미구현 1 범위와 문자열 목록 불일치 (낮음) | 반영됨 | 범위를 "'오늘의 미션' · 일일 미션 계열 … 업적 '미션 연속 달성'"으로 넓히고, 제외 항목(주간 리포트 "맞춤 미션" `strings.xml` 172 · 176, 서버 배지 조건 문구)과 이유를 적음. 172 · 176 줄 번호 일치 |
+
+### 지적 사항 (머지 후 문서 대조)
+
+#### 1. 남은 작업 10번 상태가 release · README 완료를 반영하지 않음 (심각도: 낮음)
+- **위치:** `plan.md:187` (`| 10 | 시연 영상, release APK, README, 제출 양식 (5장) | 함께 | 4~8 | 11.13~ |`) ↔ `plan.md:142-155` (develop #69~#72: "release APK 빌드" [x], 출시 키 · 점검 · 로컬 서버 E2E · 설치 [x], "README의 TODO 채우기" [x]) ↔ `README.md:25-28` "해야 할 일"(출시 키 [x], 시연 영상 · 제출 양식 · 보안 남은 항목 [ ])
+- **문제:** 이 브랜치가 표 제목을 "남은 작업 (11.10 기준)"으로 바꿨는데, 머지 뒤 같은 문서 5장은 release APK와 README가 끝났다고 적혀 있어 10번 행만 "11.13~"(시작 전처럼 읽힘)로 남음. 이 줄 자체는 develop에서 온 것이고 이 브랜치가 바꾼 줄은 아님.
+- **실패 시나리오:** 남은 작업 표만 보고 release APK · README를 아직 할 일로 보고 다시 잡거나, 반대로 남은 일(시연 영상 편집, 제출 양식, 보안 체크리스트 "남은 일")을 표에서 놓침.
+- **제안:** 상태를 "진행 중: release APK · README 완료(#69~#72, 5장), 남은 것은 시연 영상 편집 · 제출 양식 · 보안 체크리스트 남은 일(README '해야 할 일')"처럼 고침. 표 제목 기준일도 "11.11"이나 "11.13"으로 올리면 더 정확함.
+
+#### 2. screen-plan 7장 8번에 "보상 포인트"가 빠짐 (이전 지적 1의 남은 곳, 심각도: 낮음)
+- **위치:** `docs/screen-plan.md` 7장 8번 행 ("MVP 전 정합성 수정: 용어 퀘스트, SCR-02 머리말, SCR-02b 가중치, 연속 보상 주기 기준값 (plan.md 남은 작업 11)")
+- **문제:** plan.md 남은 작업 11, 미구현 4, screen-plan 4.9 · 10장, api README는 모두 "주기 · 보상 포인트(`streakRewardDays` · `streakRewardPoint`)"로 고쳤는데 이 행만 "주기 기준값"으로 남음.
+- **실패 시나리오:** 7장 작업 순서만 보고 작업하면 "+50P" 하드코딩이 범위에서 빠질 수 있음(이전 지적 1과 같은 시나리오, 다른 문서가 맞게 적혀 있어 가능성은 낮음).
+- **제안:** "연속 보상 주기 · 보상 포인트 기준값"으로 맞춤.
+
+#### 3. 9b 행 "경고 16"과 결정 기록 "경고 15건"이 다름 (심각도: 낮음, 선택)
+- **위치:** `plan.md:186` (9b 상태 "lint 오류 0(경고 16은 2차)") ↔ `plan.md:385` (결정 기록 2026-11-10, #68에서 "lint 경고 15건 … DataExtractionRules는 … 해결"로 고침)
+- **문제:** 9b 행은 11.10 당시 숫자라 틀린 기록은 아니지만, 같은 문서의 결정 기록은 #68 뒤 숫자로 바뀌어 두 숫자가 나란히 보임. 이 브랜치가 바꾼 줄은 아님.
+- **제안:** 9b 행을 "경고 16은 2차, #68 뒤 15"처럼 적거나 그대로 둠. 머지를 막을 일은 아님.
+
+참고(지적 아님): `README.md:37` "주요 기능"에 "미션 연속 달성", "운행·미션·연속 보상 적립"이 있음. 미구현 1(용어 퀘스트 통일)의 코드 위치에는 README가 없음. 용어를 바꾸는 작업(남은 작업 11) 때 README 문구도 같이 볼 것을 그 작업의 lead에게 넘기면 충분함.
+
+### 확인한 것
+
+- **develop 머지:** `git log 3019027..develop`는 #68~#72 5개, `git merge-base develop HEAD` = `e34119e` = develop 끝. 세 문서에 충돌 표시(`<<<<<<<` · `>>>>>>>`) 없음, `git diff --check` 깨끗함. 머지된 plan.md에서 develop 쪽 변경(5장 release 체크박스와 E2E 기록, "9b에서 미룬 것"의 dataExtractionRules 완료 표시, 결정 기록 11.10 경고 15건 · 백업 제외 · 11.11 R8 끔 · 로컬 서버 http)이 모두 살아 있고, 이 브랜치의 변경(현황 점검 절, 2차 앱 작업 11~18, 결정 필요 5개, 서버와 맞출 항목 표)도 모두 남아 있음.
+- **현황 점검의 대조 기준(`ad8c2c7`, #67):** 그 뒤 develop의 main 코드 변경은 `HttpClientFactory.connectionSpecsFor` 분리(#69)와 `data_extraction_rules.xml` · 매니페스트(#68)뿐. 화면, DTO 필드, 엔드포인트, 기준값 사용처는 바뀌지 않아 "화면 구현 현황", "미구현", "사용하지 않는 API · 필드"(엔드포인트 13개, `POST /api/auth/refresh`는 `HttpClientFactory`에서 호출) 내용은 지금도 맞음.
+- **release 관련 서술과 충돌 없음:** screen-plan 1장 "시나리오 재생 … 릴리스에서는 숨김"은 plan.md 5장 release 점검(홈 UI 덤프에 "시나리오" 0건)과 맞음. 세 문서 어디에도 release · 출시 키 · 로컬 서버(http) 결정과 어긋나는 문장 없음. `docs/api/README.md`는 #68~#72와 관련된 서술이 없음.
+- **README "해야 할 일" ↔ plan.md 5장:** 출시 키 [x](11.11), 시연 영상 [ ], 제출 양식 [ ]이 서로 일치. README의 "보안 가이드 남은 항목"(`docs/security-checklist.md` "남은 일")은 plan.md 5장에 체크박스가 없음 → 지적 1의 제안에 함께 넣음.
+- **마크다운 표:** 머지 후 세 문서의 모든 표에서 행별 열 수가 머리행과 같음(awk로 확인).
+- **CLAUDE.md 원칙:** `3019027`과 머지로 주행 중 화면 · 음성 · 위험 운전 문구에 관한 내용이 새로 생기지 않음. 서버 저장소 변경 없음.
+
+### 검증
+
+- 문서 전용 브랜치라 빌드 · 테스트는 돌리지 않음(요청대로). 머지로 들어온 코드(#68 · #69)는 develop에서 각자 리뷰 · 테스트를 거침(`review/2026-11-10-feature-data-extraction-rules.md`, `review/2026-11-11-feature-release-check.md`).
+- 실행한 확인 명령
+  - `git log develop..HEAD --oneline`, `git show 3019027`, `git log 3019027..develop --oneline`, `git merge-base develop HEAD`, `git diff ad8c2c7 develop -- plan.md docs/...`, `git diff develop HEAD -- plan.md`, `git diff ad8c2c7 develop -- automotive/src/main/java`
+  - `sed -n` / `grep -n`: `AchievementsUiState.kt` 19 · 32, `strings.xml` 152 · 156 · 172 · 176 · 219 · 220, `streakReward` 사용처, README "해야 할 일" · "미션", plan.md · screen-plan · api README의 release · 출시 · 제출 · 경고 수, `docs/security-checklist.md` "남은 일"
+  - 세 문서의 표 열 수 검사(awk), 충돌 표시 grep, `git diff --check`
