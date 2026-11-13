@@ -12,13 +12,13 @@
 | --- | --- | --- | --- |
 | `POST /api/drivers` 운전자 등록 | `RegisterDriverResponse` (201 · 400 · 409) | SCR-00 온보딩 | 연결됨 |
 | `POST /api/auth/refresh` 토큰 재발급 | `TokenResponse` (200 · 400 · 401) | 공통(401 때 자동) | 연결됨 |
-| `GET /api/config/thresholds` 판정 기준값 | `ThresholdsResponse`: `trip` · `turn` · `grades` · `tips` · `league` 등 | 판정, SCR-02b 팁, SCR-04 순위 자격 | 연결됨. 읽는 항목: `trip`(minDistanceKm · parkEndMinutes) · `turn` · `grades` · `tips` · `league`(minParticipants · minSeasonDistanceKm · minSeasonTrips). `harsh` · `safetyWarning` · `point` · `weights` 등은 읽지 않음(plan.md "사용하지 않는 API · 필드") |
+| `GET /api/config/thresholds` 판정 기준값 | `ThresholdsResponse`: `trip` · `turn` · `grades` · `tips` · `league` 등 | 판정, SCR-02b 팁, SCR-04 순위 자격, SCR-05 연속 보상 | 연결됨. 읽는 항목: `trip`(minDistanceKm · parkEndMinutes) · `turn` · `grades` · `tips` · `league`(minParticipants · minSeasonDistanceKm · minSeasonTrips) · `point`(streakRewardDays · streakRewardPoint, SCR-05). `harsh` · `safetyWarning` · `point`의 나머지 · `weights` 등은 읽지 않음(plan.md "사용하지 않는 API · 필드") |
 | `POST /api/trips` 운행 업로드 | `TripResult` (200 재전송 · 201 · 400 · 401 · 409 · 413) | 업로드, SCR-02 | 연결됨. 400 · 413은 재시도하지 않음(`REJECTED`). 이벤트는 `TURN`만, `supported`는 `TURN_SIGNAL`만 보냄(2차 항목은 서버 D21에 따라 payload 확인 뒤) |
-| `GET /api/trips/{tripId}/score` 운행 점수 | `TripResult`: `status` · `score` · `grade` · `metrics` · `plays` · `mission` | SCR-02 · 02a · 02b | 연결됨. 화면은 `status` · `score` · `metrics`만 씀(`grade`는 앱 계산, `plays` · `summary` · `turns`는 기기 기록, `mission`은 미션 API). `earnedPoints`는 명세에 아직 없음(서버 요청 12번) |
+| `GET /api/trips/{tripId}/score` 운행 점수 | `TripResult`: `status` · `score` · `grade` · `metrics` · `plays` · `mission` | SCR-02 · 02a · 02b | 연결됨. 화면은 `status` · `score` · `metrics`만 씀(`metrics[].weight`는 SCR-02b "적용 가중치 N%", `grade`는 앱 계산, `plays` · `summary` · `turns`는 기기 기록, `mission`은 미션 API). `earnedPoints`는 명세에 아직 없음(서버 요청 12번) |
 | `GET /api/trips?limit=N` 최근 경기 | `RecentTripResult[]` | SCR-01 홈 | 연결됨. `status` · `score`만 기기 기록에 반영 |
 | `GET /api/missions/today` 오늘의 미션 | `TodayMissionResponse`: `conditions` · `progress` · `status` · `rewardPoint` | SCR-01 카드, SCR-03 | 연결됨 |
 | `GET /api/points` 포인트 | `PointsResponse`: `balance` · `todayEarned` · `dailyCap` · `entries` | SCR-06 지갑 | 연결됨 |
-| `GET /api/streak` 연속 달성 | `StreakView`: `streakDays` · `todayAchieved` | SCR-01 연승 카드, SCR-05 | 연결됨. 연속 보상 주기 · 보상 포인트는 아직 하드코딩 7 · 50P(기준값 `point.streakRewardDays` · `streakRewardPoint`로 바꿀 예정) |
+| `GET /api/streak` 연속 달성 | `StreakView`: `streakDays` · `todayAchieved` | SCR-01 연승 카드, SCR-05 | 연결됨. 연속 보상 주기 · 보상 포인트는 기준값 `point.streakRewardDays` · `streakRewardPoint`로 읽음(받지 못하면 기본 7일 · 50P) |
 | `GET /api/badges` 배지 진열장 | `BadgeResponse[]`: 4종(`FIRST_TRIP` · `STREAK_7` · `SIGNAL_100` · `SEASON_CHAMPION`) | SCR-05 업적 | 연결됨. Fake는 3종 |
 | `GET /api/reports/weekly?week=` 주간 리포트 | `WeeklyReportView` | SCR-07 | 연결됨 |
 | `GET /api/leagues/current` 이번 시즌 리그 | `CurrentLeagueResponse`: `season` · `league` · `me` · `regions` | SCR-04 리그 | 연결됨(11.10 서버 형식으로 맞춤) |
