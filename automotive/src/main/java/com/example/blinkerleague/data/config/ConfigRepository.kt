@@ -86,7 +86,7 @@ internal fun DetectionConfig.mergedWith(response: ThresholdsResponse): Detection
             )
         } ?: league,
         point = point.copy(
-            streakRewardDays = response.point?.streakRewardDays ?: point.streakRewardDays,
+            streakRewardDays = response.point?.streakRewardDays?.takeIf { it > 0 } ?: point.streakRewardDays,
             streakRewardPoint = response.point?.streakRewardPoint ?: point.streakRewardPoint,
         ),
     )
