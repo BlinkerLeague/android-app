@@ -13,6 +13,7 @@
 
     <!-- 경기 결과 (SCR-02) -->
     <string name="result_header">경기 종료 · %1$.1f km</string>
+    <string name="result_header_today">오늘의 %1$d번째 경기 종료 · %2$.1f km</string>
     <string name="result_score">평점 %1$d</string>
     <string name="result_goals">득점 %1$d · 실점 %2$d</string>
     <string name="result_pending">결과 집계 중</string>

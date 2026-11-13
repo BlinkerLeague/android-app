@@ -33,12 +33,15 @@ class ResultViewModel(
 
     private val mission = MutableStateFlow<TodayMission?>(null)
     private val earnedPoints = MutableStateFlow<Int?>(null)
+    private val dayOrdinal = MutableStateFlow<Int?>(null)
 
-    val uiState: StateFlow<ResultUiState> = combine(result, mission, earnedPoints) { result, mission, points ->
-        result?.toResultUiState(mission, grades, points) ?: ResultUiState.NotFound
+    val uiState: StateFlow<ResultUiState> = combine(result, mission, earnedPoints, dayOrdinal) { result, mission, points, ordinal ->
+        result?.toResultUiState(mission, grades, points)?.copy(dayOrdinal = ordinal) ?: ResultUiState.NotFound
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ResultUiState.Loading)
 
     init {
+        // 기기 기록만 보므로 업로드를 기다리지 않음
+        viewModelScope.launch { dayOrdinal.value = loadDayOrdinal() }
         viewModelScope.launch {
             sync()
             // 퀘스트 진행률은 이번 운행이 서버에 반영된 뒤에 받아야 맞음
