@@ -177,4 +177,18 @@ class TripRepositoryTest {
         assertNull(stored("no-turn").trip.score)
         assertEquals(ScoreStatus.EXCLUDED_SHORT, stored("short").trip.scoreStatus)
     }
+
+    @Test
+    fun `항목 상세는 서버 점수 응답의 적용 가중치를 담는다`() = runTest {
+        // given
+        // FakeTripApi는 TURN_SIGNAL 항목의 weight를 1.0으로 줌
+        repository.saveFinishedTrip(trip("a", 0, listOf(true, false)))
+        repository.uploadPending()
+
+        // when
+        val details = repository.metricDetails("a")!!
+
+        // then
+        assertEquals(1.0, details.single { it.metric == "TURN_SIGNAL" }.weight)
+    }
 }
