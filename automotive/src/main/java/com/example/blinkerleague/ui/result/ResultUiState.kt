@@ -114,7 +114,7 @@ internal fun TripResult.toResultUiState(
             MetricRow(MetricItem.NIGHT_HEADLIGHT, MetricValue.ComingSoon),
         ),
         mission = mission,
-        earnedPoints = earnedPoints.takeIf { scoreState == ScoreState.SCORED },
+        earnedPoints = earnedPoints?.takeIf { scoreState == ScoreState.SCORED && it > 0 },
     )
 }
 
