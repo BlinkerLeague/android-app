@@ -40,6 +40,10 @@ interface TripDao {
     @Query("SELECT * FROM trip ORDER BY endedAtMs DESC LIMIT :limit")
     fun observeRecent(limit: Int): Flow<List<TripWithEvents>>
 
+    /** 결과 화면 "오늘의 N번째 경기": [dayStartMs]부터 [startedAtMs]까지(포함) 시작한 운행 수 */
+    @Query("SELECT COUNT(*) FROM trip WHERE startedAtMs >= :dayStartMs AND startedAtMs <= :startedAtMs")
+    suspend fun countStartedBetween(dayStartMs: Long, startedAtMs: Long): Int
+
     @Query("SELECT COUNT(*) FROM trip WHERE uploadState = 'PENDING'")
     fun observePendingCount(): Flow<Int>
 
