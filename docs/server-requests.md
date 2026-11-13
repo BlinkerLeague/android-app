@@ -301,7 +301,7 @@
 
 **바꾸지 않을 것**: 배지 코드 `STREAK_7`, 포인트 적립 사유 `DAILY_MISSION`, `/api/missions/*` 경로, 응답 필드 이름. 앱은 이 이름들을 그대로 씁니다.
 
-- 다른 배지의 `condition`에도 "미션"이 들어 있으면(예: `SEASON_CHAMPION`) 같은 방식으로 "퀘스트"로 바꿔 주세요.
+- 앱은 `STREAK_7` 문구만 확인했습니다. 다른 배지(`docs/api/README.md` 기준 `FIRST_TRIP` · `SIGNAL_100` · `SEASON_CHAMPION`)의 `condition`에도 "미션"이 들어 있으면 같은 방식으로 "퀘스트"로 바꿔 주세요.
 - 주간 리포트의 "맞춤 미션"(`lastMission`, `nextMission`)은 이 요청 대상이 아닙니다. 앱 화면도 "맞춤 미션"을 그대로 씁니다.
 
 앱은 서버 문구를 그대로 보여 주므로 앱 쪽 추가 작업은 없습니다(앱의 Fake 서버와 Preview 문구는 먼저 바꿨습니다).
