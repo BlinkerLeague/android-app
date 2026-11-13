@@ -27,6 +27,8 @@ class ResultViewModel(
     private val loadMission: suspend () -> TodayMission?,
     private val loadEarnedPoints: suspend () -> Int? = { null },
     private val grades: List<GradeThreshold>,
+    /** 이 운행이 오늘 몇 번째 경기인지. 오늘 운행이 아니거나 모르면 null */
+    private val loadDayOrdinal: suspend () -> Int? = { null },
 ) : ViewModel() {
 
     private val mission = MutableStateFlow<TodayMission?>(null)
