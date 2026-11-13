@@ -14,6 +14,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.intOrNull
+import java.time.ZoneId
 
 data class UploadSummary(
     val uploaded: Int,
@@ -84,6 +85,12 @@ class TripRepository(
         if (dao.trip(tripId)?.trip?.uploadState != UploadState.UPLOADED) return null
         return (api.getScore(tripId) as? ApiResult.Success)?.body?.earnedPoints
     }
+
+    /**
+     * 결과 화면 머리말 "오늘의 N번째 경기": 기기에 기록된 그날([zone] 기준 시작 날짜) 운행 중 시작 시각 순으로 몇 번째인지.
+     * 짧은 이동도 셈. 자정을 넘긴 운행은 시작한 날로 셈. 오늘 운행이 아니면 null
+     */
+    suspend fun dayOrdinal(tripId: String, zone: ZoneId): Int? = null
 
     /** 홈 "최근 경기". 기기에 저장된 운행을 먼저 보여주고, [refreshRecentScores]가 서버 점수로 갱신함 */
     fun observeRecentResults(limit: Int): Flow<List<TripResult>> =

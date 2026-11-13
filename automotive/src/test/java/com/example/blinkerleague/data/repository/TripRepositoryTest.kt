@@ -25,6 +25,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.io.IOException
 import java.time.ZoneId
+import java.time.ZonedDateTime
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -190,5 +191,25 @@ class TripRepositoryTest {
 
         // then
         assertEquals(1.0, details.single { it.metric == "TURN_SIGNAL" }.weight)
+    }
+
+    @Test
+    fun `오늘 운행이 그날 몇 번째인지 시작 시각 순으로 센다`() = runTest {
+        // given
+        val seoul = ZoneId.of("Asia/Seoul")
+        fun kst(day: Int, hour: Int, minute: Int) =
+            ZonedDateTime.of(2026, 11, day, hour, minute, 0, 0, seoul).toInstant().toEpochMilli()
+        // 어제 23:50에 시작한 운행은 오늘로 세지 않음
+        repository.saveFinishedTrip(trip("yesterday", kst(12, 23, 50), listOf(true)))
+        repository.saveFinishedTrip(trip("morning", kst(13, 8, 0), listOf(true)))
+        repository.saveFinishedTrip(trip("noon", kst(13, 12, 0), listOf(true)))
+        // 지금은 한국 시간 2026-11-13 18:00
+        now = kst(13, 18, 0)
+
+        // when
+        val ordinal = repository.dayOrdinal("noon", seoul)
+
+        // then
+        assertEquals(2, ordinal)
     }
 }
