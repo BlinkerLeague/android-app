@@ -47,6 +47,7 @@ import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.ui.theme.BlinkerLeagueTheme
 import com.example.blinkerleague.ui.theme.OnSuccessContainer
 import com.example.blinkerleague.ui.theme.OnWarningContainer
+import java.time.ZoneId
 
 private val ResultViewModelFactory = viewModelFactory {
     initializer {
@@ -61,6 +62,7 @@ private val ResultViewModelFactory = viewModelFactory {
             loadMission = container.missionRepository::todayMission,
             loadEarnedPoints = { container.tripRepository.earnedPoints(tripId) },
             grades = container.config.grades,
+            loadDayOrdinal = { container.tripRepository.dayOrdinal(tripId, ZoneId.systemDefault()) },
         )
     }
 }
@@ -117,9 +119,11 @@ private fun Loaded(
                 verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
             ) {
                 Text(
-                    stringResource(R.string.result_header, state.distanceKm),
+                    state.dayOrdinal?.let { stringResource(R.string.result_header_today, it, state.distanceKm) }
+                        ?: stringResource(R.string.result_header, state.distanceKm),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
                 )
                 Headline(state)
             }
@@ -305,6 +309,14 @@ private fun previewState(
 @Composable
 private fun ResultScoredPreview() = BlinkerLeagueTheme {
     Surface(color = MaterialTheme.colorScheme.background) { ResultContent(previewState(ScoreState.SCORED, 67, "C"), {}, {}, {}) }
+}
+
+@Preview(widthDp = 720, heightDp = 720)
+@Composable
+private fun ResultTodayOrdinalNarrowPreview() = BlinkerLeagueTheme {
+    Surface(color = MaterialTheme.colorScheme.background) {
+        ResultContent(previewState(ScoreState.SCORED, 67, "C").copy(dayOrdinal = 2), {}, {}, {})
+    }
 }
 
 @Preview(widthDp = 720, heightDp = 720)

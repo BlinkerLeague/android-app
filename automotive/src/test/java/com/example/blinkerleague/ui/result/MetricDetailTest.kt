@@ -48,4 +48,60 @@ class MetricDetailTest {
         assertNull(detail.turnCounts)
         assertTrue(detail.turns.isEmpty())
     }
+
+    @Test
+    fun `서버가 준 적용 가중치를 백분율로 보여 준다`() {
+        // given
+        val server = listOf(
+            MetricDetail("TURN_SIGNAL", "SCORED", null, 67, mapOf("turns" to 3, "onTime" to 1, "late" to 1, "missed" to 1), weight = 0.4),
+        )
+
+        // when
+        val detail = trip.toMetricDetail(MetricItem.TURN_SIGNAL, server, GradeThreshold.DEFAULT, tips, zone)
+
+        // then
+        assertEquals(40, detail.weightPercent)
+    }
+
+    @Test
+    fun `UNSUPPORTED 항목은 서버가 가중치를 줘도 보이지 않는다`() {
+        // given
+        val server = listOf(
+            MetricDetail("SMOOTH_DRIVING", "UNSUPPORTED", "SIGNAL_NOT_SUPPORTED", null, emptyMap(), weight = 0.3),
+        )
+
+        // when
+        val detail = trip.toMetricDetail(MetricItem.SMOOTH_DRIVING, server, GradeThreshold.DEFAULT, tips, zone)
+
+        // then
+        assertNull(detail.weightPercent)
+    }
+
+    @Test
+    fun `가중치가 0이면 0퍼센트로 보이지 않고 숨긴다`() {
+        // given
+        val server = listOf(
+            MetricDetail("TURN_SIGNAL", "SCORED", null, 67, mapOf("turns" to 3, "onTime" to 1, "late" to 1, "missed" to 1), weight = 0.0),
+        )
+
+        // when
+        val detail = trip.toMetricDetail(MetricItem.TURN_SIGNAL, server, GradeThreshold.DEFAULT, tips, zone)
+
+        // then
+        assertNull(detail.weightPercent)
+    }
+
+    @Test
+    fun `서버가 가중치를 주지 않으면 보이지 않는다`() {
+        // given
+        val server = listOf(
+            MetricDetail("TURN_SIGNAL", "SCORED", null, 67, mapOf("turns" to 3, "onTime" to 1, "late" to 1, "missed" to 1), weight = null),
+        )
+
+        // when
+        val detail = trip.toMetricDetail(MetricItem.TURN_SIGNAL, server, GradeThreshold.DEFAULT, tips, zone)
+
+        // then
+        assertNull(detail.weightPercent)
+    }
 }

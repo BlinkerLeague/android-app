@@ -2,6 +2,7 @@ package com.example.blinkerleague.ui.achievements
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.blinkerleague.domain.config.PointConfig
 import com.example.blinkerleague.domain.model.Badge
 import com.example.blinkerleague.domain.model.Streak
 import kotlinx.coroutines.async
@@ -17,6 +18,7 @@ class AchievementsViewModel(
     private val loadStreak: suspend () -> Streak?,
     private val loadBadges: suspend () -> List<Badge>?,
     private val zone: ZoneId,
+    private val rule: () -> PointConfig = { PointConfig() },
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AchievementsUiState>(AchievementsUiState.Loading)
@@ -33,7 +35,7 @@ class AchievementsViewModel(
                 s == null && b == null ->
                     if (_uiState.value is AchievementsUiState.Loaded) _uiState.value else AchievementsUiState.Unavailable
                 else -> AchievementsUiState.Loaded(
-                    streak = s?.let { StreakCard(it.days, it.todayAchieved, daysToReward(it.days)) },
+                    streak = s?.let { rule().let { r -> StreakCard(it.days, it.todayAchieved, daysToReward(it.days, r.streakRewardDays), r.streakRewardPoint) } },
                     badges = b.orEmpty().map {
                         BadgeCard(it.name, it.condition, it.earned, it.awardedAtMs?.let { ms -> DATE.format(Instant.ofEpochMilli(ms).atZone(zone)) })
                     },

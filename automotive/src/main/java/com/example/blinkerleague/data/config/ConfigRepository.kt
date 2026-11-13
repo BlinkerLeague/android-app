@@ -85,6 +85,10 @@ internal fun DetectionConfig.mergedWith(response: ThresholdsResponse): Detection
                 minSeasonTrips = l.minSeasonTrips ?: league.minSeasonTrips,
             )
         } ?: league,
+        point = point.copy(
+            streakRewardDays = response.point?.streakRewardDays?.takeIf { it > 0 } ?: point.streakRewardDays,
+            streakRewardPoint = response.point?.streakRewardPoint?.takeIf { it >= 0 } ?: point.streakRewardPoint,
+        ),
     )
 }
 

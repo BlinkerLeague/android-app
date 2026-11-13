@@ -168,7 +168,7 @@
 | SCR-02a | 급가속·급감속 카드 | 회전 카드만 (4.5) |
 | SCR-03 | "+20 코인" | "+20P" (P1 표시는 #61에서 제거) |
 
-## 남은 작업 (11.10 기준, MVP 11.15)
+## 남은 작업 (11.13 기준, MVP 11.15)
 
 화면 작업 순서는 screen-plan 7장을 따릅니다.
 
@@ -183,9 +183,9 @@
 | 7 | SCR-03 퀘스트 상세 (7장 4) | 신호(혼자 개발) | 5 | 완료 (#34): `ui/quest`, 조건별 진행도(서버 `conditions`, 없으면 회전 수·사용률로), 보상 "+20P", 재도전 버튼 |
 | 8 | SCR-00 온보딩 (7장 5) | 신호(혼자 개발) | 등록 API Fake, 3번 | 완료 (#35): 닉네임·지역(서울 25개 구)·측정 가능 항목·속도 권한·리그 입장. 등록 전이면 시작 화면이 온보딩 |
 | 9 | HTTP 구현체 (`TripApi`·`MissionApi`·등록) | 신호 | — | 완료: Retrofit, 토큰 재발급, `DriverRepository`. 서버 주소 설정 시 사용 |
-| 9b | 마무리 (7장 6): 예외 문구 점검, 실제 앱 폭 측정(1682×1210dp), 시연 리허설, lint 오류 0 | 신호(혼자 개발) | 4~8 | 완료 (11.10, feature/p0-finish): lint 오류 0(경고 16은 2차), 예외 문구 7종 확인, 좁은 폭 Preview, 시연 결과 회귀 테스트(C · 50 · 득점 1 · 실점 1 · 카드 2장) |
-| 10 | 시연 영상, release APK, README, 제출 양식 (5장) | 함께 | 4~8 | 11.13~ |
-| 11 | 기획서 정합성 수정 ("현황 점검" 미구현 1~4): 용어 퀘스트 통일, SCR-02 머리말 "오늘의 N번째 경기", SCR-02b 적용 가중치, 연속 보상 주기 · 보상 포인트를 기준값 `point.streakRewardDays` · `streakRewardPoint`로 | 신호(혼자 개발) | — | 예정 |
+| 9b | 마무리 (7장 6): 예외 문구 점검, 실제 앱 폭 측정(1682×1210dp), 시연 리허설, lint 오류 0 | 신호(혼자 개발) | 4~8 | 완료 (11.10, feature/p0-finish): lint 오류 0(경고 16은 2차, #68 뒤 15), 예외 문구 7종 확인, 좁은 폭 Preview, 시연 결과 회귀 테스트(C · 50 · 득점 1 · 실점 1 · 카드 2장) |
+| 10 | 시연 영상, release APK, README, 제출 양식 (5장) | 함께 | 4~8 | 진행 중: release APK · README 완료(#69~#72, 5장). 남은 것: 시연 영상 편집 · 제출 양식 · 보안 체크리스트 남은 일(README '해야 할 일') |
+| 11 | 기획서 정합성 수정 ("현황 점검" 미구현 1~4): 용어 퀘스트 통일, SCR-02 머리말 "오늘의 N번째 경기", SCR-02b 적용 가중치, 연속 보상 주기 · 보상 포인트를 기준값 `point.streakRewardDays` · `streakRewardPoint`로 | 신호(혼자 개발) | — | 완료 (feature/plan-gap-fixes) |
 
 - 권한 사용법(화면 쪽): 상태는 `container.permissions.status(RuntimePermission.SPEED)`(`GRANTED`/`DENIED`/`NOT_REQUESTED`), 요청은 `rememberPermissionRequester(container.permissions, RuntimePermission.SPEED)`. 허용되면 운행 수집이 재시작 없이 속도를 받기 시작함
 - **주의(온보딩 문구)**: `CAR_SPEED` 시스템 요청 창은 "이 기기의 **위치 정보**에 액세스하도록 허용하시겠습니까?"로 뜸(에뮬레이터). 요청 전 앱 화면에서 "속도를 쓰기 위해 묻는 것"이라고 먼저 설명해야 함
@@ -218,10 +218,10 @@
 
 | # | 내용 | 기획서 | 코드 위치 | 시기 | 크기 |
 | --- | --- | --- | --- | --- | --- |
-| 1 | 용어 "미션" → "퀘스트" 통일 ("오늘의 미션" · 일일 미션 계열: 화면 · 시동 음성 · 지갑 적립 사유 · 업적 "미션 연속 달성"). 제외: 주간 리포트 "맞춤 미션"(`strings.xml` 172 · 176, 서버 주간 미션 개념), 서버가 주는 배지 조건 문구 | 전반 | `voice/VoiceScript.kt:15-18`, `strings.xml` 64 · 70 · 72 · 73 · 152 · 154 · 155 · 219 | MVP 전 | 소 |
-| 2 | SCR-02 머리말 "오늘의 N번째 경기 종료" (지금 "경기 종료 · N km") | 3장 | `strings.xml:15` `result_header`, `ui/result` | MVP 전 | 소 |
-| 3 | SCR-02b 적용 가중치 표시 (`metrics[].weight`를 받지만 `MetricDetail`에서 버림) | 5장 | `TripRepository.metricDetails`, `domain/model/MetricDetail.kt`, `MetricDetailScreen` | MVP 전 | 소 |
-| 4 | 연속 보상 하드코딩 제거: 주기 `STREAK_REWARD_DAYS = 7`과 보상 문구 "+50P" → 기준값 `point.streakRewardDays` · `streakRewardPoint` (지갑 사유 "7일 연속 달성"(`strings.xml:220`)은 서버 사유 코드 `STREAK_7`의 이름표이고 과거 적립 행에 붙으므로 제외) | (코드 규칙) | `ui/achievements/AchievementsUiState.kt:19 · 32`, `ConfigDtos.kt`(`ThresholdsResponse`에 `point` 없음), `strings.xml:156` | MVP 전 | 소 |
+| 1 | 용어 "미션" → "퀘스트" 통일 ("오늘의 미션" · 일일 미션 계열: 화면 · 시동 음성 · 지갑 적립 사유 · 업적 "미션 연속 달성"). 제외: 주간 리포트 "맞춤 미션"(`strings.xml` 172 · 176, 서버 주간 미션 개념), 서버가 주는 배지 조건 문구 | 전반 | `voice/VoiceScript.kt:15-18`, `strings.xml` 64 · 70 · 72 · 73 · 152 · 154 · 155 · 219 | 완료 (11.13, feature/plan-gap-fixes): 화면 · 음성 문구만, 식별자 · 리소스 키 · 서버 API 이름은 mission 유지 | 소 |
+| 2 | SCR-02 머리말 "오늘의 N번째 경기 종료" (지금 "경기 종료 · N km") | 3장 | `strings.xml:15` `result_header`, `ui/result` | 완료 (11.13, feature/plan-gap-fixes): 기기 기록으로 그날 시작 순서를 셈. 오늘이 아닌 운행 · 짧은 이동은 N 없이 | 소 |
+| 3 | SCR-02b 적용 가중치 표시 (`metrics[].weight`를 받지만 `MetricDetail`에서 버림) | 5장 | `TripRepository.metricDetails`, `domain/model/MetricDetail.kt`, `MetricDetailScreen` | 완료 (11.13, feature/plan-gap-fixes): "적용 가중치 N%", 항목이 SCORED이고 가중치가 0보다 클 때만 표시, 아니면 줄 숨김 | 소 |
+| 4 | 연속 보상 하드코딩 제거: 주기 `STREAK_REWARD_DAYS = 7`과 보상 문구 "+50P" → 기준값 `point.streakRewardDays` · `streakRewardPoint` (지갑 사유 "7일 연속 달성"(`strings.xml:220`)은 서버 사유 코드 `STREAK_7`의 이름표이고 과거 적립 행에 붙으므로 제외) | (코드 규칙) | `ui/achievements/AchievementsUiState.kt:19 · 32`, `ConfigDtos.kt`(`ThresholdsResponse`에 `point` 없음), `strings.xml:156` | 완료 (11.13, feature/plan-gap-fixes): `PointConfig`(기본 7일 · 50P), `STREAK_REWARD_DAYS` 삭제 | 소 |
 | 5 | SCR-08 음성 안내 끄기 토글 | 5 · 10장 | `ui/settings`, `service/TripVoiceGuide` | 2차 | 중 |
 | 6 | SCR-08 내 차량 측정 항목 목록 (`CapabilityReport`, 온보딩 3단계 재사용) | 2 · 5장 | `ui/settings` | 2차 | 소 |
 | 7 | SCR-05 연승 7일 진행 점 | 8장 | `ui/achievements` | 2차 | 소 |
@@ -250,7 +250,7 @@
 
 | API | 필드 | 분류 | 이유 · 계획 |
 | --- | --- | --- | --- |
-| `TripResult` (업로드 · 점수) | `metrics[].weight` | 쓸 계획 | 미구현 3 (SCR-02b 가중치) |
+| `TripResult` (업로드 · 점수) | `metrics[].weight` | 씀 | SCR-02b "적용 가중치 N%" (미구현 3, 11.13) |
 | 〃 | `metrics[].value` | 안 씀 | 점수 `score`와 근거 `detail`로 표시 |
 | 〃 | `grade` | 안 씀 | 앱이 `config.grades`로 계산 (결정 11.08) |
 | 〃 | `turns`, `summary`(`goals` · `conceded` · `fouls`) | 안 씀 | 기기 회전 기록으로 셈. `fouls`는 "반칙" 용어를 쓰지 않아서 |
@@ -259,7 +259,7 @@
 | 〃 | `earnedPoints` | 서버 대기 | 앱 DTO에만 있음. openapi에 없음 (서버 요청 12번) |
 | `GET /api/trips` | `grade` · `endedAt` · `distanceKm` | 안 씀 | 기기 기록을 먼저 보여 주고 `status` · `score`만 갱신 (결정 11.08) |
 | `GET /api/missions/today` | `missionId` · `periodKey` | 안 씀 | 화면에 필요 없음 (`rewardPoint`는 SCR-03에서 씀) |
-| `GET /api/config/thresholds` | `point.streakRewardDays` · `streakRewardPoint` | 쓸 계획 | 미구현 4 (하드코딩 7 · +50P 제거) |
+| `GET /api/config/thresholds` | `point.streakRewardDays` · `streakRewardPoint` | 씀 | SCR-05 연속 보상 주기 · 보상 포인트 (미구현 4, 11.13) |
 | 〃 | `point.dailyCap` · `tripMaxKm`, `weights`, `minSamples`, `league.commonItems` · `topN`, `harsh.penaltyPer10Km`, `safetyWarning.penaltyPer100Km` | 안 씀 | 서버 계산용. 하루 상한은 `GET /api/points`의 `dailyCap`, 가중치는 `metrics[].weight`로 받음 |
 | 〃 | `harsh.deltaKmhPerSec` | 쓸 계획 | 2차 앱 작업 11 (급가속 · 급감속) |
 | 〃 | `safetyWarning.mergeWindowSec` | 쓸 계획 | 2차 앱 작업 13 (안전 경고) |
@@ -387,4 +387,9 @@
 | 2026-11-10 | 백업·기기 간 전송은 파일별이 아니라 모든 도메인 제외(dataExtractionRules), fullBackupContent는 두지 않음 | allowBackup=false와 같은 뜻. 파일 이름 나열은 새 저장소가 빠질 위험. 운행 DB만 옮겨지면 새로 등록한 운전자로 예전 운행이 올라갈 수 있음. API 28~30은 allowBackup=false로 충분. lint FullBackupContent는 device_* 도메인 오탐이라 무시(프레임워크 FullBackup.java는 해석함) |
 | 2026-11-11 | MVP release는 R8(minify·난독화)을 끔 | 기한 4일, Pleos SDK keep 규칙 미확인, 보안 가이드에 난독화 필수 항목 없음. 2차에 검토 |
 | 2026-11-11 | 1차 제출 release는 로컬 서버(http, -Pblinker.serverUrl)에 연결할 수 있게 함. 평문은 그 호스트에만 빌드 때 허용 | 사용자 결정. 보안 가이드(TLS) 때문에 평문 전체 허용은 하지 않음 |
+| 2026-11-13 | 용어는 화면 · 음성 문구만 "미션"→"퀘스트". 코드 식별자 · 리소스 키 · 서버 API 이름(`mission`)은 유지. 주간 리포트 "맞춤 미션", 지갑 사유 "7일 연속 달성"(`STREAK_7`), 서버가 주는 배지 문구는 바꾸지 않음 | 기획서 용어와 맞춤. 이름을 바꾸면 서버 형식 · DB와 어긋남 |
+| 2026-11-13 | SCR-02b 적용 가중치는 서버 `metrics[].weight`를 백분율 정수로 표시("적용 가중치 N%"). 항목이 SCORED이고 가중치가 0보다 클 때만 보이고, 아니면(값 없음 · 0 · 미측정) 줄을 숨김 | 가중치는 서버 계산 규칙이라 앱이 셈하지 않음 |
+| 2026-11-13 | "오늘의 N번째 경기"는 기기(Room)에 있는 그날 운행을 시작 시각 순으로, 짧은 이동도 포함해 셈. 자정을 넘긴 운행은 시작한 날로 셈. 오늘이 아닌 운행 · 짧은 이동 결과는 N 없이 기존 머리말 | 사용자 결정. 결과 화면은 업로드 전 · 오프라인에도 열리므로 기기 기록으로 셈 |
+| 2026-11-13 | point 기준값 검사: streakRewardDays는 1 이상, streakRewardPoint는 0 이상만 받고 아니면 로컬 기본값 | 리뷰 지적 1. 주기 0은 나눗셈 오류, 음수 보상은 잘못된 문구가 됨 |
+| 2026-11-13 | 적용 가중치는 항목이 SCORED이고 0보다 클 때만 표시 | 리뷰 지적 2. 미측정 항목에 가중치가 보이거나 "0%"가 보이지 않게 함 |
 | 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |

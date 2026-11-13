@@ -31,6 +31,8 @@ sealed interface ResultUiState {
         val mission: TodayMission? = null,
         /** 이 운행으로 적립된 운행 포인트(상한 적용 후). 모르면 null (표시 안 함) */
         val earnedPoints: Int? = null,
+        /** 머리말 "오늘의 N번째 경기 종료"의 N. 오늘 운행이 아니거나 모르면 null */
+        val dayOrdinal: Int? = null,
     ) : ResultUiState
 }
 

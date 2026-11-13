@@ -14,6 +14,7 @@ data class DetectionConfig(
     /** 항목별 팁 문구 (항목 상세 SCR-02b). 서버 기준값 `tips`가 오면 항목별로 덮어씀 */
     val tips: Map<String, String> = DEFAULT_TIPS,
     val league: LeagueConfig = LeagueConfig(),
+    val point: PointConfig = PointConfig(),
 ) {
     companion object {
         /** 서버 기본 기준값의 팁 문구. 깜빡이는 앱 판정 기준(회전 5초 전)에 맞춘 문구 */
@@ -76,6 +77,14 @@ data class LeagueConfig(
     val minSeasonDistanceKm: Double = 50.0,
     /** 순위 자격: 시즌 운행 횟수 (거리와 둘 중 하나만 채우면 됨) */
     val minSeasonTrips: Int = 10,
+)
+
+/** 서버 기준값 `point`. 연속 보상 주기(일)와 보상 포인트 */
+data class PointConfig(
+    /** 이 일수만큼 연속으로 운행하면 연속 보상 */
+    val streakRewardDays: Int = 7,
+    /** 연속 보상 포인트 */
+    val streakRewardPoint: Int = 50,
 )
 
 /** 주행 안전 가드 기준 (docs/screen-plan.md 3장) */

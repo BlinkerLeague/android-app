@@ -1,5 +1,6 @@
 package com.example.blinkerleague.ui.achievements
 
+import com.example.blinkerleague.domain.config.PointConfig
 import com.example.blinkerleague.domain.model.Badge
 import com.example.blinkerleague.domain.model.Streak
 import kotlinx.coroutines.Dispatchers
@@ -55,6 +56,26 @@ class AchievementsViewModelTest {
         none.refresh()
         runCurrent()
         assertEquals(AchievementsUiState.Unavailable, none.uiState.value)
+    }
+
+    @Test
+    fun `연속 보상 주기와 보상 포인트를 기준값에서 읽는다`() = runTest(dispatcher) {
+        // given
+        // 서버 기준값: 5일마다 30P, 지금 3일 연속
+        val vm = AchievementsViewModel(
+            { Streak(3, false) },
+            { emptyList() },
+            zone,
+            rule = { PointConfig(streakRewardDays = 5, streakRewardPoint = 30) },
+        )
+
+        // when
+        vm.refresh()
+        runCurrent()
+
+        // then
+        val state = vm.uiState.value as AchievementsUiState.Loaded
+        assertEquals(StreakCard(3, false, daysToReward = 2, rewardPoint = 30), state.streak)
     }
 
     @Test

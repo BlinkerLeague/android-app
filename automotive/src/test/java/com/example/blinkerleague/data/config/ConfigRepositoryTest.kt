@@ -6,6 +6,7 @@ import com.example.blinkerleague.data.remote.dto.ThresholdsResponse
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.config.GradeThreshold
 import com.example.blinkerleague.domain.config.LeagueConfig
+import com.example.blinkerleague.domain.config.PointConfig
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
@@ -75,6 +76,77 @@ class ConfigRepositoryTest {
 
         // then
         assertEquals(LeagueConfig(minParticipants = 20, minSeasonDistanceKm = 30.0, minSeasonTrips = 5), merged.league)
+    }
+
+    @Test
+    fun `서버 기준값 point의 연속 보상 주기를 읽고 보상 포인트가 없으면 기본값을 쓴다`() {
+        // given
+        // 서버가 연속 보상 주기를 5일로 바꾸고 보상 포인트는 주지 않음
+        val changed = json.decodeFromString<ThresholdsResponse>(
+            """{"version":2,"point":{"dailyCap":150,"streakRewardDays":5,"tripMaxKm":50}}""",
+        )
+
+        // when
+        val merged = DetectionConfig.DEFAULT.mergedWith(changed)
+
+        // then
+        assertEquals(PointConfig(streakRewardDays = 5, streakRewardPoint = 50), merged.point)
+    }
+
+    @Test
+    fun `서버 기준값 point의 연속 보상 포인트를 읽는다`() {
+        // given
+        // 서버가 연속 보상 주기를 5일, 보상 포인트를 30으로 바꿈
+        val changed = json.decodeFromString<ThresholdsResponse>(
+            """{"version":3,"point":{"streakRewardDays":5,"streakRewardPoint":30}}""",
+        )
+
+        // when
+        val merged = DetectionConfig.DEFAULT.mergedWith(changed)
+
+        // then
+        assertEquals(PointConfig(streakRewardDays = 5, streakRewardPoint = 30), merged.point)
+    }
+
+    @Test
+    fun `서버 기준값 point의 연속 보상 주기가 0 이하이면 기본값을 쓴다`() {
+        // given
+        // 서버가 연속 보상 주기를 0일, -3일로 잘못 보냄
+        val zero = json.decodeFromString<ThresholdsResponse>(
+            """{"version":2,"point":{"streakRewardDays":0,"streakRewardPoint":30}}""",
+        )
+        val negative = json.decodeFromString<ThresholdsResponse>(
+            """{"version":3,"point":{"streakRewardDays":-3,"streakRewardPoint":30}}""",
+        )
+
+        // when
+        val mergedZero = DetectionConfig.DEFAULT.mergedWith(zero)
+        val mergedNegative = DetectionConfig.DEFAULT.mergedWith(negative)
+
+        // then
+        val expected = PointConfig(streakRewardDays = PointConfig().streakRewardDays, streakRewardPoint = 30)
+        assertEquals(expected, mergedZero.point)
+        assertEquals(expected, mergedNegative.point)
+    }
+
+    @Test
+    fun `서버 기준값 point의 연속 보상 포인트가 음수이면 기본값을 쓰고 0은 그대로 쓴다`() {
+        // given
+        // 서버가 연속 보상 포인트를 -10으로 잘못 보낸 경우와 0(보상 없음)으로 보낸 경우
+        val negative = json.decodeFromString<ThresholdsResponse>(
+            """{"version":2,"point":{"streakRewardDays":5,"streakRewardPoint":-10}}""",
+        )
+        val zero = json.decodeFromString<ThresholdsResponse>(
+            """{"version":3,"point":{"streakRewardDays":5,"streakRewardPoint":0}}""",
+        )
+
+        // when
+        val mergedNegative = DetectionConfig.DEFAULT.mergedWith(negative)
+        val mergedZero = DetectionConfig.DEFAULT.mergedWith(zero)
+
+        // then
+        assertEquals(PointConfig(streakRewardDays = 5, streakRewardPoint = PointConfig().streakRewardPoint), mergedNegative.point)
+        assertEquals(PointConfig(streakRewardDays = 5, streakRewardPoint = 0), mergedZero.point)
     }
 
     @Test

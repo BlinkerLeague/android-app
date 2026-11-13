@@ -25,6 +25,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.io.IOException
 import java.time.ZoneId
+import java.time.ZonedDateTime
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
@@ -59,6 +60,11 @@ class TripRepositoryTest {
     )
 
     private suspend fun stored(id: String) = db.tripDao().trip(id)!!
+
+    private val seoul = ZoneId.of("Asia/Seoul")
+
+    private fun kst(day: Int, hour: Int, minute: Int) =
+        ZonedDateTime.of(2026, 11, day, hour, minute, 0, 0, seoul).toInstant().toEpochMilli()
 
     @Test
     fun `저장한 운행을 올리면 UPLOADED와 서버 점수가 남음`() = runTest {
@@ -176,5 +182,69 @@ class TripRepositoryTest {
         assertEquals(ScoreStatus.NO_TURN, stored("no-turn").trip.scoreStatus)
         assertNull(stored("no-turn").trip.score)
         assertEquals(ScoreStatus.EXCLUDED_SHORT, stored("short").trip.scoreStatus)
+    }
+
+    @Test
+    fun `항목 상세는 서버 점수 응답의 적용 가중치를 담는다`() = runTest {
+        // given
+        // FakeTripApi는 TURN_SIGNAL 항목의 weight를 1.0으로 줌
+        repository.saveFinishedTrip(trip("a", 0, listOf(true, false)))
+        repository.uploadPending()
+
+        // when
+        val details = repository.metricDetails("a")!!
+
+        // then
+        assertEquals(1.0, details.single { it.metric == "TURN_SIGNAL" }.weight)
+    }
+
+    @Test
+    fun `오늘 운행이 그날 몇 번째인지 시작 시각 순으로 센다`() = runTest {
+        // given
+        // 어제 23:50에 시작한 운행은 오늘로 세지 않음
+        repository.saveFinishedTrip(trip("yesterday", kst(12, 23, 50), listOf(true)))
+        repository.saveFinishedTrip(trip("morning", kst(13, 8, 0), listOf(true)))
+        repository.saveFinishedTrip(trip("noon", kst(13, 12, 0), listOf(true)))
+        // 지금은 한국 시간 2026-11-13 18:00
+        now = kst(13, 18, 0)
+
+        // when
+        val ordinal = repository.dayOrdinal("noon", seoul)
+
+        // then
+        assertEquals(2, ordinal)
+    }
+
+    @Test
+    fun `오늘이 아닌 운행은 몇 번째인지 세지 않는다`() = runTest {
+        // given
+        // 한국 시간 2026-11-12 23:50에 시작한 운행
+        repository.saveFinishedTrip(trip("yesterday", kst(12, 23, 50), listOf(true)))
+        // 지금은 한국 시간 2026-11-13 18:00
+        now = kst(13, 18, 0)
+
+        // when
+        val ordinal = repository.dayOrdinal("yesterday", seoul)
+
+        // then
+        assertNull(ordinal)
+    }
+
+    @Test
+    fun `짧은 이동도 그날 몇 번째인지 셀 때 포함한다`() = runTest {
+        // given
+        // 1km 미만이라 서버가 EXCLUDED_SHORT로 판정하는 08:00 운행
+        repository.saveFinishedTrip(trip("short", kst(13, 8, 0), listOf(true), distanceKm = 0.4))
+        repository.saveFinishedTrip(trip("noon", kst(13, 12, 0), listOf(true)))
+        // 지금은 한국 시간 2026-11-13 18:00
+        now = kst(13, 18, 0)
+        repository.uploadPending()
+
+        // when
+        val ordinal = repository.dayOrdinal("noon", seoul)
+
+        // then
+        assertEquals(ScoreStatus.EXCLUDED_SHORT, stored("short").trip.scoreStatus)
+        assertEquals(2, ordinal)
     }
 }

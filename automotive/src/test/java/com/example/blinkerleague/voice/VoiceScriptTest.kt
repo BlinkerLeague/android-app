@@ -20,22 +20,28 @@ class VoiceScriptTest {
     )
 
     @Test
-    fun `시동 안내 - 미션 상태별 문구`() {
-        assertEquals(
-            "오늘의 미션, 회전 깜빡이 완벽. 이번 운행에서 회전 세 번 모두 깜빡이를 미리 켜 보세요.",
-            VoiceScript.tripStart(mission(MissionStatus.IN_PROGRESS, 0)),
-        )
-        // 미션은 운행 1건 안에서 판정(서버 D25) → 지난 운행 진행도와 상관없이 이번 운행 기준
-        assertEquals(
-            "오늘의 미션, 회전 깜빡이 완벽. 이번 운행에서 회전 세 번 모두 깜빡이를 미리 켜 보세요.",
-            VoiceScript.tripStart(mission(MissionStatus.IN_PROGRESS, 2)),
-        )
-        assertEquals("오늘의 미션은 이미 달성했어요. 오늘도 깜빡이 잊지 마세요.", VoiceScript.tripStart(mission(MissionStatus.ACHIEVED, 3)))
-        assertEquals(
-            "오늘의 미션, 회전 깜빡이 완벽. 이번 운행에서 회전 세 번 모두 깜빡이를 미리 켜 보세요.",
-            VoiceScript.tripStart(mission(MissionStatus.FAILED, 1)),
-        )
-        assertEquals("회전할 때 깜빡이를 미리 켜 주세요.", VoiceScript.tripStart(null))
+    fun `시동 안내는 오늘의 퀘스트로 상태별 문구를 말한다`() {
+        // given
+        val notStarted = mission(MissionStatus.IN_PROGRESS, 0)
+        // 퀘스트는 운행 1건 안에서 판정(서버 D25) → 지난 운행 진행도와 상관없이 이번 운행 기준
+        val partlyDone = mission(MissionStatus.IN_PROGRESS, 2)
+        val achieved = mission(MissionStatus.ACHIEVED, 3)
+        val failed = mission(MissionStatus.FAILED, 1)
+
+        // when
+        val notStartedScript = VoiceScript.tripStart(notStarted)
+        val partlyDoneScript = VoiceScript.tripStart(partlyDone)
+        val achievedScript = VoiceScript.tripStart(achieved)
+        val failedScript = VoiceScript.tripStart(failed)
+        val noQuestScript = VoiceScript.tripStart(null)
+
+        // then
+        val questIntro = "오늘의 퀘스트, 회전 깜빡이 완벽. 이번 운행에서 회전 세 번 모두 깜빡이를 미리 켜 보세요."
+        assertEquals(questIntro, notStartedScript)
+        assertEquals(questIntro, partlyDoneScript)
+        assertEquals("오늘의 퀘스트는 이미 달성했어요. 오늘도 깜빡이 잊지 마세요.", achievedScript)
+        assertEquals(questIntro, failedScript)
+        assertEquals("회전할 때 깜빡이를 미리 켜 주세요.", noQuestScript)
     }
 
     @Test
