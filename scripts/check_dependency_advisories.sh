@@ -3,6 +3,8 @@
 # Pleos 앱 보안 가이드 "SDK·라이브러리 점검"(docs/security-checklist.md). 필요: JDK 17, gh(로그인)
 # 사용: scripts/check_dependency_advisories.sh
 set -euo pipefail
+# Windows Git Bash(MSYS)가 "/"로 시작하는 인자를 Windows 경로로 바꾸지 않게 함 (macOS·Linux에서는 영향 없음)
+export MSYS_NO_PATHCONV=1
 cd "$(dirname "$0")/.."
 tmp=$(mktemp -d)
 ./gradlew -q :automotive:dependencies --configuration releaseRuntimeClasspath > "$tmp/deps.txt"
@@ -13,7 +15,7 @@ grep -v "(c)" "$tmp/deps.txt" \
 count=0; found=0
 while read -r line; do
   pkg="${line%:*}"; ver="${line##*:}"; count=$((count + 1))
-  out=$(gh api -X GET /advisories -f ecosystem=maven -f "affects=$pkg@$ver" -f per_page=20 \
+  out=$(gh api -X GET advisories -f ecosystem=maven -f "affects=$pkg@$ver" -f per_page=20 \
         --jq '.[] | "  \(.ghsa_id) [\(.severity)] \(.summary)"')
   if [ -n "$out" ]; then found=$((found + 1)); echo "$pkg@$ver"; echo "$out"; fi
 done < "$tmp/resolved.txt"
