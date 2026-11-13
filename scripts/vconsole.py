@@ -18,7 +18,8 @@ APP = "com.example.blinkerleague"
 
 
 def adb(*args, check=False):
-    return subprocess.run([ADB, *args], check=check, capture_output=True, text=True).stdout
+    return subprocess.run([ADB, *args], check=check, capture_output=True, text=True, encoding="utf-8",
+                          errors="replace").stdout
 
 
 class Console:

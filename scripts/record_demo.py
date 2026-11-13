@@ -10,7 +10,9 @@ Pleos 에뮬레이터에서 한 번에 진행하며 화면을 녹화합니다.
       환경 변수 DEMO_CRUISE_SEC로 덮어쓸 수 있음. 서버 모드에서 서버 기준값이 3km이면 DEMO_CRUISE_SEC=115)
      (주행 중에는 시스템이 앱 화면을 "주행 중에는 사용할 수 없습니다"로 덮고, 앱은 "기록 중" 화면)
   4. 운행 종료 음성이 끝나면 홈 → 최근 경기 → 경기 결과 → 플레이 보기 → 퀘스트 → 홈 → 업적(배지) → 홈 순서로 화면을 넘김
+     (경기 결과·플레이·퀘스트·업적 화면은 각각 DEMO_SCREEN_SEC(기본 4초)만큼 보여 줌)
   5. 녹화를 멈추고 automotive/build/demo/blinker_demo_1.mp4, _2.mp4 … 로 가져옴 (편집 때 이어 붙이기)
+     전체 약 2분 40초라 보통 _1.mp4 하나. 실행할 때마다 이전 blinker_demo*.mp4를 지우므로 남기려면 먼저 옮겨 둘 것
 
 준비: 디버그 빌드 설치(Fake 모드 권장: ./gradlew :automotive:installDebug), 등록(온보딩) 완료,
       adb forward tcp:8088 tcp:8088, 속도 권한 허용.
@@ -35,14 +37,17 @@ ADB = os.environ.get(
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.join(HERE, "..", "automotive", "build", "demo")
 DEVICE_PATTERN = "/sdcard/blinker_demo_{}.mp4"
-SEGMENT_SEC = 175
+SEGMENT_SEC = 180  # screenrecord --time-limit 최대값
 PARK_END_SEC = int(os.environ.get("PARK_END_SEC", "10"))
+# 운행 종료 뒤 결과·플레이·퀘스트·업적 화면을 각각 보여 주는 시간(초)
+SCREEN_SEC = float(os.environ.get("DEMO_SCREEN_SEC", "4"))
 # vehicle_probe_sim.py demo의 100km/h 구간 길이. 70초 ≈ 1.9km, 회전 구간 포함 약 2.2km (+1P가 보이게)
 os.environ.setdefault("DEMO_CRUISE_SEC", "70")
 
 
 def adb(*args, check=True):
-    return subprocess.run([ADB, *args], capture_output=True, text=True, check=check).stdout
+    return subprocess.run([ADB, *args], capture_output=True, text=True, encoding="utf-8", errors="replace",
+                          check=check).stdout
 
 
 def log(msg):
@@ -53,7 +58,8 @@ def wait_logcat(pattern, timeout, after=None):
     """logcat에서 pattern이 나올 때까지 기다림. after가 있으면 그 줄 다음부터 찾음"""
     deadline = time.time() + timeout
     while time.time() < deadline:
-        lines = adb("logcat", "-d").splitlines()
+        # 기다리는 로그는 TripCollection(운행 끝) · PleosTtsAnnouncer(안내) 태그뿐이라 그 둘만 받음
+        lines = adb("logcat", "-d", "-s", "TripCollection", "PleosTtsAnnouncer").splitlines()
         if after is not None:
             idx = next((i for i, l in enumerate(lines) if re.search(after, l)), None)
             lines = lines[idx + 1:] if idx is not None else []
@@ -88,6 +94,7 @@ class Recorder:
     def __init__(self):
         self.stopped = threading.Event()
         self.count = 0
+        self.started = None
         self.thread = threading.Thread(target=self._loop, daemon=True)
 
     def _loop(self):
@@ -99,9 +106,11 @@ class Recorder:
                             "--time-limit", str(SEGMENT_SEC), path], check=False)
 
     def start(self):
+        self.started = time.time()
         self.thread.start()
 
     def stop_and_pull(self):
+        elapsed = time.time() - self.started if self.started else 0
         self.stopped.set()
         adb("shell", "pkill", "-INT", "screenrecord", check=False)
         self.thread.join(timeout=20)
@@ -110,6 +119,7 @@ class Recorder:
             out = os.path.abspath(os.path.join(OUT_DIR, f"blinker_demo_{i}.mp4"))
             adb("pull", DEVICE_PATTERN.format(i), out, check=False)
             log(f"저장: {out}")
+        log(f"녹화 약 {elapsed:.0f}초 (한 파일 최대 {SEGMENT_SEC}초)")
 
 
 def main():
@@ -136,14 +146,14 @@ def main():
         wait_logcat(r"PleosTtsAnnouncer: 안내", timeout=20, after=r"TripCollection: 운행 끝")
         time.sleep(3)  # 홈 화면 보여주기
 
-        tap_text(r"^오늘 \d\d:\d\d$", "최근 경기 첫 줄"); time.sleep(6)
-        tap_text(r"^플레이 보기$", "플레이 보기"); time.sleep(6)
+        tap_text(r"^오늘 \d\d:\d\d$", "최근 경기 첫 줄"); time.sleep(SCREEN_SEC)
+        tap_text(r"^플레이 보기$", "플레이 보기"); time.sleep(SCREEN_SEC)
         adb("shell", "input", "keyevent", "BACK"); time.sleep(2)
-        tap_text(r"^퀘스트 · ", "퀘스트"); time.sleep(6)
+        tap_text(r"^퀘스트 · ", "퀘스트"); time.sleep(SCREEN_SEC)
         adb("shell", "input", "keyevent", "BACK"); time.sleep(1)
         adb("shell", "input", "keyevent", "BACK"); time.sleep(3)
-        tap_text(r"^업적$", "업적 탭"); time.sleep(6)
-        tap_text(r"^홈$", "홈 탭"); time.sleep(3)
+        tap_text(r"^업적$", "업적 탭"); time.sleep(SCREEN_SEC)
+        tap_text(r"^홈$", "홈 탭"); time.sleep(2)
     finally:
         log("녹화 멈춤")
         recorder.stop_and_pull()
