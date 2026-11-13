@@ -55,6 +55,19 @@ class ResultUiStateTest {
     }
 
     @Test
+    fun `적립 포인트가 0이면 포인트 줄을 보이지 않는다`() {
+        // given
+        // 점수는 났지만 적립된 포인트가 없는 운행 (첫 경기 등)
+        val trip = result(ScoreState.SCORED, 67)
+
+        // when
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, earnedPoints = 0)
+
+        // then
+        assertNull(state.earnedPoints)
+    }
+
+    @Test
     fun `업로드 전이면 집계 중, 50점 미만은 등급 없음`() {
         assertEquals(MetricValue.Pending, metric(result(ScoreState.PENDING, null).toResultUiState(null, GradeThreshold.DEFAULT)))
         assertNull(result(ScoreState.SCORED, 33).toResultUiState(null, GradeThreshold.DEFAULT).grade)
