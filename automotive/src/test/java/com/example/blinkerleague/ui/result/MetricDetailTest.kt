@@ -48,4 +48,18 @@ class MetricDetailTest {
         assertNull(detail.turnCounts)
         assertTrue(detail.turns.isEmpty())
     }
+
+    @Test
+    fun `서버가 준 적용 가중치를 백분율로 보여 준다`() {
+        // given
+        val server = listOf(
+            MetricDetail("TURN_SIGNAL", "SCORED", null, 67, mapOf("turns" to 3, "onTime" to 1, "late" to 1, "missed" to 1), weight = 0.4),
+        )
+
+        // when
+        val detail = trip.toMetricDetail(MetricItem.TURN_SIGNAL, server, GradeThreshold.DEFAULT, tips, zone)
+
+        // then
+        assertEquals(40, detail.weightPercent)
+    }
 }
