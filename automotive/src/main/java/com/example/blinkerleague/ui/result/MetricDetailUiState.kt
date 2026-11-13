@@ -28,6 +28,9 @@ sealed interface MetricDetailUiState {
     ) : MetricDetailUiState
 }
 
+/** 서버 `metrics[].status` 중 이번 점수에 반영된 항목 */
+private const val METRIC_SCORED = "SCORED"
+
 data class TurnCounts(val turns: Int, val onTime: Int, val late: Int, val missed: Int, val fromServer: Boolean)
 
 internal fun TripResult.toMetricDetail(
@@ -58,6 +61,6 @@ internal fun TripResult.toMetricDetail(
         turnCounts = counts,
         turns = if (item == MetricItem.TURN_SIGNAL) toPlaysUiState(zone).plays else emptyList(),
         tip = tips[item.name],
-        weightPercent = fromServer?.weight?.let { (it * 100).roundToInt() },
+        weightPercent = fromServer?.takeIf { it.status == METRIC_SCORED }?.weight?.let { (it * 100).roundToInt() },
     )
 }
