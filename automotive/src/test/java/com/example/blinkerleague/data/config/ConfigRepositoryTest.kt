@@ -94,6 +94,21 @@ class ConfigRepositoryTest {
     }
 
     @Test
+    fun `서버 기준값 point의 연속 보상 포인트를 읽는다`() {
+        // given
+        // 서버가 연속 보상 주기를 5일, 보상 포인트를 30으로 바꿈
+        val changed = json.decodeFromString<ThresholdsResponse>(
+            """{"version":3,"point":{"streakRewardDays":5,"streakRewardPoint":30}}""",
+        )
+
+        // when
+        val merged = DetectionConfig.DEFAULT.mergedWith(changed)
+
+        // then
+        assertEquals(PointConfig(streakRewardDays = 5, streakRewardPoint = 30), merged.point)
+    }
+
+    @Test
     fun `version이 바뀐 경우에만 갱신하고 저장, 다시 켜면 저장 값으로 시작`() = runTest {
         val cache = MemoryCache()
         val api = FakeConfigApi(ApiResult.Success(response))
