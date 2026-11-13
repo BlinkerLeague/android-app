@@ -109,6 +109,27 @@ class ConfigRepositoryTest {
     }
 
     @Test
+    fun `서버 기준값 point의 연속 보상 주기가 0 이하이면 기본값을 쓴다`() {
+        // given
+        // 서버가 연속 보상 주기를 0일, -3일로 잘못 보냄
+        val zero = json.decodeFromString<ThresholdsResponse>(
+            """{"version":2,"point":{"streakRewardDays":0,"streakRewardPoint":30}}""",
+        )
+        val negative = json.decodeFromString<ThresholdsResponse>(
+            """{"version":3,"point":{"streakRewardDays":-3,"streakRewardPoint":30}}""",
+        )
+
+        // when
+        val mergedZero = DetectionConfig.DEFAULT.mergedWith(zero)
+        val mergedNegative = DetectionConfig.DEFAULT.mergedWith(negative)
+
+        // then
+        val expected = PointConfig(streakRewardDays = PointConfig().streakRewardDays, streakRewardPoint = 30)
+        assertEquals(expected, mergedZero.point)
+        assertEquals(expected, mergedNegative.point)
+    }
+
+    @Test
     fun `version이 바뀐 경우에만 갱신하고 저장, 다시 켜면 저장 값으로 시작`() = runTest {
         val cache = MemoryCache()
         val api = FakeConfigApi(ApiResult.Success(response))
