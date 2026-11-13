@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.domain.model.TripResult
 import kotlinx.coroutines.flow.Flow
@@ -36,7 +37,10 @@ class ResultViewModel(
     private val dayOrdinal = MutableStateFlow<Int?>(null)
 
     val uiState: StateFlow<ResultUiState> = combine(result, mission, earnedPoints, dayOrdinal) { result, mission, points, ordinal ->
-        result?.toResultUiState(mission, grades, points)?.copy(dayOrdinal = ordinal) ?: ResultUiState.NotFound
+        // 짧은 이동은 경기가 아니므로 몇 번째인지 보여주지 않음
+        result?.toResultUiState(mission, grades, points)
+            ?.copy(dayOrdinal = ordinal.takeIf { result.scoreState != ScoreState.EXCLUDED_SHORT })
+            ?: ResultUiState.NotFound
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ResultUiState.Loading)
 
     init {
