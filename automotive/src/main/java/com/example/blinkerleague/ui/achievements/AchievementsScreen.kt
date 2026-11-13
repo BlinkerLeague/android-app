@@ -152,7 +152,7 @@ private fun AchievementsPreview() = BlinkerLeagueTheme {
                 StreakCard(5, false, 2),
                 listOf(
                     BadgeCard("첫 경기", "점수가 난 첫 운행", true, "11.09"),
-                    BadgeCard("7일 연속", "오늘의 미션 7일 연속 달성", false, null),
+                    BadgeCard("7일 연속", "오늘의 퀘스트 7일 연속 달성", false, null),
                     BadgeCard("깜빡이 100회", "깜빡이를 켠 회전 누적 100회", false, null),
                 ),
             ),
