@@ -4,7 +4,6 @@ import com.example.blinkerleague.data.scenario.Scenarios
 import com.example.blinkerleague.domain.config.Coordinate
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.config.SafetyWarningConfig
-import com.example.blinkerleague.domain.config.TripConfig
 import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.Gear
 import com.example.blinkerleague.domain.model.HeadlightSample
@@ -360,5 +359,39 @@ class TripAssemblerTest {
             listOf(TripEvent.SafetyWarningEvent(id = "event-3", occurredAtMs = 10_000)) + turns,
             trip.events,
         )
+    }
+
+    @Test
+    fun `횟수형 이벤트를 모두 빼도 maxEvents를 넘으면 시각이 이른 것부터 maxEvents개만 남긴다`() {
+        // given
+        // 이벤트 상한 1개
+        val limitedAssembler = TripAssembler(
+            DetectionConfig.DEFAULT.copy(trip = DetectionConfig.DEFAULT.trip.copy(maxEvents = 1)),
+        ) { "event-${++seq}" }
+        // 운행 0s ~ 150s, 1초 간격으로 20km/h 일정. 횟수형 이벤트(급가감속 · 경고등)는 없음
+        val speeds = (0L..150_000L step 1_000).map { SpeedSample(it, 20f) }
+        // 핸들: 40s ~ 45s, 100s ~ 105s 두 번 왼쪽으로 100도 꺾음 → 회전 2개
+        val steering = listOf(
+            SteeringSample(0, 0f),
+            SteeringSample(40_000, 30f),
+            SteeringSample(42_000, 100f),
+            SteeringSample(45_000, 0f),
+            SteeringSample(100_000, 30f),
+            SteeringSample(102_000, 100f),
+            SteeringSample(105_000, 0f),
+        )
+
+        // when
+        val trip = limitedAssembler.assemble(
+            tripId = "t",
+            startedAtMs = 0,
+            endedAtMs = 150_000,
+            recording = TripRecording(steering, emptyList(), emptyList(), emptyList(), speeds = speeds),
+            supported = setOf(SignalType.TURN_SIGNAL, SignalType.STEERING_ANGLE, SignalType.SPEED),
+        )
+
+        // then
+        // 40s 회전 1개만
+        assertEquals(listOf("event-1" to 40_000L), trip.events.map { it.id to it.occurredAtMs })
     }
 }
