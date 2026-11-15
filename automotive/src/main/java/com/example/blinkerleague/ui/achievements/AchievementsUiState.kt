@@ -34,6 +34,8 @@ data class BadgeCard(
     val earned: Boolean,
     /** 예: "11.09". 못 받았거나 서버가 안 주면 null */
     val awardedOn: String?,
+    /** 서버 배지 코드 (예: FIRST_TRIP). 진열장 아이콘을 고를 때만 씀 */
+    val code: String = "",
 )
 
 /**

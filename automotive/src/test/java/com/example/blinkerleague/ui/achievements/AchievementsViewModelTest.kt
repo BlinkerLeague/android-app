@@ -126,6 +126,24 @@ class AchievementsViewModelTest {
     }
 
     @Test
+    fun `배지 카드에 서버 배지 코드를 담는다`() = runTest(dispatcher) {
+        // given
+        val vm = AchievementsViewModel(
+            { null },
+            { listOf(Badge("SIGNAL_100", "깜빡이 100회", "회전 깜빡이 100회", false, null)) },
+            zone,
+        )
+
+        // when
+        vm.refresh()
+        runCurrent()
+
+        // then
+        val state = vm.uiState.value as AchievementsUiState.Loaded
+        assertEquals("SIGNAL_100", state.badges[0].code)
+    }
+
+    @Test
     fun `7일마다 보상 - 남은 날 계산`() {
         assertEquals(7, daysToReward(0))
         assertEquals(4, daysToReward(3))
