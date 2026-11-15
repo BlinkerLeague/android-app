@@ -94,6 +94,7 @@ class TripMapper(
                 occurredAtMs = event.occurredAtMs,
                 payload = json.encodeToString(SeatBeltPayload(event.buckledAtDeparture, event.unbuckledMovingSec)),
             )
+            is TripEvent.SafetyWarningEvent -> TODO()
         }
     }
 

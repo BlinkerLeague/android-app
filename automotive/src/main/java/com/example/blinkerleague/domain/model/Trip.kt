@@ -62,4 +62,10 @@ sealed interface TripEvent {
         val buckledAtDeparture: Boolean,
         val unbuckledMovingSec: Int,
     ) : TripEvent
+
+    /** 안전 경고등 한 번 (주행 중 설정 대상 경고등이 켜짐). 횟수만 보내므로 경고등 이름은 담지 않음 */
+    data class SafetyWarningEvent(
+        override val id: String,
+        override val occurredAtMs: Long,
+    ) : TripEvent
 }

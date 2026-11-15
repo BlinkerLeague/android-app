@@ -3,6 +3,7 @@ package com.example.blinkerleague.domain.detection
 import com.example.blinkerleague.data.scenario.Scenarios
 import com.example.blinkerleague.domain.config.Coordinate
 import com.example.blinkerleague.domain.config.DetectionConfig
+import com.example.blinkerleague.domain.config.SafetyWarningConfig
 import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.Gear
 import com.example.blinkerleague.domain.model.HeadlightSample
@@ -11,6 +12,7 @@ import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.SpeedSample
+import com.example.blinkerleague.domain.model.TelltaleSample
 import com.example.blinkerleague.domain.model.TripEvent
 import com.example.blinkerleague.domain.model.TurnDirection
 import com.example.blinkerleague.domain.model.TurnSignalState
@@ -247,5 +249,31 @@ class TripAssemblerTest {
         // then
         assertEquals(setOf(SignalType.SPEED), trip.supported)
         assertEquals(emptyList<TripEvent>(), trip.events)
+    }
+
+    @Test
+    fun `경고등과 속도가 지원되면 SAFETY_WARNING 이벤트를 만든다`() {
+        // given
+        // 대상 경고등은 ABS (기본 설정의 목록은 비어 있어서 테스트에서 주입)
+        val safetyAssembler = TripAssembler(
+            DetectionConfig.DEFAULT.copy(safetyWarning = SafetyWarningConfig(telltaleTypes = setOf("ABS"))),
+        ) { "event-${++seq}" }
+        // 운행 0s ~ 60s, 1초 간격으로 30km/h. 경고등은 1초 폴링, 20s ~ 29s 동안 ABS 켜짐
+        val speeds = (0L..60_000L step 1_000).map { SpeedSample(it, 30f) }
+        val telltales = (0L..60_000L step 1_000).map { t ->
+            TelltaleSample(t, if (t in 20_000L..29_000L) setOf("ABS") else emptySet())
+        }
+
+        // when
+        val trip = safetyAssembler.assemble(
+            tripId = "t",
+            startedAtMs = 0,
+            endedAtMs = 60_000,
+            recording = TripRecording(emptyList(), emptyList(), emptyList(), emptyList(), speeds = speeds, telltales = telltales),
+            supported = setOf(SignalType.SAFETY_WARNING, SignalType.SPEED),
+        )
+
+        // then
+        assertEquals(listOf(TripEvent.SafetyWarningEvent(id = "event-1", occurredAtMs = 20_000)), trip.events)
     }
 }

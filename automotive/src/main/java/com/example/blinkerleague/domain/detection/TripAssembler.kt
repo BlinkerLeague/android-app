@@ -9,6 +9,7 @@ import com.example.blinkerleague.domain.model.SeatBeltSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.SpeedSample
+import com.example.blinkerleague.domain.model.TelltaleSample
 import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.Trip
 import com.example.blinkerleague.domain.model.TripEvent
@@ -30,6 +31,8 @@ data class TripRecording(
     val headlights: List<HeadlightSample> = emptyList(),
     /** 운전석 안전벨트 착용 상태를 읽은 값. 안전벨트 판정에 씀 */
     val seatBelts: List<SeatBeltSample> = emptyList(),
+    /** 그 시점에 켜진 경고등 이름 집합 (1초 폴링). 안전 경고등 판정에 씀 */
+    val telltales: List<TelltaleSample> = emptyList(),
 )
 
 /**
