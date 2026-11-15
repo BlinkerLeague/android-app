@@ -49,7 +49,7 @@ class TripVoiceGuideTest {
 
         assertEquals(
             listOf(
-                "오늘의 퀘스트, 회전 깜빡이 완벽. 이번 운행에서 회전 세 번 모두 깜빡이를 미리 켜 보세요.",
+                "깜빡이리그, 경기 시작합니다! 오늘의 퀘스트는 회전 깜빡이 완벽, 회전 세 번 모두 득점해 볼까요?",
                 "경기 종료! 1 대 0 퍼펙트 승리입니다!",
             ),
             announcer.spoken,
