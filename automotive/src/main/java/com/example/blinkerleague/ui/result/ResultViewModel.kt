@@ -38,10 +38,11 @@ class ResultViewModel(
     private val mission = MutableStateFlow<TodayMission?>(null)
     private val earnedPoints = MutableStateFlow<Int?>(null)
     private val dayOrdinal = MutableStateFlow<Int?>(null)
+    private val metrics = MutableStateFlow<List<MetricDetail>>(emptyList())
 
-    val uiState: StateFlow<ResultUiState> = combine(result, mission, earnedPoints, dayOrdinal) { result, mission, points, ordinal ->
+    val uiState: StateFlow<ResultUiState> = combine(result, mission, earnedPoints, dayOrdinal, metrics) { result, mission, points, ordinal, metrics ->
         // 짧은 이동은 경기가 아니므로 몇 번째인지 보여주지 않음
-        result?.toResultUiState(mission, grades, points)
+        result?.toResultUiState(mission, grades, points, serverMetrics = metrics)
             ?.copy(dayOrdinal = ordinal.takeIf { result.scoreState != ScoreState.EXCLUDED_SHORT })
             ?: ResultUiState.NotFound
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ResultUiState.Loading)
@@ -54,6 +55,8 @@ class ResultViewModel(
             // 퀘스트 진행률은 이번 운행이 서버에 반영된 뒤에 받아야 맞음
             mission.value = loadMission()
             earnedPoints.value = loadEarnedPoints()
+            // 서버 항목 결과도 업로드가 끝난 뒤에만 있음
+            metrics.value = loadMetrics() ?: emptyList()
         }
     }
 
