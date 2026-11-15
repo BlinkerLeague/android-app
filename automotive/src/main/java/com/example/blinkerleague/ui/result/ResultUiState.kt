@@ -98,8 +98,16 @@ internal fun TripResult.toResultUiState(
     val goals = turns.count { it.signalOn }
     val canMeasureTurns = SignalType.TURN_SIGNAL in supported && SignalType.STEERING_ANGLE in supported
     fun serverScore(item: MetricItem): Int? = serverMetrics.firstOrNull { it.metric == item.name }?.score
-    // 깜빡이 외 항목: 서버 점수가 있으면 점수, 없으면 준비 중
-    fun otherValue(item: MetricItem): MetricValue = serverScore(item)?.let { MetricValue.Score(it) } ?: MetricValue.ComingSoon
+    // 깜빡이 외 항목: 서버 판정(미지원 / 해당 없음 / 점수), 없으면 준비 중
+    fun otherValue(item: MetricItem): MetricValue {
+        val detail = serverMetrics.firstOrNull { it.metric == item.name }
+        return when {
+            detail?.status == "UNSUPPORTED" -> MetricValue.Unsupported
+            detail?.status == "NOT_APPLICABLE" -> MetricValue.NotApplicable
+            detail?.score != null -> MetricValue.Score(detail.score)
+            else -> MetricValue.ComingSoon
+        }
+    }
     val serverTurnScore = serverScore(MetricItem.TURN_SIGNAL)
     val turnValue: MetricValue = when {
         // 서버가 깜빡이 항목 점수를 줬으면 총점 대신 그 점수
