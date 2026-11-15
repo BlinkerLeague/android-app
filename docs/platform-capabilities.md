@@ -33,6 +33,20 @@
 | **주행 중 화면 제한** | ✅ | (시스템 동작) | - | 기어 D(속도 0 포함)면 앱 화면 위에 "주행 중에는 사용할 수 없습니다"가 덮임. P면 풀림 | 앱이 distraction-optimized가 아니라서. 앱 가드(`DrivingGuard`)도 따로 막음 |
 | **시동 켜짐·꺼짐 감지** | ❌ | Vehicle SDK 없음, CarProperty `IGNITION_STATE`는 속성 목록에 없음 | `android.car.permission.CAR_POWERTRAIN` (일반) | - | 기어 P/D로 운행을 구분함. 콘솔 전원 Off도 Android 절전으로 이어지지 않아 Resume 재현 불가 (실차 확인) |
 
+### 점수 항목 확장용 신호 (javap 확인, 2026-11-15)
+
+> SDK 2.3.2 `classes.jar`를 `javap -v`로 열어 메서드 시그니처와 `@RequiresPermission`을 확인했습니다. 앱 구현은 `PleosVehicleSignalSource`. 에뮬레이터·실차 동작은 이번에 다시 재지 않았습니다.
+
+| 신호 | 앱이 쓰는 API | capability 확인 | 권한 (`@RequiresPermission`) | 값 → 앱 샘플 | 주의할 점 |
+| --- | --- | --- | --- | --- | --- |
+| **브레이크 페달** | `Brake.registerBrakePedalStatus(BrakePedalStatusListener)` → `onBrakePedalStatusUpdated(Boolean?)` | `checkBrakePedalStatusCapabilities` | `pleos.car.permission.CAR_DRIVE` | `true`=밟음 → `BrakeSample` | 값이 바뀔 때만 옴 (sdk-test-log) |
+| **하향등** | `Light.registerLowBeamLightState(LightStateListener)` → `onLightStateUpdated(LightState?)` | `checkLowBeamLightStateCapabilities` | `pleos.car.permission.CAR_LIGHTS` | `OFF`/`ON`/`DAYTIME_RUNNING` → `ON`만 켜짐 (`HeadlightSample`) | 주간주행등은 꺼짐으로 봄 |
+| **운전석 안전벨트** | `Seat.getCurrentSeatBeltBuckledState(SeatArea(ROW_1_LEFT), …)`를 1초마다 폴링 (`SeatBeltConfig.pollIntervalSec`) | `checkSeatBeltBuckledCapabilities` (목록에 운전석이 있는지) | `pleos.car.permission.CAR_SEATS` | `Boolean?` → `SeatBeltSample` | 변경 콜백 `registerSeatBeltBuckledState`도 있지만 콘솔로 바꿀 수 없어 확인 못 함 → 폴링. 좌핸들 기준 |
+| **경고등** | `Safety.getTelltalesInfo(…)`를 1초마다 폴링 (`SafetyWarningConfig.pollIntervalSec`) → `Telltales(List<TelltaleData(type, state, …)>)` | 없음 → get 성공 여부 | `pleos.car.permission.CAR_SAFETY` | 상태 `ON`·`BLINK`인 `TelltaleType` 이름 집합 → `TelltaleSample` | `registerTelltales`·`checkTelltalesCapabilities`는 **`PRIVATE_CAR_SAFETY`** → 쓰지 않음. 판정 대상 기본값 `ABS`, `ESC`, `TPMS`, `PARKING_BRAKE`, `ELECTRONIC_PARKING_BRAKE` |
+| **와이퍼** | `Wiper.registerWiperState(WindowArea(FRONT_WINDSHIELD), WiperStateListener)` → `onWiperStateUpdated(WiperState?)` | `checkWiperStateCapabilities` (앞 유리 영역이 있는지) | `pleos.car.permission.CAR_WINDOWS` | `OTHER`/`OFF`/`ON`/`SERVICE` → `ON`만 켜짐 (`WiperSample`) | 스위치(`getCurrentWiperSwitch`, AUTO 등)가 아니라 실제 작동 상태를 씀 |
+
+- 리스너 등록에서 `SecurityException`이 나거나 `onFailed`가 오면 그 신호의 Flow만 끝나고 측정에서 빠집니다. 폴링은 처음부터 2번 연속 실패하면 멈춥니다.
+
 ## 2. 앱이 화면에 없을 때도 신호가 오는가
 
 | 앱 상태 | 결과 | 설명 |
