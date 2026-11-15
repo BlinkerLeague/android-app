@@ -29,4 +29,16 @@ class ScoreItemTest {
         // then
         assertTrue("측정 항목: $items", ScoreItem.TURN_SPEED in items)
     }
+
+    @Test
+    fun `속도와 브레이크가 모두 있으면 SMOOTH_DRIVING을 넣는다`() {
+        // given
+        val signals = setOf(SignalType.SPEED, SignalType.BRAKE)
+
+        // when
+        val items = ScoreItem.measurable(signals)
+
+        // then
+        assertTrue("측정 항목: $items", ScoreItem.SMOOTH_DRIVING in items)
+    }
 }
