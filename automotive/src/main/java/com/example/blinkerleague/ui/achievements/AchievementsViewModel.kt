@@ -37,7 +37,7 @@ class AchievementsViewModel(
                 else -> AchievementsUiState.Loaded(
                     streak = s?.let { rule().let { r -> StreakCard(it.days, it.todayAchieved, daysToReward(it.days, r.streakRewardDays), r.streakRewardPoint, r.streakRewardDays) } },
                     badges = b.orEmpty().map {
-                        BadgeCard(it.name, it.condition, it.earned, it.awardedAtMs?.let { ms -> DATE.format(Instant.ofEpochMilli(ms).atZone(zone)) })
+                        BadgeCard(it.name, it.condition, it.earned, it.awardedAtMs?.let { ms -> DATE.format(Instant.ofEpochMilli(ms).atZone(zone)) }, it.code)
                     },
                     earnedCount = b.orEmpty().count { it.earned },
                 )
