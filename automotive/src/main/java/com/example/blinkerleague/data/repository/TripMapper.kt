@@ -47,7 +47,15 @@ class TripMapper(
                 tripId = trip.id,
                 type = TripEventType.TURN,
                 occurredAtMs = event.occurredAtMs,
-                payload = json.encodeToString(TurnPayload(event.direction.name, event.signalOn, event.uTurn)),
+                payload = json.encodeToString(
+                    TurnPayload(
+                        direction = event.direction.name,
+                        signalOn = event.signalOn,
+                        uTurn = event.uTurn,
+                        // 소수 1자리로 반올림
+                        maxSpeedKmh = event.maxSpeedKmh?.let { Math.round(it * 10) / 10.0 },
+                    ),
+                ),
             )
             is TripEvent.SignalLeftOnEvent -> TripEventEntity(
                 eventId = event.id,
