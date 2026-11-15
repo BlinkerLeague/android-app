@@ -34,7 +34,7 @@ object VoiceScript {
             success > total - success -> "경기 종료! $success 대 ${total - success} 승리입니다. 화면에서 하이라이트를 볼 수 있어요."
             success == total - success -> "경기 종료! $success 대 ${total - success} 무승부입니다. 화면에서 하이라이트를 볼 수 있어요."
             success == 0 -> "운행이 끝났어요. 다음 회전에는 깜빡이를 미리 켜 봐요."
-            else -> "운행이 끝났어요. 회전 ${count(total)} 중 ${count(success)} 깜빡이를 제때 켰어요."
+            else -> "경기 종료. $success 대 ${total - success}, 아쉬운 경기였어요. 다음 경기에선 회전 ${signalLeadSec}초 전에 깜빡이!"
         }
     }
 
