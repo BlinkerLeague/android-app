@@ -7,6 +7,7 @@ import com.example.blinkerleague.domain.model.TripEvent
 import com.example.blinkerleague.domain.model.TurnDirection
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.double
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
@@ -94,5 +95,21 @@ class TripMapperTest {
         assertEquals("SIGNAL_LEFT_ON", event.type)
         assertEquals("2026-11-03T08:02:00+09:00", event.occurredAt)
         assertEquals(Json.parseToJsonElement("""{"durationSec":40}"""), event.payload)
+    }
+
+    @Test
+    fun `TURN payload에 maxSpeedKmh를 소수 1자리로 넣는다`() {
+        // given
+        val withSpeed = trip.copy(
+            events = listOf(TripEvent.TurnEvent("e1", start + 1_000, TurnDirection.LEFT, signalOn = true, uTurn = null, maxSpeedKmh = 32.46)),
+        )
+
+        // when
+        val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(withSpeed), mapper.toEventEntities(withSpeed)))
+
+        // then
+        val payload = request.events.single().payload.jsonObject
+        assertEquals(setOf("direction", "signalOn", "maxSpeedKmh"), payload.keys)
+        assertEquals(32.5, payload["maxSpeedKmh"]!!.jsonPrimitive.double, 0.0)
     }
 }

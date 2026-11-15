@@ -35,6 +35,8 @@ data class TurnPayload(
     val direction: String,
     val signalOn: Boolean,
     val uTurn: Boolean? = null,
+    /** 회전 구간 최고 속도(km/h, 소수 1자리). 모르면 null이라 직렬화에서 빠짐 */
+    val maxSpeedKmh: Double? = null,
 )
 
 /** `SIGNAL_LEFT_ON` 이벤트 payload (openapi `TripEventRequest.payload`) */
