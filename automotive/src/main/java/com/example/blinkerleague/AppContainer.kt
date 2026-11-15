@@ -5,6 +5,8 @@ import com.example.blinkerleague.data.auth.DriverProfile
 import com.example.blinkerleague.data.auth.PrefsTokenStore
 import com.example.blinkerleague.data.auth.TokenStore
 import com.example.blinkerleague.data.config.ConfigRepository
+import com.example.blinkerleague.data.celebration.CelebrationStore
+import com.example.blinkerleague.data.celebration.PrefsCelebrationStore
 import com.example.blinkerleague.data.config.PrefsConfigCache
 import com.example.blinkerleague.data.local.AppDatabase
 import com.example.blinkerleague.data.location.LocationSource
@@ -144,6 +146,9 @@ class AppContainer(context: Context) {
     )
 
     val missionRepository = MissionRepository(missionApi)
+
+    /** 퀘스트 클리어 축하(꽃가루)를 이미 본 회차 (회차당 1회, 앱을 다시 켜도 유지) */
+    val questCelebrations: CelebrationStore = PrefsCelebrationStore(context)
 
     /** 화면·기록 작업보다 오래 사는 작업용 (음성 안내 등) */
     val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)

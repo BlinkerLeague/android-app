@@ -89,7 +89,7 @@ class ResultViewModelTest {
     }
 
     @Test
-    fun `결과 화면은 기준값의 팁을 쓴다`() = runTest(dispatcher) {
+    fun `결과 화면 팁은 기준값 signalLeadSec을 쓴다`() = runTest(dispatcher) {
         // given
         // 깜빡이를 켜지 않은 회전 하나 → 실점 1
         val conceded = scored.copy(turns = listOf(TurnRecord(start + 5 * 60_000L, TurnDirection.LEFT, false)))
@@ -98,7 +98,7 @@ class ResultViewModelTest {
             sync = {},
             loadMission = { null },
             grades = GradeThreshold.DEFAULT,
-            tips = mapOf("TURN_SIGNAL" to "회전 전에 깜빡이를 미리 켜 보세요"),
+            signalLeadSec = 7,
         )
 
         // when
@@ -106,7 +106,7 @@ class ResultViewModelTest {
         advanceUntilIdle()
 
         // then
-        assertEquals("회전 전에 깜빡이를 미리 켜 보세요", (vm.uiState.value as ResultUiState.Loaded).tip)
+        assertEquals(7, (vm.uiState.value as ResultUiState.Loaded).tipLeadSec)
     }
 
     @Test

@@ -12,6 +12,8 @@ sealed interface AchievementsUiState {
         /** 연속 달성. 못 받으면 null (그 칸만 숨김) */
         val streak: StreakCard?,
         val badges: List<BadgeCard>,
+        /** 획득한 배지 수 ("획득 N / 전체 M"의 N) */
+        val earnedCount: Int = 0,
     ) : AchievementsUiState
 }
 
@@ -32,6 +34,8 @@ data class BadgeCard(
     val earned: Boolean,
     /** 예: "11.09". 못 받았거나 서버가 안 주면 null */
     val awardedOn: String?,
+    /** 서버 배지 코드 (예: FIRST_TRIP). 진열장 아이콘을 고를 때만 씀 */
+    val code: String = "",
 )
 
 /**

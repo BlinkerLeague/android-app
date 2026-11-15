@@ -84,10 +84,21 @@ fun Modifier.reveal(
     translationY = (1 - p) * fromY.toPx()
 }
 
-/** 화면 어디를 눌러도 남은 연출을 건너뜀. 누른 것(버튼 등)은 그대로 동작하도록 이벤트를 소비하지 않음 */
+/**
+ * 화면 어디를 눌러도 남은 연출을 건너뜀.
+ * 연출 중의 탭은 건너뛰기만 하고 소비함: 아직 투명한 배너 · 카드 · 버튼이 눌려 다른 화면으로 넘어가지 않게 (리뷰 8).
+ * 연출이 끝난 뒤의 탭은 소비하지 않아 누른 것(버튼 등)이 그대로 동작함
+ */
 fun Modifier.skipRevealOnTap(clock: RevealClock): Modifier = pointerInput(clock) {
     awaitEachGesture {
-        awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        if (clock.elapsedMs >= clock.totalMs) return@awaitEachGesture
         clock.skip()
+        down.consume()
+        // 손을 뗄 때까지 같은 제스처의 이벤트를 모두 소비 (자식의 클릭 · 스크롤이 시작되지 않게)
+        do {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+            event.changes.forEach { it.consume() }
+        } while (event.changes.any { it.pressed })
     }
 }

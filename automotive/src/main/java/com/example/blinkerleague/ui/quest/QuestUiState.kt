@@ -10,6 +10,8 @@ sealed interface QuestUiState {
         val mission: TodayMission,
         /** 이 퀘스트와 연승의 관계. 연승을 못 받으면 null (그 줄만 숨김) */
         val streakImpact: StreakImpact? = null,
+        /** 클리어 축하(꽃가루)를 보여 줄지. 같은 회차는 한 번만 (앱을 다시 켜도) */
+        val celebrate: Boolean = false,
     ) : QuestUiState
 
     data object Unavailable : QuestUiState

@@ -84,8 +84,8 @@ private val ResultViewModelFactory = viewModelFactory {
             loadEarnedPoints = { container.tripRepository.earnedPoints(tripId) },
             grades = container.config.grades,
             loadDayOrdinal = { container.tripRepository.dayOrdinal(tripId, ZoneId.systemDefault()) },
-            tips = container.config.tips,
             loadMetrics = { container.tripRepository.metricDetails(tripId) },
+            signalLeadSec = container.config.turn.signalLeadSec,
         )
     }
 }
@@ -184,7 +184,7 @@ private fun Loaded(
     }
 }
 
-/** 왼쪽: 머리말 · 스코어보드 · 승패 · 등급 도장 · 평점 · 적립 포인트 */
+/** 왼쪽: 머리말 · 스코어보드 · 승패 · 등급 도장 · 평점 · 다음 등급까지 · 적립 포인트 */
 @Composable
 private fun Scoreboard(state: ResultUiState.Loaded, grades: List<GradeThreshold>, clock: RevealClock) {
     Column(
@@ -211,7 +211,8 @@ private fun Scoreboard(state: ResultUiState.Loaded, grades: List<GradeThreshold>
             Column(
                 Modifier.weight(1f).fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+                // 도장 · 평점 · 다음 등급을 남은 높이에 고르게 (도장은 남은 높이만큼 커짐, 최대 240dp)
+                verticalArrangement = Arrangement.SpaceEvenly,
             ) {
                 Rating(state, grades, clock)
             }
@@ -220,7 +221,7 @@ private fun Scoreboard(state: ResultUiState.Loaded, grades: List<GradeThreshold>
     }
 }
 
-/** 득점 : 실점 큰 숫자. 회전이 없으면 "오늘은 회전 없는 경기" */
+/** 득점 : 실점 큰 숫자. 회전이 없으면 "회전 없는 경기" (홈 최근 경기 행과 같은 문구) */
 @Composable
 private fun GoalsBoard(state: ResultUiState.Loaded, clock: RevealClock) {
     val shape = RoundedCornerShape(16.dp)
@@ -282,7 +283,7 @@ private fun ColumnScope.Rating(state: ResultUiState.Loaded, grades: List<GradeTh
                     color = gradeColor(it, grades),
                     clock = clock,
                     startMs = ResultMotion.STAMP,
-                    modifier = Modifier.weight(1f, fill = false).heightIn(min = 96.dp, max = 168.dp),
+                    modifier = Modifier.weight(1f, fill = false).heightIn(min = 96.dp, max = 240.dp),
                     glow = state.celebrate,
                 )
             }
@@ -293,6 +294,15 @@ private fun ColumnScope.Rating(state: ResultUiState.Loaded, grades: List<GradeTh
                     ResultMotion.RATING,
                     style = MaterialTheme.typography.headlineMedium,
                     format = { stringResource(R.string.result_score, it) },
+                )
+            }
+            state.nextGrade?.let {
+                Text(
+                    stringResource(R.string.result_next_grade, it.grade, it.points),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.reveal(clock, ResultMotion.RATING),
                 )
             }
         }
@@ -348,7 +358,7 @@ private fun Stats(state: ResultUiState.Loaded, clock: RevealClock, onOpenMetric:
         state.metrics.forEachIndexed { index, row ->
             MetricLine(row, clock, ResultMotion.STATS + index * 100, onClick = { onOpenMetric(row.item) })
         }
-        state.tip?.let { TipCard(it, Modifier.fillMaxWidth().reveal(clock, ResultMotion.TIP, fromX = 40.dp, fromY = 0.dp)) }
+        state.tipLeadSec?.let { TipCard(stringResource(R.string.result_tip_turn_signal, it), Modifier.fillMaxWidth().reveal(clock, ResultMotion.TIP, fromX = 40.dp, fromY = 0.dp)) }
     }
 }
 
@@ -386,11 +396,9 @@ private fun MetricLine(row: MetricRow, clock: RevealClock, startMs: Int, onClick
         }
         val barModifier = Modifier.weight(0.45f).height(16.dp)
         when (value) {
-            // 아직 측정하지 않는 항목은 사선 무늬 (0점처럼 보이지 않게)
-            MetricValue.ComingSoon, MetricValue.Unsupported -> HatchedBox(barModifier)
-            else -> {
-                val fraction = if (value is MetricValue.Score) value.score.coerceIn(0, 100) / 100f else 0f
-                val fill = if (value is MetricValue.Score && value.score >= 70) OnSuccessContainer else OnWarningContainer
+            is MetricValue.Score -> {
+                val fraction = value.score.coerceIn(0, 100) / 100f
+                val fill = if (value.score >= 70) OnSuccessContainer else OnWarningContainer
                 Box(barModifier.clip(RoundedCornerShape(percent = 50)).background(MaterialTheme.colorScheme.outlineVariant)) {
                     val filled = fraction * clock.progress(startMs, 900)
                     if (filled > 0f) {
@@ -398,6 +406,8 @@ private fun MetricLine(row: MetricRow, clock: RevealClock, startMs: Int, onClick
                     }
                 }
             }
+            // 점수가 없는 항목(준비 중 · 미지원 · 해당 없음 · 제외 · 집계 중 등)은 모두 사선 무늬 (빈 막대가 0점처럼 보이지 않게, 리뷰 7)
+            else -> HatchedBox(barModifier)
         }
         Text(
             if (value is MetricValue.Score) value.score.toString() else "—",
@@ -486,7 +496,7 @@ private fun previewState(
 private val TopGradeState = previewState(ScoreState.SCORED, 100, "S", goals = 4, conceded = 0)
     .copy(celebrate = true, earnedPoints = 3, dayOrdinal = 3)
 private val SecondGradeState = previewState(ScoreState.SCORED, 86, "A")
-    .copy(earnedPoints = 3, dayOrdinal = 3, tip = "우회전도 회전 5초 전에 깜빡이를 켜 보세요")
+    .copy(earnedPoints = 3, dayOrdinal = 3, nextGrade = NextGrade("S", 9), tipLeadSec = 5)
 
 @Composable
 private fun ResultPreview(state: ResultUiState) = BlinkerLeagueTheme {

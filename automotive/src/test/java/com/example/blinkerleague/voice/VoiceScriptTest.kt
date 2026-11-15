@@ -107,7 +107,7 @@ class VoiceScriptTest {
         val script = VoiceScript.tripEnd(noTurn, 1.0)
 
         // then
-        assertEquals("경기 종료. 오늘은 회전 없는 경기였어요.", script)
+        assertEquals("경기 종료. 이번 경기는 회전이 없었어요.", script)
     }
 
     @Test

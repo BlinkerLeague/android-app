@@ -5,7 +5,7 @@
 - 기획서 (원본): https://claude.ai/artifact/8xWTvcr2nsR3zC57iVAYgZ
 - UI 목업 (참고용, 11.08 개정): https://claude.ai/artifact/EjjhjWCfMLr6d3aFThibn9
 - **화면 기준 문서: [`docs/screen-plan.md`](docs/screen-plan.md)** (목업과 다르면 이 문서를 따름)
-- **정차 화면 게임 UI (2차, 진행 중): [`plan-ui.md`](plan-ui.md)** — 끝난 것 · 남은 것 · 결정, 목업 [`docs/mockups/game-ui.html`](docs/mockups/game-ui.html)
+- **정차 화면 게임 UI (2차, 구현 완료 · 리뷰 · 머지 남음): [`plan-ui.md`](plan-ui.md)** — 끝난 것 · 남은 것 · 결정, 목업 [`docs/mockups/game-ui.html`](docs/mockups/game-ui.html)
 - 구현 가이드 (10/27, 기획서 문서의 탭): SDK 사용 흐름, 핸들 각도 판정, 확인 목록
 - Pleos 앱 보안 가이드 대응표: [`docs/security-checklist.md`](docs/security-checklist.md)
 - Pleos 문의 사항(실차·SDK·심사): [`docs/pleos-inquiries.md`](docs/pleos-inquiries.md)
@@ -225,10 +225,10 @@
 | 4 | 연속 보상 하드코딩 제거: 주기 `STREAK_REWARD_DAYS = 7`과 보상 문구 "+50P" → 기준값 `point.streakRewardDays` · `streakRewardPoint` (지갑 사유 "7일 연속 달성"(`strings.xml:220`)은 서버 사유 코드 `STREAK_7`의 이름표이고 과거 적립 행에 붙으므로 제외) | (코드 규칙) | `ui/achievements/AchievementsUiState.kt:19 · 32`, `ConfigDtos.kt`(`ThresholdsResponse`에 `point` 없음), `strings.xml:156` | 완료 (11.13, feature/plan-gap-fixes): `PointConfig`(기본 7일 · 50P), `STREAK_REWARD_DAYS` 삭제 | 소 |
 | 5 | SCR-08 음성 안내 끄기 토글 | 5 · 10장 | `ui/settings`, `service/TripVoiceGuide` | 2차 | 중 |
 | 6 | SCR-08 내 차량 측정 항목 목록 (`CapabilityReport`, 온보딩 3단계 재사용) | 2 · 5장 | `ui/settings` | 2차 | 소 |
-| 7 | SCR-05 연승 7일 진행 점 | 8장 | `ui/achievements` | 2차 | 소 |
-| 8 | SCR-03 연승 영향 문구 ("달성하면 연승 N일째") | 6장 | `ui/quest` | 2차 | 소 |
-| 9 | VOC-02 종료 음성: "퀘스트 달성! 연승 N일째"를 먼저 말하기, 퍼펙트(모든 회전 득점) 문구 | 10장 | `VoiceScript.tripEnd` | 2차 | 중 |
-| 10 | SCR-01 퀘스트 진행 링 (지금 막대, 낮음) | 6장 | `ui/quest/MissionCard.kt:65` | 2차 | 소 |
+| 7 | SCR-05 연승 7일 진행 점 | 8장 | `ui/achievements` | 완료 (11.15, 2차 #22 PR-C `feature/game-ui-shelf`): 기준값 주기(`point.streakRewardDays`)칸 진행 점, 홈과 같은 `StreakDots` | 소 |
+| 8 | SCR-03 연승 영향 문구 ("달성하면 연승 N일째") | 6장 | `ui/quest` | 완료 (11.15, 2차 #22 PR-B): "클리어하면 N연승" / "오늘 클리어로 N연승" + 주기면 연속 보상 | 소 |
+| 9 | VOC-02 종료 음성: "퀘스트 달성! 연승 N일째"를 먼저 말하기, 퍼펙트(모든 회전 득점) 문구 | 10장 | `VoiceScript.tripEnd` | 일부 완료 (11.15, 2차 #22 PR-A): 퍼펙트 문구만. 퀘스트 · 연승을 먼저 말하기는 보류(plan-ui 결정 5, 사용자 결정 필요) | 중 |
+| 10 | SCR-01 퀘스트 진행 링 (지금 막대, 낮음) | 6장 | `ui/quest/MissionCard.kt:65` | 완료 (11.15, 2차 #22 PR-B): `ProgressRing` | 소 |
 | 11 | SCR-04 육각 타일 지역 지도 (지금은 지역 안전지수 목록) | 8장 | `ui/league` `RegionsPanel` | 2차 | 대 |
 | 12 | 2차 측정 판정 엔진: 급가속 · 급감속(`HARSH_*`), 야간 전조등(`NIGHT_SEGMENT`), 안전 경고(`SAFETY_WARNING`). 지금은 신호 `SignalType`(`BRAKE` · `HEADLIGHT` · `SAFETY_WARNING`)에 정의만 있고 이벤트(`TripEvent`)는 `TurnEvent`뿐이며 결과 행은 항상 "준비 중"(`ResultUiState.kt:110-112`). 서버는 이벤트 종류를 이미 받음 | 2 · 4장 | `domain/detection`, `data/vehicle`, `ScoreItem`, `ui/result` | 2차 | 완료(11.15, "2차 앱 작업" 20): 판정 · 업로드, 결과 행 값은 서버 `metrics`. 8행 확장은 21 |
 
@@ -306,12 +306,12 @@
 | 13 | 안전 경고 판정(`SAFETY_WARNING`): Safety 경고등(`registerTelltales`) 켜짐을 `safetyWarning.mergeWindowSec`로 묶어 이벤트로, `supported`에 `SAFETY_WARNING`, 결과 행 연결. 실차 경고등 종류는 스파이크 7 확인 필요 | 완료(11.15): `getTelltalesInfo` 1초 폴링(등록 API는 PRIVATE 권한이라 안 씀). 실차 경고등 종류 확인 필요 |
 | 14 | 11~13의 이벤트 payload 형식을 서버와 확인(`docs/server-requests.md` 새 항목, 서버 D21: 서버 반영 확인 뒤에만 보냄) | 완료: openapi `TripEventRequest.payload`에 형식이 들어와 그대로 맞춤(11.15) |
 | 15 | SCR-08 음성 안내 끄기 토글 · 내 차량 측정 항목 목록 ("현황 점검" 미구현 5 · 6) | 예정 |
-| 16 | 연승 표시 보강: SCR-05 7일 진행 점, SCR-03 연승 영향 문구, SCR-01 퀘스트 진행 링 (미구현 7 · 8 · 10) | 예정 |
-| 17 | VOC-02 종료 음성: 퀘스트 달성 · 연승을 먼저 말하고, 퍼펙트 문구 추가 (미구현 9). 음성은 종료 시 1회 원칙 유지 | 예정 |
+| 16 | 연승 표시 보강: SCR-05 7일 진행 점, SCR-03 연승 영향 문구, SCR-01 퀘스트 진행 링 (미구현 7 · 8 · 10) | 완료(11.15, #22 PR-B · PR-C) |
+| 17 | VOC-02 종료 음성: 퀘스트 달성 · 연승을 먼저 말하고, 퍼펙트 문구 추가 (미구현 9). 음성은 종료 시 1회 원칙 유지 | 퍼펙트 문구 완료(#22 PR-A). 퀘스트 · 연승 먼저 말하기는 보류(plan-ui 결정 5) |
 | 18 | SCR-04 육각 타일 지역 지도 (미구현 11) | 예정 |
 | 19 | 포인트를 리워드처럼 보이게 하는 화면 문구 · 구성 재검토(지갑 탭 "내 포인트 · 오늘 적립 · 적립 한도 · 적립 내역", 퀘스트 보상 +20P, 업적 +50P). 포인트는 리그 순위 가산점으로만 쓰는 방향(11.14 결정) | 검토 |
 | 20 | 점수 항목 확장(`docs/scoring-criteria.md`): `SIGNAL_CANCEL`(`SIGNAL_LEFT_ON`) · `TURN_SPEED`(TURN `maxSpeedKmh`) · `SMOOTH_DRIVING`(11) · `NIGHT_HEADLIGHT`(12) · `SEAT_BELT` · `SAFETY_WARNING`(13) · `RAIN_DRIVING`(`RAIN_SEGMENT`) 판정 · 업로드, Pleos SDK 브레이크 · 하향등 · 안전벨트 · 경고등 · 와이퍼 연결 | 완료(11.15, `feature/score-metrics-expansion`) |
-| 22 | 정차 화면 게임 UI ([`plan-ui.md`](plan-ui.md), 목업 `docs/mockups/game-ui.html`). PR-A(`feature/game-ui`): 공통 연출 부품, SCR-02 결과(스코어보드 · 승패 · 등급 도장 · 팁), SCR-02a 하이라이트 타임라인, 시동 · 종료 음성 중계 톤(#17 중 "퍼펙트 문구"만). PR-B(`feature/game-ui-lobby`): SCR-01 홈 로비(선수 카드 닉네임 · 지역, 퀘스트 진행 링 · 조건 체크 · "다음 경기에서 회전 N번 모두", 연승 불꽃 · 주기 칸 점 · 다음 연속 보상, 최근 경기 등급 도장 · 스코어 · 거리, 상태줄 "출전 대기 중"), SCR-03 퀘스트(체크포인트 · 연승 영향 · CLEAR 도장 · 꽃가루)(#16 일부). PR-C: SCR-05 업적 · SCR-04 리그 · 문서 마무리(#16 나머지) | PR-A · PR-B 구현 완료(11.15), C 예정 |
+| 22 | 정차 화면 게임 UI ([`plan-ui.md`](plan-ui.md), 목업 `docs/mockups/game-ui.html`). PR-A(`feature/game-ui`): 공통 연출 부품, SCR-02 결과(스코어보드 · 승패 · 등급 도장 · 팁), SCR-02a 하이라이트 타임라인, 시동 · 종료 음성 중계 톤(#17 중 "퍼펙트 문구"만). PR-B(`feature/game-ui-lobby`): SCR-01 홈 로비(선수 카드 닉네임 · 지역, 퀘스트 진행 링 · 조건 체크 · "다음 경기에서 회전 N번 모두", 연승 불꽃 · 주기 칸 점 · 다음 연속 보상, 최근 경기 등급 도장 · 스코어 · 거리, 상태줄 "출전 대기 중"), SCR-03 퀘스트(체크포인트 · 연승 영향 · CLEAR 도장 · 꽃가루)(#16 일부). PR-C(`feature/game-ui-shelf`): SCR-05 트로피 진열장(획득 N / 전체 M, 배지 코드별 아이콘, 잠긴 배지 실루엣 · 자물쇠 · 서버 조건 문구, 획득 날짜, 연승 카드 진행 점), SCR-04 리그(큰 "N위", D-day 칩, 1~3위 금 · 은 · 동, 내 행 강조), 문서 마무리(#16 나머지). 배지 진행도 · 리그 단계 · 승강 · 순위 변동은 데이터가 없어 넣지 않음(plan-ui 결정 6 · 7) | PR-A · B · C 구현 완료(11.15). 남은 것: 리뷰 1회 · 에뮬레이터 확인 · PR 머지(#82 → #83 → PR-C) · README 스크린샷 |
 | 21 | 결과 화면(SCR-02) 8행 확장: 서버 8개 항목을 행으로 모두 표시(사용자 결정). 지금은 4행, 행 값은 서버 `metrics`로 채움 | 보류: UI 수정 후 (H4~H7) |
 
 - 리그 순위 공개 후속 (리뷰 낮음, 11.10): 공개를 끈 상태를 리그 화면에 안내 · 오프라인으로 설정을 열면 토글이 숨겨지고 다시 불러오지 않음 · 화면을 떠나면 진행 중 저장이 취소될 수 있음(다시 들어오면 서버 값으로 맞춰짐)
@@ -427,4 +427,5 @@
 | 2026-11-15 | 연승 칸 수 · 연속 보상은 기준값 `point.streakRewardDays` · `streakRewardPoint`에서 읽음. 칸은 주기 안 연승 일수(보상 받는 날은 꽉 참, 0일은 빈 칸). 퀘스트 화면 연승 영향: 오늘 클리어 전이면 클리어 시 일수(+1), 이미 클리어면 지금 일수, 그 일수가 주기의 배수면 보상 포인트 | 하드코딩(7일 · 50P) 없이 서버 기준값 교체에 맞춤 |
 | 2026-11-15 | 홈 선수 카드는 등록한 닉네임 · 지역만. 경험치 · 리그 단계 · 보유 포인트는 넣지 않음. 퀘스트 클리어 때만 꽃가루 1회(진입 시), 보물상자 · 보상 받기 · 일일 상한 줄 없음 | plan-ui 결정 2 · 6 |
 | 2026-11-15 | 진행 방식(이 작업부터): PR마다 새 에이전트 하나, 한 에이전트가 사이클의 red → green을 직접(커밋은 `test:` · `feat:` 따로), lead 없음, reviewer는 PR-A~C가 끝난 뒤 한 번 | 사용자 결정(사용량 절약). `plan-ui.md` 2장 |
+| 2026-11-15 | 업적 진열장: 잠긴 배지도 보여 주고(회색 실루엣 + 자물쇠 + 서버 `condition` 그대로), 아이콘은 배지 코드별 Canvas 그림(모르는 코드는 기본 트로피, 이모지 없음). 리그: 순위가 공개되고 내 순위가 있을 때만 큰 "N위", 아니면 기존 안내 문구. 1~3위 금 · 은 · 동. 배지 진행 막대 · 가장 가까운 트로피 · 리그 단계 · 승강 구역 · 순위 변동 · 승급까지는 넣지 않음 | 데이터 없음(plan-ui 결정 6 · 7, 사용자 결정 남음) |
 | 2026-11-15 | 이미 `REJECTED`인 운행은 이번 변경 뒤에도 재전송하지 않음 | 400 · 413은 같은 요청을 다시 보내도 거부됨. 기존 운행을 다시 조립하지 않음 |
