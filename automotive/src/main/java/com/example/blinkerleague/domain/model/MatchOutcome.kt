@@ -13,6 +13,7 @@ enum class MatchOutcome {
         fun of(goals: Int, conceded: Int): MatchOutcome? = when {
             goals == conceded -> DRAW
             goals < conceded -> TOUGH
+            conceded == 0 -> PERFECT
             else -> WIN
         }
     }
