@@ -25,6 +25,7 @@ import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.TelltaleSample
 import com.example.blinkerleague.domain.model.TurnDirection
 import com.example.blinkerleague.domain.model.TurnSignalState
+import com.example.blinkerleague.domain.model.WiperSample
 import com.example.blinkerleague.ui.result.toPlaysUiState
 import com.example.blinkerleague.ui.result.toResultUiState
 import kotlinx.coroutines.flow.first
@@ -296,5 +297,34 @@ class TripRecorderTest {
         val finished = recorder.state.value as RecorderState.Finished
         val types = db.tripDao().trip(finished.tripId)!!.events.map { it.type }
         assertTrue("저장된 이벤트: $types", "SAFETY_WARNING" in types)
+    }
+
+    @Test
+    fun `운행 중 와이퍼 샘플을 모아 RAIN_SEGMENT를 저장한다`() = runTest {
+        // given
+        // 2초 정차 → 출발, 30km/h로 60초 → 종료 (와이퍼 기준 30초 초과)
+        // 와이퍼는 운행 시작 전(0s)에 켜진 뒤, 하향등은 운행 시작 전(0s)에 꺼진 뒤 상태 변화가 없음
+        val s = scenario("비 오는 날 와이퍼 켠 채 운행") {
+            stop(seconds = 2)
+            start()
+            straight(seconds = 60, speedKmh = 30f)
+            end()
+        }.let {
+            it.copy(
+                supported = it.supported + SignalType.WIPER + SignalType.HEADLIGHT,
+                wipers = listOf(WiperSample(0, on = true)),
+                headlights = listOf(HeadlightSample(0, on = false)),
+            )
+        }
+        val recorder = recorder(s)
+        backgroundScope.launch { recorder.run() }
+
+        // when
+        advanceTimeBy(s.durationMs + 1_000)
+
+        // then
+        val finished = recorder.state.value as RecorderState.Finished
+        val types = db.tripDao().trip(finished.tripId)!!.events.map { it.type }
+        assertTrue("저장된 이벤트: $types", "RAIN_SEGMENT" in types)
     }
 }

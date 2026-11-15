@@ -10,6 +10,7 @@ import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.TelltaleSample
 import com.example.blinkerleague.domain.model.VehicleStateSample
+import com.example.blinkerleague.domain.model.WiperSample
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
@@ -53,5 +54,9 @@ interface VehicleSignalSource {
 
     /** 그 시점에 켜진 경고등 이름 집합 (안전 경고등 판정 입력, 1초 폴링). 기본은 보내지 않음(미지원) */
     val telltales: Flow<TelltaleSample>
+        get() = emptyFlow()
+
+    /** 와이퍼 작동 상태 변화 (우천 구간 판정 입력). 기본은 보내지 않음(미지원) */
+    val wipers: Flow<WiperSample>
         get() = emptyFlow()
 }
