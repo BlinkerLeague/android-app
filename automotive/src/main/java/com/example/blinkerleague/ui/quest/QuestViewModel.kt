@@ -28,5 +28,7 @@ class QuestViewModel(
         }
     }
 
-    private fun impactOf(streak: Streak): StreakImpact = StreakImpact(streak.days + 1, streak.todayAchieved)
+    /** 오늘 클리어 전이면 클리어할 때 이어질 일수(내일 0이 되기 전 +1), 이미 클리어면 지금 일수 */
+    private fun impactOf(streak: Streak): StreakImpact =
+        StreakImpact(if (streak.todayAchieved) streak.days else streak.days + 1, streak.todayAchieved)
 }
