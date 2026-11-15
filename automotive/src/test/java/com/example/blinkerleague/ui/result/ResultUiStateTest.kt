@@ -301,7 +301,7 @@ class ResultUiStateTest {
     @Test
     fun `결과 화면은 서버 8개 항목을 서버 순서대로 행으로 보인다`() {
         // given
-        val server = listOf(MetricDetail(metric = "SEAT_BELT", status = "SCORED", score = 30, counts = emptyMap(), weight = 0.1))
+        val server = listOf(MetricDetail(metric = "SEAT_BELT", status = "SCORED", reason = null, score = 30, counts = emptyMap(), weight = 0.1))
 
         // when
         val state = result(ScoreState.SCORED, 72).toResultUiState(null, GradeThreshold.DEFAULT, serverMetrics = server)

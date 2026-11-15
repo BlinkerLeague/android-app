@@ -135,6 +135,10 @@ internal fun metricLabel(item: MetricItem): Int = when (item) {
     MetricItem.SMOOTH_DRIVING -> R.string.result_metric_smooth
     MetricItem.SAFETY_WARNING -> R.string.result_metric_safety
     MetricItem.NIGHT_HEADLIGHT -> R.string.result_metric_headlight
+    MetricItem.SIGNAL_CANCEL -> R.string.metric_signal_cancel
+    MetricItem.TURN_SPEED -> R.string.metric_turn_speed
+    MetricItem.SEAT_BELT -> R.string.metric_seat_belt
+    MetricItem.RAIN_DRIVING -> R.string.metric_rain_driving
 }
 
 internal fun metricValueText(value: MetricValue): Int = when (value) {
