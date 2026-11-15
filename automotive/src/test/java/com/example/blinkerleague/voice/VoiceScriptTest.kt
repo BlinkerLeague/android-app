@@ -20,12 +20,12 @@ class VoiceScriptTest {
     )
 
     @Test
-    fun `시동 안내는 오늘의 퀘스트로 상태별 문구를 말한다`() {
+    fun `시동 - 퀘스트를 못 받으면 깜빡이 안내만 한다`() {
         // when
-        val noQuestScript = VoiceScript.tripStart(null)
+        val script = VoiceScript.tripStart(null)
 
         // then
-        assertEquals("회전할 때 깜빡이를 미리 켜 주세요.", noQuestScript)
+        assertEquals("깜빡이리그, 경기 시작합니다! 회전할 때 깜빡이를 미리 켜 주세요.", script)
     }
 
     @Test
