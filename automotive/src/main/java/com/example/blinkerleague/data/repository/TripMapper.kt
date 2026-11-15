@@ -7,6 +7,7 @@ import com.example.blinkerleague.data.local.TripEventEntity
 import com.example.blinkerleague.data.local.TripWithEvents
 import com.example.blinkerleague.data.local.UploadState
 import com.example.blinkerleague.data.remote.dto.ScoreStatus
+import com.example.blinkerleague.data.remote.dto.SignalLeftOnPayload
 import com.example.blinkerleague.data.remote.dto.TripEventDto
 import com.example.blinkerleague.data.remote.dto.TripEventType
 import com.example.blinkerleague.data.remote.dto.TripUploadRequest
@@ -48,7 +49,13 @@ class TripMapper(
                 occurredAtMs = event.occurredAtMs,
                 payload = json.encodeToString(TurnPayload(event.direction.name, event.signalOn, event.uTurn)),
             )
-            is TripEvent.SignalLeftOnEvent -> TODO()
+            is TripEvent.SignalLeftOnEvent -> TripEventEntity(
+                eventId = event.id,
+                tripId = trip.id,
+                type = TripEventType.SIGNAL_LEFT_ON,
+                occurredAtMs = event.occurredAtMs,
+                payload = json.encodeToString(SignalLeftOnPayload(event.durationSec)),
+            )
         }
     }
 

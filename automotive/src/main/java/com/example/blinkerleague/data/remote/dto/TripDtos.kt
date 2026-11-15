@@ -37,6 +37,12 @@ data class TurnPayload(
     val uTurn: Boolean? = null,
 )
 
+/** `SIGNAL_LEFT_ON` 이벤트 payload (openapi `TripEventRequest.payload`) */
+@Serializable
+data class SignalLeftOnPayload(
+    val durationSec: Int,
+)
+
 /**
  * `POST /api/trips` 응답과 `GET /api/trips/{id}/score` 응답 (서버 plan.md 3.5 `TripResult`).
  * 서버가 아직 안 주는 필드도 있으므로 [score] 이후는 모두 선택값
@@ -126,6 +132,9 @@ data class TurnCountDto(
 
 object TripEventType {
     const val TURN = "TURN"
+
+    /** 깜빡이를 켠 채 잊음. payload는 [SignalLeftOnPayload] */
+    const val SIGNAL_LEFT_ON = "SIGNAL_LEFT_ON"
 }
 
 object ScoreStatus {
