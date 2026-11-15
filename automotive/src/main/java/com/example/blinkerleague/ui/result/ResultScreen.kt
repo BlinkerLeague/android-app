@@ -63,6 +63,7 @@ private val ResultViewModelFactory = viewModelFactory {
             loadEarnedPoints = { container.tripRepository.earnedPoints(tripId) },
             grades = container.config.grades,
             loadDayOrdinal = { container.tripRepository.dayOrdinal(tripId, ZoneId.systemDefault()) },
+            tips = container.config.tips,
         )
     }
 }

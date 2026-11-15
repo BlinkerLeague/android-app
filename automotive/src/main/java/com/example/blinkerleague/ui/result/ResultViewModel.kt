@@ -40,7 +40,7 @@ class ResultViewModel(
 
     val uiState: StateFlow<ResultUiState> = combine(result, mission, earnedPoints, dayOrdinal) { result, mission, points, ordinal ->
         // 짧은 이동은 경기가 아니므로 몇 번째인지 보여주지 않음
-        result?.toResultUiState(mission, grades, points)
+        result?.toResultUiState(mission, grades, points, tips)
             ?.copy(dayOrdinal = ordinal.takeIf { result.scoreState != ScoreState.EXCLUDED_SHORT })
             ?: ResultUiState.NotFound
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ResultUiState.Loading)
