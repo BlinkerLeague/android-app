@@ -82,6 +82,19 @@ class ResultUiStateTest {
     }
 
     @Test
+    fun `짧은 이동 결과에는 승패를 담지 않는다`() {
+        // given
+        // 회전은 있었지만(2 대 1) 짧은 이동이라 경기에서 제외됨
+        val trip = result(ScoreState.EXCLUDED_SHORT, null, signals = listOf(true, false, true))
+
+        // when
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT)
+
+        // then
+        assertNull(state.outcome)
+    }
+
+    @Test
     fun `업로드 전이면 집계 중, 50점 미만은 등급 없음`() {
         assertEquals(MetricValue.Pending, metric(result(ScoreState.PENDING, null).toResultUiState(null, GradeThreshold.DEFAULT)))
         assertNull(result(ScoreState.SCORED, 33).toResultUiState(null, GradeThreshold.DEFAULT).grade)
