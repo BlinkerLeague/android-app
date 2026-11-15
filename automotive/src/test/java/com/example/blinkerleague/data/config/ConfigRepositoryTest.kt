@@ -7,6 +7,7 @@ import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.config.GradeThreshold
 import com.example.blinkerleague.domain.config.LeagueConfig
 import com.example.blinkerleague.domain.config.PointConfig
+import com.example.blinkerleague.domain.config.SignalCancelConfig
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
@@ -147,6 +148,21 @@ class ConfigRepositoryTest {
         // then
         assertEquals(PointConfig(streakRewardDays = 5, streakRewardPoint = PointConfig().streakRewardPoint), mergedNegative.point)
         assertEquals(PointConfig(streakRewardDays = 5, streakRewardPoint = 0), mergedZero.point)
+    }
+
+    @Test
+    fun `서버 기준값 signalCancel의 forgetSec와 minSpeedKmh로 깜빡이 끄기 기준을 덮어쓴다`() {
+        // given
+        // 서버가 깜빡이를 15초 이상 켜 두면 잊은 것으로, 판정 속도를 40km/h 이상으로 바꿈
+        val changed = json.decodeFromString<ThresholdsResponse>(
+            """{"version":2,"signalCancel":{"forgetSec":15,"minSpeedKmh":40,"penalty":5}}""",
+        )
+
+        // when
+        val merged = DetectionConfig.DEFAULT.mergedWith(changed)
+
+        // then
+        assertEquals(SignalCancelConfig(forgetSec = 15, minSpeedKmh = 40), merged.signalCancel)
     }
 
     @Test

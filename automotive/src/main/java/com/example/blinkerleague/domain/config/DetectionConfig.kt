@@ -15,6 +15,7 @@ data class DetectionConfig(
     val tips: Map<String, String> = DEFAULT_TIPS,
     val league: LeagueConfig = LeagueConfig(),
     val point: PointConfig = PointConfig(),
+    val signalCancel: SignalCancelConfig = SignalCancelConfig(),
 ) {
     companion object {
         /** 서버 기본 기준값의 팁 문구. 깜빡이는 앱 판정 기준(회전 5초 전)에 맞춘 문구 */
@@ -85,6 +86,14 @@ data class PointConfig(
     val streakRewardDays: Int = 7,
     /** 연속 보상 포인트 */
     val streakRewardPoint: Int = 50,
+)
+
+/** 서버 기준값 `signalCancel`. 깜빡이를 켠 채 잊은 것으로 보는 기준 */
+data class SignalCancelConfig(
+    /** 깜빡이를 이 초 이상 켜 두면 끄기를 잊은 것으로 봄 */
+    val forgetSec: Int = 20,
+    /** 이 속도 이상에서만 판정 */
+    val minSpeedKmh: Int = 30,
 )
 
 /** 주행 안전 가드 기준 (docs/screen-plan.md 3장) */

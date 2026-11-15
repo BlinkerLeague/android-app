@@ -15,6 +15,7 @@ data class ThresholdsResponse(
     val tips: Map<String, String>? = null,
     val league: LeagueThresholdsDto? = null,
     val point: PointThresholdsDto? = null,
+    val signalCancel: SignalCancelDto? = null,
 )
 
 @Serializable
@@ -53,4 +54,11 @@ data class LeagueThresholdsDto(
 data class PointThresholdsDto(
     val streakRewardDays: Int? = null,
     val streakRewardPoint: Int? = null,
+)
+
+/** 깜빡이 끄기 기준 (openapi `SignalCancel`). penalty는 서버 계산용이라 앱은 읽지 않음 */
+@Serializable
+data class SignalCancelDto(
+    val forgetSec: Int? = null,
+    val minSpeedKmh: Int? = null,
 )
