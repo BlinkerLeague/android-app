@@ -63,6 +63,7 @@ class TripAssembler(
     private val seatBeltJudge = SeatBeltJudge(config.seatBelt)
     private val safetyWarningDetector = SafetyWarningDetector(config.safetyWarning)
     private val rainDetector = RainSegmentDetector(config.rain)
+    private val maxEvents = config.trip.maxEvents
 
     fun assemble(
         tripId: String,
@@ -190,7 +191,20 @@ class TripAssembler(
                 TripDistance.km(locations)
             },
             supported = measuredSupported,
-            events = (turnEvents + signalLeftOnEvents + harshEvents + nightEvents + seatBeltEvents + safetyWarningEvents + rainEvents).sortedBy { it.occurredAtMs },
+            events = capEvents(
+                (turnEvents + signalLeftOnEvents + harshEvents + nightEvents + seatBeltEvents + safetyWarningEvents + rainEvents).sortedBy { it.occurredAtMs },
+            ),
         )
     }
+
+    /** 이벤트가 [maxEvents]를 넘으면 횟수형 이벤트(급가속 · 급감속 · 안전 경고)를 늦은 것부터 뺌. [events]는 시각 순 */
+    private fun capEvents(events: List<TripEvent>): List<TripEvent> {
+        val excess = events.size - maxEvents
+        if (excess <= 0) return events
+        val dropped = events.filter { it.isCountType() }.takeLast(excess).toSet()
+        return events.filterNot { it in dropped }
+    }
+
+    private fun TripEvent.isCountType(): Boolean =
+        this is TripEvent.HarshAccelEvent || this is TripEvent.HarshBrakeEvent || this is TripEvent.SafetyWarningEvent
 }
