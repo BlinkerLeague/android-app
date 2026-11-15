@@ -93,6 +93,9 @@ internal fun DetectionConfig.mergedWith(response: ThresholdsResponse): Detection
             forgetSec = response.signalCancel?.forgetSec ?: signalCancel.forgetSec,
             minSpeedKmh = response.signalCancel?.minSpeedKmh ?: signalCancel.minSpeedKmh,
         ),
+        harsh = harsh.copy(
+            deltaKmhPerSec = response.harsh?.deltaKmhPerSec ?: harsh.deltaKmhPerSec,
+        ),
     )
 }
 

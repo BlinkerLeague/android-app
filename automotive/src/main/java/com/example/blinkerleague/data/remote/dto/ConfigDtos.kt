@@ -3,7 +3,7 @@ package com.example.blinkerleague.data.remote.dto
 import kotlinx.serialization.Serializable
 
 // GET /api/config/thresholds 형식. 서버 ThresholdController.ThresholdsResponse 기준 (서버 plan.md 3.3).
-// 앱이 쓰는 항목만 두고 나머지(harsh, weights, point의 dailyCap · tripMaxKm 등)는 무시함. 서버가 아직 안 주는 필드도 있어 모두 선택값
+// 앱이 쓰는 항목만 두고 나머지(weights, point의 dailyCap · tripMaxKm, harsh의 penaltyPer10Km 등)는 무시함. 서버가 아직 안 주는 필드도 있어 모두 선택값
 
 @Serializable
 data class ThresholdsResponse(
