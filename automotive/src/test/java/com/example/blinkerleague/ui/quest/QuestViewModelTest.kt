@@ -40,4 +40,17 @@ class QuestViewModelTest {
         // then
         assertEquals(StreakImpact(days = 6, todayCleared = false), loaded(vm).streakImpact)
     }
+
+    @Test
+    fun `오늘 이미 클리어면 오늘 클리어로 이어진 일수`() = runTest(dispatcher) {
+        // given
+        // 오늘 클리어해서 6일 연속
+        val vm = QuestViewModel(loadMission = { mission }, loadStreak = { Streak(6, true) })
+
+        // when
+        runCurrent()
+
+        // then
+        assertEquals(StreakImpact(days = 6, todayCleared = true), loaded(vm).streakImpact)
+    }
 }
