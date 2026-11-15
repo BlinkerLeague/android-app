@@ -16,6 +16,7 @@ data class DetectionConfig(
     val league: LeagueConfig = LeagueConfig(),
     val point: PointConfig = PointConfig(),
     val signalCancel: SignalCancelConfig = SignalCancelConfig(),
+    val harsh: HarshConfig = HarshConfig(),
 ) {
     companion object {
         /** 서버 기본 기준값의 팁 문구. 깜빡이는 앱 판정 기준(회전 5초 전)에 맞춘 문구 */
@@ -94,6 +95,14 @@ data class SignalCancelConfig(
     val forgetSec: Int = 20,
     /** 이 속도 이상에서만 판정 */
     val minSpeedKmh: Int = 30,
+)
+
+/** 서버 기준값 `harsh`. 급가속 · 급감속 기준 */
+data class HarshConfig(
+    /** 1초 사이 속도 변화가 이 km/h 이상이면 급가속 · 급감속 */
+    val deltaKmhPerSec: Int = 10,
+    /** 속도 샘플 간격이 이 초를 넘으면 판정하지 않음 (앱 내부 값, 서버 설정에는 없음) */
+    val maxGapSec: Int = 2,
 )
 
 /** 주행 안전 가드 기준 (docs/screen-plan.md 3장) */

@@ -16,6 +16,7 @@ data class ThresholdsResponse(
     val league: LeagueThresholdsDto? = null,
     val point: PointThresholdsDto? = null,
     val signalCancel: SignalCancelDto? = null,
+    val harsh: HarshDto? = null,
 )
 
 @Serializable
@@ -61,4 +62,10 @@ data class PointThresholdsDto(
 data class SignalCancelDto(
     val forgetSec: Int? = null,
     val minSpeedKmh: Int? = null,
+)
+
+/** 급가속 · 급감속 기준 (openapi `Harsh`). penaltyPer10Km는 서버 계산용이라 앱은 읽지 않음 */
+@Serializable
+data class HarshDto(
+    val deltaKmhPerSec: Int? = null,
 )

@@ -5,6 +5,7 @@ import com.example.blinkerleague.data.remote.ConfigApi
 import com.example.blinkerleague.data.remote.dto.ThresholdsResponse
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.config.HarshConfig
 import com.example.blinkerleague.domain.config.LeagueConfig
 import com.example.blinkerleague.domain.config.PointConfig
 import com.example.blinkerleague.domain.config.SignalCancelConfig
@@ -163,6 +164,21 @@ class ConfigRepositoryTest {
 
         // then
         assertEquals(SignalCancelConfig(forgetSec = 15, minSpeedKmh = 40), merged.signalCancel)
+    }
+
+    @Test
+    fun `서버 기준값 harsh의 deltaKmhPerSec로 급가감속 기준을 덮어쓴다`() {
+        // given
+        // 서버가 1초 사이 속도 변화 기준을 8km/h로 바꿈
+        val changed = json.decodeFromString<ThresholdsResponse>(
+            """{"version":2,"harsh":{"deltaKmhPerSec":8,"penaltyPer10Km":5.0}}""",
+        )
+
+        // when
+        val merged = DetectionConfig.DEFAULT.mergedWith(changed)
+
+        // then
+        assertEquals(HarshConfig(deltaKmhPerSec = 8, maxGapSec = HarshConfig().maxGapSec), merged.harsh)
     }
 
     @Test
