@@ -118,7 +118,7 @@ internal fun TripResult.toResultUiState(
         ),
         mission = mission,
         earnedPoints = earnedPoints?.takeIf { scoreState == ScoreState.SCORED && it > 0 },
-        outcome = MatchOutcome.of(goals, turns.size - goals),
+        outcome = if (scoreState == ScoreState.EXCLUDED_SHORT) null else MatchOutcome.of(goals, turns.size - goals),
     )
 }
 
