@@ -49,7 +49,6 @@ class VoiceScriptTest {
         assertEquals("운행이 끝났어요. 회전 네 번 중 세 번 깜빡이를 제때 켰어요.", VoiceScript.tripEnd(result(5.0, true, true, false, true), 1.0))
         assertEquals("운행이 끝났어요. 회전 두 번 모두 깜빡이를 제때 켰어요. 멋져요.", VoiceScript.tripEnd(result(5.0, true, true), 1.0))
         assertEquals("운행이 끝났어요. 다음 회전에는 깜빡이를 미리 켜 봐요.", VoiceScript.tripEnd(result(5.0, false), 1.0))
-        assertEquals("운행이 끝났어요. 이번에는 측정할 회전이 없었어요.", VoiceScript.tripEnd(result(5.0), 1.0))
     }
 
     @Test
@@ -63,6 +62,19 @@ class VoiceScriptTest {
 
         // then
         assertEquals("경기 종료. 짧은 이동이라 경기에 반영되지 않아요.", script)
+    }
+
+    @Test
+    fun `종료 - 회전이 없으면 회전 없는 경기라고 말한다`() {
+        // given
+        // 5km 운행, 회전 없음
+        val noTurn = result(5.0)
+
+        // when
+        val script = VoiceScript.tripEnd(noTurn, 1.0)
+
+        // then
+        assertEquals("경기 종료. 오늘은 회전 없는 경기였어요.", script)
     }
 
     @Test
