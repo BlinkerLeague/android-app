@@ -18,6 +18,7 @@ import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.TelltaleSample
 import com.example.blinkerleague.domain.model.VehicleStateSample
+import com.example.blinkerleague.domain.model.WiperSample
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -75,6 +76,7 @@ class TripRecorder(
         data class Headlight(val sample: HeadlightSample) : Input
         data class SeatBelt(val sample: SeatBeltSample) : Input
         data class Telltale(val sample: TelltaleSample) : Input
+        data class Wiper(val sample: WiperSample) : Input
         data class Tick(val nowMs: Long) : Input
     }
 
@@ -92,12 +94,14 @@ class TripRecorder(
     private val headlights = mutableListOf<HeadlightSample>()
     private val seatBelts = mutableListOf<SeatBeltSample>()
     private val telltales = mutableListOf<TelltaleSample>()
+    private val wipers = mutableListOf<WiperSample>()
     private var lastSpeed: SpeedSample? = null
     private var lastSignal: SignalSample? = null
     private var lastBrake: BrakeSample? = null
     private var lastHeadlight: HeadlightSample? = null
     private var lastSeatBelt: SeatBeltSample? = null
     private var lastTelltale: TelltaleSample? = null
+    private var lastWiper: WiperSample? = null
     private var lastVehicleState: VehicleStateSample? = null
 
     /** 취소될 때까지 수집함. 입력은 한 줄로 합쳐 순서대로 처리하므로 상태를 잠글 필요가 없음 */
@@ -112,6 +116,7 @@ class TripRecorder(
             vehicle.headlights.map { Input.Headlight(it) },
             vehicle.seatBelts.map { Input.SeatBelt(it) },
             vehicle.telltales.map { Input.Telltale(it) },
+            vehicle.wipers.map { Input.Wiper(it) },
             ticks(),
         ).collect { handle(it) }
     }
@@ -156,6 +161,10 @@ class TripRecorder(
                 lastTelltale = input.sample
                 if (tripId != null) telltales += input.sample
             }
+            is Input.Wiper -> {
+                lastWiper = input.sample
+                if (tripId != null) wipers += input.sample
+            }
             is Input.Tick -> segmenter.onTick(input.nowMs)?.let { onBoundary(it) }
         }
     }
@@ -171,13 +180,14 @@ class TripRecorder(
         val id = newId()
         tripId = id
         startedAtMs = atMs
-        listOf(steering, signals, vehicleStates, locations, speeds, brakes, headlights, seatBelts, telltales).forEach { it.clear() }
-        // 운행 시작 전부터 이어지던 상태(켜져 있던 깜빡이, 기어, 밟고 있던 브레이크, 하향등, 벨트, 경고등)를 이어받음
+        listOf(steering, signals, vehicleStates, locations, speeds, brakes, headlights, seatBelts, telltales, wipers).forEach { it.clear() }
+        // 운행 시작 전부터 이어지던 상태(켜져 있던 깜빡이, 기어, 밟고 있던 브레이크, 하향등, 벨트, 경고등, 와이퍼)를 이어받음
         lastSignal?.let { signals += it }
         lastBrake?.let { brakes += it }
         lastHeadlight?.let { headlights += it }
         lastSeatBelt?.let { seatBelts += it }
         lastTelltale?.let { telltales += it }
+        lastWiper?.let { wipers += it }
         lastVehicleState?.let { vehicleStates += it }
         lastSpeed?.let { speeds += it.copy(timestampMs = maxOf(it.timestampMs, atMs)) }
         _state.value = RecorderState.Recording(id, atMs)
@@ -192,7 +202,7 @@ class TripRecorder(
             endedAtMs = maxOf(atMs, startedAtMs),
             recording = TripRecording(
                 steering.toList(), signals.toList(), vehicleStates.toList(), locations.toList(), speeds.toList(), brakes.toList(),
-                headlights.toList(), seatBelts.toList(), telltales.toList(),
+                headlights.toList(), seatBelts.toList(), telltales.toList(), wipers.toList(),
             ),
             supported = vehicle.supportedSignals(),
             coordinate = coordinate(),
