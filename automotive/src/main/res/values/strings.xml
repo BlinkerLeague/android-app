@@ -48,6 +48,7 @@
     <string name="result_outcome_tough">아쉬운 경기</string>
     <string name="result_no_turn_match">오늘은 회전 없는 경기</string>
     <string name="result_tip_title">다음 경기 팁</string>
+    <string name="result_tip_turn_signal">회전 %1$d초 전에 깜빡이를 켜 보세요.</string>
 
     <!-- 항목 상세 (SCR-02b) -->
     <string name="detail_score">%1$d점</string>

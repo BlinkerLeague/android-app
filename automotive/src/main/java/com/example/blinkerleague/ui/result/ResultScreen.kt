@@ -84,8 +84,8 @@ private val ResultViewModelFactory = viewModelFactory {
             loadEarnedPoints = { container.tripRepository.earnedPoints(tripId) },
             grades = container.config.grades,
             loadDayOrdinal = { container.tripRepository.dayOrdinal(tripId, ZoneId.systemDefault()) },
-            tips = container.config.tips,
             loadMetrics = { container.tripRepository.metricDetails(tripId) },
+            signalLeadSec = container.config.turn.signalLeadSec,
         )
     }
 }
@@ -358,7 +358,7 @@ private fun Stats(state: ResultUiState.Loaded, clock: RevealClock, onOpenMetric:
         state.metrics.forEachIndexed { index, row ->
             MetricLine(row, clock, ResultMotion.STATS + index * 100, onClick = { onOpenMetric(row.item) })
         }
-        state.tip?.let { TipCard(it, Modifier.fillMaxWidth().reveal(clock, ResultMotion.TIP, fromX = 40.dp, fromY = 0.dp)) }
+        state.tipLeadSec?.let { TipCard(stringResource(R.string.result_tip_turn_signal, it), Modifier.fillMaxWidth().reveal(clock, ResultMotion.TIP, fromX = 40.dp, fromY = 0.dp)) }
     }
 }
 
@@ -496,7 +496,7 @@ private fun previewState(
 private val TopGradeState = previewState(ScoreState.SCORED, 100, "S", goals = 4, conceded = 0)
     .copy(celebrate = true, earnedPoints = 3, dayOrdinal = 3)
 private val SecondGradeState = previewState(ScoreState.SCORED, 86, "A")
-    .copy(earnedPoints = 3, dayOrdinal = 3, nextGrade = NextGrade("S", 9), tip = "우회전도 회전 5초 전에 깜빡이를 켜 보세요")
+    .copy(earnedPoints = 3, dayOrdinal = 3, nextGrade = NextGrade("S", 9), tipLeadSec = 5)
 
 @Composable
 private fun ResultPreview(state: ResultUiState) = BlinkerLeagueTheme {

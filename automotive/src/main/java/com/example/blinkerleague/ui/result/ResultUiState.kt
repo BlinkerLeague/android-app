@@ -40,8 +40,6 @@ sealed interface ResultUiState {
         val outcome: MatchOutcome? = null,
         /** 기준값에서 가장 높은 등급일 때만 축하 연출(꽃가루) */
         val celebrate: Boolean = false,
-        /** 다음 경기 팁. 없으면 null (카드 숨김) */
-        val tip: String? = null,
         /** 다음 경기 팁 "회전 N초 전에 깜빡이"의 N (기준값 turn.signalLeadSec). 실점이 없으면 null (카드 숨김) */
         val tipLeadSec: Int? = null,
         /** "다음 등급까지 N점". 맨 위 등급이거나 점수가 없으면 null */
@@ -109,12 +107,10 @@ internal fun TripResult.toResultUiState(
     mission: TodayMission?,
     grades: List<GradeThreshold>,
     earnedPoints: Int? = null,
-    /** 항목별 팁 문구 (기준값 `tips`, 키는 MetricItem 이름) */
-    tips: Map<String, String> = emptyMap(),
     /** 서버가 준 항목별 판정 결과 (점수 응답 `metrics`). 업로드 전·조회 실패면 비어 있음 */
     serverMetrics: List<MetricDetail> = emptyList(),
     /** 회전 몇 초 전에 깜빡이를 켜야 하는지 (기준값 turn.signalLeadSec). 다음 경기 팁에 씀 */
-    @Suppress("UNUSED_PARAMETER") signalLeadSec: Int = TurnConfig().signalLeadSec,
+    signalLeadSec: Int = TurnConfig().signalLeadSec,
 ): ResultUiState.Loaded {
     val goals = turns.count { it.signalOn }
     val conceded = turns.size - goals
@@ -160,7 +156,8 @@ internal fun TripResult.toResultUiState(
         earnedPoints = earnedPoints?.takeIf { scoreState == ScoreState.SCORED && it > 0 },
         outcome = if (scoreState == ScoreState.EXCLUDED_SHORT) null else MatchOutcome.of(goals, conceded),
         celebrate = grade != null && grade == grades.maxByOrNull { it.minScore }?.grade,
-        tip = if (conceded > 0) tips[MetricItem.TURN_SIGNAL.name] else null,
+        // 서버 tips 문구는 숫자가 박혀 있어 기준값과 어긋날 수 있으므로 기준값 초로 앱 문구를 만듦 (리뷰 6)
+        tipLeadSec = if (conceded > 0) signalLeadSec else null,
         nextGrade = if (scoreState == ScoreState.SCORED) nextGradeOf(score, grades) else null,
     )
 }

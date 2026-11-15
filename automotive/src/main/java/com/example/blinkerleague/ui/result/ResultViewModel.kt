@@ -32,12 +32,10 @@ class ResultViewModel(
     internal val grades: List<GradeThreshold>,
     /** 이 운행이 오늘 몇 번째 경기인지. 오늘 운행이 아니거나 모르면 null */
     private val loadDayOrdinal: suspend () -> Int? = { null },
-    /** 항목별 팁 문구 (기준값 `tips`). 다음 경기 팁에 씀 */
-    private val tips: Map<String, String> = emptyMap(),
     /** 서버 항목 결과(metrics). 업로드 전이거나 실패면 null */
     private val loadMetrics: suspend () -> List<MetricDetail>? = { null },
     /** 회전 몇 초 전에 깜빡이를 켜야 하는지 (기준값 turn.signalLeadSec). 다음 경기 팁에 씀 */
-    @Suppress("unused") private val signalLeadSec: Int = TurnConfig().signalLeadSec,
+    private val signalLeadSec: Int = TurnConfig().signalLeadSec,
 ) : ViewModel() {
 
     private val mission = MutableStateFlow<TodayMission?>(null)
@@ -47,7 +45,7 @@ class ResultViewModel(
 
     val uiState: StateFlow<ResultUiState> = combine(result, mission, earnedPoints, dayOrdinal, metrics) { result, mission, points, ordinal, metrics ->
         // 짧은 이동은 경기가 아니므로 몇 번째인지 보여주지 않음
-        result?.toResultUiState(mission, grades, points, tips, serverMetrics = metrics)
+        result?.toResultUiState(mission, grades, points, serverMetrics = metrics, signalLeadSec = signalLeadSec)
             ?.copy(dayOrdinal = ordinal.takeIf { result.scoreState != ScoreState.EXCLUDED_SHORT })
             ?: ResultUiState.NotFound
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ResultUiState.Loading)
