@@ -1,6 +1,7 @@
 package com.example.blinkerleague.ui.result
 
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.model.MetricDetail
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.TodayMission
@@ -38,7 +39,7 @@ sealed interface ResultUiState {
 
 enum class MetricItem { TURN_SIGNAL, SMOOTH_DRIVING, SAFETY_WARNING, NIGHT_HEADLIGHT }
 
-/** 항목별 점수 한 줄. P0은 깜빡이만 값이 있고 나머지는 "준비 중" */
+/** 항목별 점수 한 줄. 값은 서버 `metrics`로 채우고, 서버 결과가 없으면 깜빡이는 기기 판정 · 나머지는 "준비 중" */
 data class MetricRow(val item: MetricItem, val value: MetricValue)
 
 sealed interface MetricValue {
@@ -59,7 +60,10 @@ sealed interface MetricValue {
     /** 이 차량 미지원 (0점이 아니라 제외) */
     data object Unsupported : MetricValue
 
-    /** P1 항목 */
+    /** 이 운행에는 해당 없음 (서버 NOT_APPLICABLE) */
+    data object NotApplicable : MetricValue
+
+    /** 서버 항목 결과가 아직 없음 */
     data object ComingSoon : MetricValue
 }
 
@@ -88,10 +92,26 @@ internal fun TripResult.toResultUiState(
     mission: TodayMission?,
     grades: List<GradeThreshold>,
     earnedPoints: Int? = null,
+    /** 서버가 준 항목별 판정 결과 (점수 응답 `metrics`). 업로드 전·조회 실패면 비어 있음 */
+    serverMetrics: List<MetricDetail> = emptyList(),
 ): ResultUiState.Loaded {
     val goals = turns.count { it.signalOn }
     val canMeasureTurns = SignalType.TURN_SIGNAL in supported && SignalType.STEERING_ANGLE in supported
+    fun serverScore(item: MetricItem): Int? = serverMetrics.firstOrNull { it.metric == item.name }?.score
+    // 깜빡이 외 항목: 서버 판정(미지원 / 해당 없음 / 점수), 없으면 준비 중
+    fun otherValue(item: MetricItem): MetricValue {
+        val detail = serverMetrics.firstOrNull { it.metric == item.name }
+        return when {
+            detail?.status == "UNSUPPORTED" -> MetricValue.Unsupported
+            detail?.status == "NOT_APPLICABLE" -> MetricValue.NotApplicable
+            detail?.score != null -> MetricValue.Score(detail.score)
+            else -> MetricValue.ComingSoon
+        }
+    }
+    val serverTurnScore = serverScore(MetricItem.TURN_SIGNAL)
     val turnValue: MetricValue = when {
+        // 서버가 깜빡이 항목 점수를 줬으면 총점 대신 그 점수
+        serverTurnScore != null -> MetricValue.Score(serverTurnScore)
         !canMeasureTurns -> MetricValue.Unsupported
         scoreState == ScoreState.EXCLUDED_SHORT -> MetricValue.Excluded
         scoreState == ScoreState.REJECTED -> MetricValue.NotScored
@@ -109,9 +129,9 @@ internal fun TripResult.toResultUiState(
         conceded = turns.size - goals,
         metrics = listOf(
             MetricRow(MetricItem.TURN_SIGNAL, turnValue),
-            MetricRow(MetricItem.SMOOTH_DRIVING, MetricValue.ComingSoon),
-            MetricRow(MetricItem.SAFETY_WARNING, MetricValue.ComingSoon),
-            MetricRow(MetricItem.NIGHT_HEADLIGHT, MetricValue.ComingSoon),
+            MetricRow(MetricItem.SMOOTH_DRIVING, otherValue(MetricItem.SMOOTH_DRIVING)),
+            MetricRow(MetricItem.SAFETY_WARNING, otherValue(MetricItem.SAFETY_WARNING)),
+            MetricRow(MetricItem.NIGHT_HEADLIGHT, otherValue(MetricItem.NIGHT_HEADLIGHT)),
         ),
         mission = mission,
         earnedPoints = earnedPoints?.takeIf { scoreState == ScoreState.SCORED && it > 0 },

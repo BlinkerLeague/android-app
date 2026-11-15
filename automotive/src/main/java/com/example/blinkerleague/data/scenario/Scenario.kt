@@ -1,10 +1,15 @@
 package com.example.blinkerleague.data.scenario
 
+import com.example.blinkerleague.domain.model.BrakeSample
+import com.example.blinkerleague.domain.model.HeadlightSample
 import com.example.blinkerleague.domain.model.LocationSample
+import com.example.blinkerleague.domain.model.SeatBeltSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.SteeringSample
+import com.example.blinkerleague.domain.model.TelltaleSample
 import com.example.blinkerleague.domain.model.VehicleStateSample
+import com.example.blinkerleague.domain.model.WiperSample
 
 /**
  * 실차 없이 재생하는 위치·신호 시계열. 타임스탬프는 시나리오 시작 기준(0부터)의 ms.
@@ -16,6 +21,16 @@ data class Scenario(
     val signals: List<SignalSample>,
     val vehicleStates: List<VehicleStateSample>,
     val supported: Set<SignalType> = setOf(SignalType.TURN_SIGNAL, SignalType.STEERING_ANGLE),
+    /** 브레이크 페달 상태 변화 */
+    val brakes: List<BrakeSample> = emptyList(),
+    /** 하향등 상태 변화 */
+    val headlights: List<HeadlightSample> = emptyList(),
+    /** 운전석 안전벨트 착용 상태를 읽은 값 */
+    val seatBelts: List<SeatBeltSample> = emptyList(),
+    /** 그 시점에 켜진 경고등 이름 집합 (1초 폴링) */
+    val telltales: List<TelltaleSample> = emptyList(),
+    /** 와이퍼 상태 변화 */
+    val wipers: List<WiperSample> = emptyList(),
 ) {
     val durationMs: Long
         get() = listOfNotNull(

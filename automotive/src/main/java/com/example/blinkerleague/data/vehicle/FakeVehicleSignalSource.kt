@@ -3,12 +3,17 @@ package com.example.blinkerleague.data.vehicle
 import com.example.blinkerleague.data.scenario.Scenario
 import com.example.blinkerleague.data.scenario.replay
 import com.example.blinkerleague.domain.model.Availability
+import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.CapabilityReport
+import com.example.blinkerleague.domain.model.HeadlightSample
+import com.example.blinkerleague.domain.model.SeatBeltSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.SteeringSample
+import com.example.blinkerleague.domain.model.TelltaleSample
 import com.example.blinkerleague.domain.model.VehicleStateSample
+import com.example.blinkerleague.domain.model.WiperSample
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -30,6 +35,11 @@ class FakeVehicleSignalSource(
             steering = of(SignalType.STEERING_ANGLE),
             gear = Availability.SUPPORTED,
             speed = Availability.SUPPORTED,
+            brake = of(SignalType.BRAKE),
+            headlight = of(SignalType.HEADLIGHT),
+            seatBelt = of(SignalType.SEAT_BELT),
+            safetyWarning = of(SignalType.SAFETY_WARNING),
+            wiper = of(SignalType.WIPER),
         )
     }
 
@@ -47,4 +57,19 @@ class FakeVehicleSignalSource(
         { it.timestampMs },
         speed,
     ) { it.copy(timestampMs = startMs + it.timestampMs) }
+
+    override val brakes: Flow<BrakeSample> =
+        replay(scenario.brakes, { it.timestampMs }, speed) { it.copy(timestampMs = startMs + it.timestampMs) }
+
+    override val headlights: Flow<HeadlightSample> =
+        replay(scenario.headlights, { it.timestampMs }, speed) { it.copy(timestampMs = startMs + it.timestampMs) }
+
+    override val seatBelts: Flow<SeatBeltSample> =
+        replay(scenario.seatBelts, { it.timestampMs }, speed) { it.copy(timestampMs = startMs + it.timestampMs) }
+
+    override val telltales: Flow<TelltaleSample> =
+        replay(scenario.telltales, { it.timestampMs }, speed) { it.copy(timestampMs = startMs + it.timestampMs) }
+
+    override val wipers: Flow<WiperSample> =
+        replay(scenario.wipers, { it.timestampMs }, speed) { it.copy(timestampMs = startMs + it.timestampMs) }
 }

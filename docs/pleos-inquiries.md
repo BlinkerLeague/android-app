@@ -31,8 +31,11 @@
 
 | 권한 | 용도 |
 | --- | --- |
-| `pleos.car.permission.CAR_LIGHTS` | Vehicle SDK `TurnSignal.registerTurnSignalState` (방향지시등) |
-| `pleos.car.permission.CAR_DRIVE` | Vehicle SDK `SteeringWheel.registerSteeringWheelAngle`(핸들 각도), `Gear.registerGearSelection`(기어) |
+| `pleos.car.permission.CAR_LIGHTS` | Vehicle SDK `TurnSignal.registerTurnSignalState` (방향지시등), `Light.registerLowBeamLightState` (하향등, 야간 전조등 판정) |
+| `pleos.car.permission.CAR_DRIVE` | Vehicle SDK `SteeringWheel.registerSteeringWheelAngle`(핸들 각도), `Gear.registerGearSelection`(기어), `Brake.registerBrakePedalStatus`(브레이크 페달, 급감속 판정) |
+| `pleos.car.permission.CAR_SEATS` | Vehicle SDK `Seat.getCurrentSeatBeltBuckledState`(운전석 안전벨트 착용, 주기 조회) |
+| `pleos.car.permission.CAR_SAFETY` | Vehicle SDK `Safety.getTelltalesInfo`(경고등 목록, 주기 조회). 등록 API의 `PRIVATE_CAR_SAFETY`는 선언하지 않음 |
+| `pleos.car.permission.CAR_WINDOWS` | Vehicle SDK `Wiper.registerWiperState`(앞 유리 와이퍼 작동 상태, 우천 구간 판정) |
 | `pleos.car.permission.FUSED_LOCATION` | Pleos FusedLocation SDK (런타임 권한) |
 | `pleos.car.permission.TTS_SERVICE` | Pleos TextToSpeech SDK (음성 안내) |
 | `android.car.permission.CAR_SPEED` | `CarPropertyManager` `PERF_VEHICLE_SPEED` (속도, 런타임 권한). Vehicle SDK 2.3.2에 속도 API가 없어 Android 표준 API를 씀 |

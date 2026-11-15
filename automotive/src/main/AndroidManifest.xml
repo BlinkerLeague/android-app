@@ -19,9 +19,15 @@
     <!-- 위치: Pleos FusedLocation SDK (@RequiresPermission). 기기 prot=dangerous → 런타임 허용 필요 -->
     <uses-permission android:name="pleos.car.permission.FUSED_LOCATION" />
 
-    <!-- 차량 신호 (Pleos Vehicle SDK @RequiresPermission): TurnSignal=CAR_LIGHTS, SteeringWheel 각도·Gear=CAR_DRIVE -->
+    <!-- 차량 신호 (Pleos Vehicle SDK @RequiresPermission): TurnSignal·하향등=CAR_LIGHTS, SteeringWheel 각도·Gear·Brake=CAR_DRIVE -->
     <uses-permission android:name="pleos.car.permission.CAR_LIGHTS" />
     <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
+    <!-- 운전석 안전벨트 착용 상태: Seat.getCurrentSeatBeltBuckledState (@RequiresPermission CAR_SEATS) -->
+    <uses-permission android:name="pleos.car.permission.CAR_SEATS" />
+    <!-- 경고등: Safety.getTelltalesInfo (@RequiresPermission CAR_SAFETY). 등록 API의 PRIVATE_CAR_SAFETY는 선언하지 않음 -->
+    <uses-permission android:name="pleos.car.permission.CAR_SAFETY" />
+    <!-- 앞 유리 와이퍼 상태: Wiper.registerWiperState (@RequiresPermission CAR_WINDOWS) -->
+    <uses-permission android:name="pleos.car.permission.CAR_WINDOWS" />
 
     <!-- 차량 속도: CarProperty PERF_VEHICLE_SPEED. dangerous → 런타임 허용 필요 -->
     <uses-permission android:name="android.car.permission.CAR_SPEED" />
@@ -75,7 +81,7 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="운행 중 차량 신호(방향지시등·핸들 각도·기어·속도)를 받아 회전 시 깜빡이 사용을 판정함. 앱이 화면에 없어도 운행 전체를 기록해야 해서 포그라운드 서비스로 실행" />
+                android:value="운행 중 차량 신호(방향지시등·핸들 각도·기어·속도·브레이크·하향등·안전벨트·경고등·와이퍼)를 받아 깜빡이 사용·급가감속·야간 전조등·안전벨트·안전 경고·우천 운행을 판정함. 앱이 화면에 없어도 운행 전체를 기록해야 해서 포그라운드 서비스로 실행" />
         </service>
 
     </application>

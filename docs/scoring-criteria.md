@@ -1,6 +1,6 @@
 # 점수 항목 확장안 (제안)
 
-> 상태: **팀 검토 전 제안**입니다. MVP(11.15)는 기존대로 회전 깜빡이 1개 항목만 씁니다. 이 문서의 항목은 2차(12.2) 범위 후보입니다.
+> 상태: **7개 항목 앱 판정 반영(2026-11-15)**. 서버 8개 점수 항목 중 회전 깜빡이 외 `SIGNAL_CANCEL` · `TURN_SPEED` · `SMOOTH_DRIVING` · `NIGHT_HEADLIGHT` · `SEAT_BELT` · `SAFETY_WARNING` · `RAIN_DRIVING`을 앱이 판정해 보냅니다(결정은 `plan.md` 결정 기록 2026-11-15). 나머지 항목(과속 등)은 아직 제안입니다.
 > 근거 데이터: [`sdk-test-log.md`](sdk-test-log.md)(이 문서에서 "로그"), 팀원 조사 `feature/vehicle-background-speed`의 `docs/spikes/`.
 > 점수 계산은 서버가 합니다(서버 `plan.md` 3.3·4.1). 앱은 판정한 이벤트만 보냅니다. 팀에서 확정하면 [`server-requests.md`](server-requests.md)로 서버 팀에 전달합니다.
 > 작성: 2026-11-04

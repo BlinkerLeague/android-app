@@ -40,7 +40,7 @@ internal fun TripResult.toMetricDetail(
     tips: Map<String, String>,
     zone: ZoneId,
 ): MetricDetailUiState.Loaded {
-    val base = toResultUiState(null, grades)
+    val base = toResultUiState(null, grades, serverMetrics = server.orEmpty())
     val value = base.metrics.first { it.item == item }.value
     val fromServer = server?.firstOrNull { it.metric == item.name }
     val counts = if (item == MetricItem.TURN_SIGNAL) {

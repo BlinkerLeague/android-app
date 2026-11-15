@@ -5,8 +5,11 @@ import com.example.blinkerleague.data.remote.ConfigApi
 import com.example.blinkerleague.data.remote.dto.ThresholdsResponse
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.config.HarshConfig
 import com.example.blinkerleague.domain.config.LeagueConfig
 import com.example.blinkerleague.domain.config.PointConfig
+import com.example.blinkerleague.domain.config.RainConfig
+import com.example.blinkerleague.domain.config.SignalCancelConfig
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
@@ -147,6 +150,87 @@ class ConfigRepositoryTest {
         // then
         assertEquals(PointConfig(streakRewardDays = 5, streakRewardPoint = PointConfig().streakRewardPoint), mergedNegative.point)
         assertEquals(PointConfig(streakRewardDays = 5, streakRewardPoint = 0), mergedZero.point)
+    }
+
+    @Test
+    fun `서버 기준값 signalCancel의 forgetSec와 minSpeedKmh로 깜빡이 끄기 기준을 덮어쓴다`() {
+        // given
+        // 서버가 깜빡이를 15초 이상 켜 두면 잊은 것으로, 판정 속도를 40km/h 이상으로 바꿈
+        val changed = json.decodeFromString<ThresholdsResponse>(
+            """{"version":2,"signalCancel":{"forgetSec":15,"minSpeedKmh":40,"penalty":5}}""",
+        )
+
+        // when
+        val merged = DetectionConfig.DEFAULT.mergedWith(changed)
+
+        // then
+        assertEquals(SignalCancelConfig(forgetSec = 15, minSpeedKmh = 40), merged.signalCancel)
+    }
+
+    @Test
+    fun `서버 기준값 harsh의 deltaKmhPerSec로 급가감속 기준을 덮어쓴다`() {
+        // given
+        // 서버가 1초 사이 속도 변화 기준을 8km/h로 바꿈
+        val changed = json.decodeFromString<ThresholdsResponse>(
+            """{"version":2,"harsh":{"deltaKmhPerSec":8,"penaltyPer10Km":5.0}}""",
+        )
+
+        // when
+        val merged = DetectionConfig.DEFAULT.mergedWith(changed)
+
+        // then
+        assertEquals(HarshConfig(deltaKmhPerSec = 8, maxGapSec = HarshConfig().maxGapSec), merged.harsh)
+    }
+
+    @Test
+    fun `서버 기준값 rain의 minWiperSec로 우천 구간 기준을 덮어쓴다`() {
+        // given
+        // 서버가 와이퍼를 45초 넘게 켜야 우천 구간으로 보도록 바꿈
+        val changed = json.decodeFromString<ThresholdsResponse>(
+            """{"version":2,"rain":{"minWiperSec":45,"speedRatio":0.8}}""",
+        )
+
+        // when
+        val merged = DetectionConfig.DEFAULT.mergedWith(changed)
+
+        // then
+        assertEquals(RainConfig(minWiperSec = 45), merged.rain)
+    }
+
+    @Test
+    fun `서버 기준값 trip의 maxEvents로 운행 이벤트 상한을 덮어쓴다`() {
+        // given
+        // 서버가 운행 한 건의 이벤트 상한을 500개로 바꿈
+        val changed = json.decodeFromString<ThresholdsResponse>(
+            """{"version":2,"trip":{"maxEvents":500,"minDistanceKm":1.0}}""",
+        )
+
+        // when
+        val merged = DetectionConfig.DEFAULT.mergedWith(changed)
+
+        // then
+        assertEquals(500, merged.trip.maxEvents)
+    }
+
+    @Test
+    fun `서버 기준값 trip의 maxEvents가 0 이하이면 기본값을 쓴다`() {
+        // given
+        // 서버가 운행 이벤트 상한을 0개, -10개로 잘못 보냄
+        val zero = json.decodeFromString<ThresholdsResponse>(
+            """{"version":2,"trip":{"maxEvents":0,"minDistanceKm":1.0}}""",
+        )
+        val negative = json.decodeFromString<ThresholdsResponse>(
+            """{"version":3,"trip":{"maxEvents":-10,"minDistanceKm":1.0}}""",
+        )
+
+        // when
+        val mergedZero = DetectionConfig.DEFAULT.mergedWith(zero)
+        val mergedNegative = DetectionConfig.DEFAULT.mergedWith(negative)
+
+        // then
+        // 앱 기본값 2000개
+        assertEquals(2000, mergedZero.trip.maxEvents)
+        assertEquals(2000, mergedNegative.trip.maxEvents)
     }
 
     @Test

@@ -63,6 +63,7 @@ private val ResultViewModelFactory = viewModelFactory {
             loadEarnedPoints = { container.tripRepository.earnedPoints(tripId) },
             grades = container.config.grades,
             loadDayOrdinal = { container.tripRepository.dayOrdinal(tripId, ZoneId.systemDefault()) },
+            loadMetrics = { container.tripRepository.metricDetails(tripId) },
         )
     }
 }
@@ -243,6 +244,7 @@ private fun MetricLine(row: MetricRow, onClick: () -> Unit) {
                         MetricValue.Unsupported -> R.string.result_metric_unsupported
                         MetricValue.Excluded -> R.string.result_metric_excluded
                         MetricValue.NotScored -> R.string.result_metric_not_scored
+                        MetricValue.NotApplicable -> R.string.result_metric_not_applicable
                         else -> R.string.result_metric_coming_soon
                     },
                 ),
