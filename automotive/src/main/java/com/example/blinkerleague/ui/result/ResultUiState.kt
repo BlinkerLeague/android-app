@@ -94,7 +94,10 @@ internal fun TripResult.toResultUiState(
 ): ResultUiState.Loaded {
     val goals = turns.count { it.signalOn }
     val canMeasureTurns = SignalType.TURN_SIGNAL in supported && SignalType.STEERING_ANGLE in supported
-    val serverTurnScore = serverMetrics.firstOrNull { it.metric == MetricItem.TURN_SIGNAL.name }?.score
+    fun serverScore(item: MetricItem): Int? = serverMetrics.firstOrNull { it.metric == item.name }?.score
+    // 깜빡이 외 항목: 서버 점수가 있으면 점수, 없으면 준비 중
+    fun otherValue(item: MetricItem): MetricValue = serverScore(item)?.let { MetricValue.Score(it) } ?: MetricValue.ComingSoon
+    val serverTurnScore = serverScore(MetricItem.TURN_SIGNAL)
     val turnValue: MetricValue = when {
         // 서버가 깜빡이 항목 점수를 줬으면 총점 대신 그 점수
         serverTurnScore != null -> MetricValue.Score(serverTurnScore)
@@ -115,9 +118,9 @@ internal fun TripResult.toResultUiState(
         conceded = turns.size - goals,
         metrics = listOf(
             MetricRow(MetricItem.TURN_SIGNAL, turnValue),
-            MetricRow(MetricItem.SMOOTH_DRIVING, MetricValue.ComingSoon),
-            MetricRow(MetricItem.SAFETY_WARNING, MetricValue.ComingSoon),
-            MetricRow(MetricItem.NIGHT_HEADLIGHT, MetricValue.ComingSoon),
+            MetricRow(MetricItem.SMOOTH_DRIVING, otherValue(MetricItem.SMOOTH_DRIVING)),
+            MetricRow(MetricItem.SAFETY_WARNING, otherValue(MetricItem.SAFETY_WARNING)),
+            MetricRow(MetricItem.NIGHT_HEADLIGHT, otherValue(MetricItem.NIGHT_HEADLIGHT)),
         ),
         mission = mission,
         earnedPoints = earnedPoints?.takeIf { scoreState == ScoreState.SCORED && it > 0 },
