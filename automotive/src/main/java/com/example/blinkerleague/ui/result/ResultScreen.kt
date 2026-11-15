@@ -221,7 +221,7 @@ private fun Scoreboard(state: ResultUiState.Loaded, grades: List<GradeThreshold>
     }
 }
 
-/** 득점 : 실점 큰 숫자. 회전이 없으면 "오늘은 회전 없는 경기" */
+/** 득점 : 실점 큰 숫자. 회전이 없으면 "회전 없는 경기" (홈 최근 경기 행과 같은 문구) */
 @Composable
 private fun GoalsBoard(state: ResultUiState.Loaded, clock: RevealClock) {
     val shape = RoundedCornerShape(16.dp)

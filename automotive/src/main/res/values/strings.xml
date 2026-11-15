@@ -46,7 +46,7 @@
     <string name="result_outcome_win">승리!</string>
     <string name="result_outcome_draw">무승부</string>
     <string name="result_outcome_tough">아쉬운 경기</string>
-    <string name="result_no_turn_match">오늘은 회전 없는 경기</string>
+    <string name="result_no_turn_match">회전 없는 경기</string>
     <string name="result_tip_title">다음 경기 팁</string>
     <string name="result_tip_turn_signal">회전 %1$d초 전에 깜빡이를 켜 보세요.</string>
 
@@ -128,7 +128,7 @@
     <string name="home_day_other">%1$s %2$s</string>
     <string name="home_score">평점 %1$d</string>
     <string name="home_state_pending">결과 집계 중</string>
-    <string name="home_state_no_turn">측정할 회전이 없었어요</string>
+    <string name="home_state_no_turn">회전 없는 경기</string>
     <string name="home_state_excluded_short">짧은 이동은 경기에서 제외돼요</string>
     <string name="home_state_rejected">결과를 올리지 못했어요</string>
     <string name="home_notice_no_speed">속도 권한이 없어 판정 정확도가 제한돼요</string>
