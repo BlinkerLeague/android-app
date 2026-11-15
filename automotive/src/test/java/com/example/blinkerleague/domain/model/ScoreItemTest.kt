@@ -66,4 +66,16 @@ class ScoreItemTest {
         // then
         assertTrue("측정 항목: $items", ScoreItem.SEAT_BELT in items)
     }
+
+    @Test
+    fun `속도가 없으면 SEAT_BELT를 넣지 않는다`() {
+        // given
+        val signals = setOf(SignalType.SEAT_BELT)
+
+        // when
+        val items = ScoreItem.measurable(signals)
+
+        // then
+        assertFalse("측정 항목: $items", ScoreItem.SEAT_BELT in items)
+    }
 }
