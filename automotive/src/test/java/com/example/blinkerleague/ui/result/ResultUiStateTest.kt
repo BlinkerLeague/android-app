@@ -117,6 +117,21 @@ class ResultUiStateTest {
     }
 
     @Test
+    fun `서버가 SMOOTH_DRIVING을 SCORED로 주면 부드러운 가감속 행에 점수를 보인다`() {
+        // given
+        val trip = result(ScoreState.SCORED, 72)
+        val serverMetrics = listOf(
+            MetricDetail(metric = "SMOOTH_DRIVING", status = "SCORED", reason = null, score = 80, counts = emptyMap(), weight = 0.5),
+        )
+
+        // when
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, serverMetrics = serverMetrics)
+
+        // then
+        assertEquals(MetricValue.Score(80), state.metrics.first { it.item == MetricItem.SMOOTH_DRIVING }.value)
+    }
+
+    @Test
     fun `타임라인 - 시각순 카드, 득점은 깜빡이 켠 회전`() {
         val plays = result(ScoreState.SCORED, 67).toPlaysUiState(zone)
         assertEquals("08:10", plays.startedAt)
