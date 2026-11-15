@@ -4,6 +4,7 @@ import com.example.blinkerleague.domain.config.Coordinate
 import com.example.blinkerleague.domain.model.HeadlightSample
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
 
@@ -33,6 +34,42 @@ class NightSegmentDetectorTest {
         // then
         assertEquals(
             listOf(NightSegment(occurredAtMs = kst(22, 0), durationSec = 600, headlightOffSec = 240)),
+            segments,
+        )
+    }
+
+    @Test
+    fun `낮에만 달린 운행은 야간 구간을 만들지 않는다`() {
+        // given
+        // 서울, 2026-11-15 12:00 ~ 12:10 KST 운행 (한낮), 하향등 내내 꺼짐
+        val detector = NightSegmentDetector(seoulZone)
+        val headlights = listOf(HeadlightSample(kst(11, 59), on = false))
+
+        // when
+        val segments = detector.detect(headlights, tripStartMs = kst(12, 0), tripEndMs = kst(12, 10), coordinate = seoul)
+
+        // then
+        assertEquals(emptyList<NightSegment>(), segments)
+    }
+
+    @Test
+    fun `일몰을 넘긴 운행은 일몰 뒤부터만 잰다`() {
+        // given
+        // 서울, 2026-11-15 17:00 ~ 18:00 KST 운행 (그날 일몰은 이 사이), 하향등 내내 꺼짐
+        // 일몰 시각은 SunTimes로 구함
+        val detector = NightSegmentDetector(seoulZone)
+        val headlights = listOf(HeadlightSample(kst(16, 50), on = false))
+        val sunsetMs = SunTimes.of(LocalDate.of(2026, 11, 15), seoul.latitude, seoul.longitude, seoulZone)!!
+            .sunset.toInstant().toEpochMilli()
+        val tripEndMs = kst(18, 0)
+        val nightSec = ((tripEndMs - sunsetMs) / 1000).toInt()
+
+        // when
+        val segments = detector.detect(headlights, tripStartMs = kst(17, 0), tripEndMs = tripEndMs, coordinate = seoul)
+
+        // then
+        assertEquals(
+            listOf(NightSegment(occurredAtMs = sunsetMs, durationSec = nightSec, headlightOffSec = nightSec)),
             segments,
         )
     }
