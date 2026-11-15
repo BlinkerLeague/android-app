@@ -146,6 +146,7 @@ class AppContainer(context: Context) {
         tripConfig = { config.trip },
         scope = applicationScope,
         turnConfig = { config.turn },
+        streak = rewardRepository::streak,
     )
 
     private val _recordingStatus = MutableStateFlow(RecordingStatus.OFF)
