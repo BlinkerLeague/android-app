@@ -198,4 +198,37 @@ class TripMapperTest {
         assertEquals("2026-11-03T08:03:00+09:00", event.occurredAt)
         assertEquals(JsonObject(emptyMap()), event.payload)
     }
+
+    @Test
+    fun `RAIN_SEGMENT는 payload {durationSec, headlightOffSec, knownLimitSec, overRainLimitSec}로 저장 · 업로드한다`() {
+        // given
+        // 와이퍼 · 하향등을 지원하는 운행에서 2분부터 5분 동안 우천 주행, 그중 1분은 하향등이 꺼져 있었음 (제한속도는 몰라서 0)
+        val rain = trip.copy(
+            supported = setOf(SignalType.WIPER, SignalType.HEADLIGHT),
+            events = listOf(
+                TripEvent.RainSegmentEvent(
+                    "e1",
+                    start + 120_000,
+                    durationSec = 300,
+                    headlightOffSec = 60,
+                    knownLimitSec = 0,
+                    overRainLimitSec = 0,
+                ),
+            ),
+        )
+
+        // when
+        val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(rain), mapper.toEventEntities(rain)))
+
+        // then
+        assertTrue("supported: ${request.supported}", "RAIN_DRIVING" in request.supported)
+        val event = request.events.single()
+        assertEquals("e1", event.eventId)
+        assertEquals("RAIN_SEGMENT", event.type)
+        assertEquals("2026-11-03T08:02:00+09:00", event.occurredAt)
+        assertEquals(
+            Json.parseToJsonElement("""{"durationSec":300,"headlightOffSec":60,"knownLimitSec":0,"overRainLimitSec":0}"""),
+            event.payload,
+        )
+    }
 }
