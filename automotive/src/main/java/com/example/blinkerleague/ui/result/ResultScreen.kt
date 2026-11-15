@@ -396,11 +396,9 @@ private fun MetricLine(row: MetricRow, clock: RevealClock, startMs: Int, onClick
         }
         val barModifier = Modifier.weight(0.45f).height(16.dp)
         when (value) {
-            // 아직 측정하지 않는 항목은 사선 무늬 (0점처럼 보이지 않게)
-            MetricValue.ComingSoon, MetricValue.Unsupported -> HatchedBox(barModifier)
-            else -> {
-                val fraction = if (value is MetricValue.Score) value.score.coerceIn(0, 100) / 100f else 0f
-                val fill = if (value is MetricValue.Score && value.score >= 70) OnSuccessContainer else OnWarningContainer
+            is MetricValue.Score -> {
+                val fraction = value.score.coerceIn(0, 100) / 100f
+                val fill = if (value.score >= 70) OnSuccessContainer else OnWarningContainer
                 Box(barModifier.clip(RoundedCornerShape(percent = 50)).background(MaterialTheme.colorScheme.outlineVariant)) {
                     val filled = fraction * clock.progress(startMs, 900)
                     if (filled > 0f) {
@@ -408,6 +406,8 @@ private fun MetricLine(row: MetricRow, clock: RevealClock, startMs: Int, onClick
                     }
                 }
             }
+            // 점수가 없는 항목(준비 중 · 미지원 · 해당 없음 · 제외 · 집계 중 등)은 모두 사선 무늬 (빈 막대가 0점처럼 보이지 않게, 리뷰 7)
+            else -> HatchedBox(barModifier)
         }
         Text(
             if (value is MetricValue.Score) value.score.toString() else "—",
