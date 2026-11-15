@@ -3,6 +3,7 @@ package com.example.blinkerleague.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.model.MatchOutcome
 import com.example.blinkerleague.domain.model.PermissionStatus
 import com.example.blinkerleague.domain.model.Streak
 import com.example.blinkerleague.domain.model.TodayMission
@@ -96,6 +97,8 @@ class HomeViewModel(
             today.minusDays(1) -> TripDay.YESTERDAY
             else -> TripDay.OTHER
         }
+        val goals = result.turns.count { it.signalOn }
+        val conceded = result.turns.size - goals
         return RecentTripRow(
             tripId = result.tripId,
             day = day,
@@ -104,6 +107,10 @@ class HomeViewModel(
             scoreState = result.scoreState,
             score = result.score,
             grade = GradeThreshold.gradeOf(result.score, grades),
+            goals = goals,
+            conceded = conceded,
+            outcome = MatchOutcome.of(goals, conceded),
+            distanceKm = result.distanceKm,
         )
     }
 
