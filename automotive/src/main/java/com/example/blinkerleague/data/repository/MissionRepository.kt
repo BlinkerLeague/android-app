@@ -26,6 +26,7 @@ class MissionRepository(private val api: MissionApi) {
             conditions = conditions.ifEmpty {
                 MissionCondition.derive(body.progress.turns, body.progress.successTurns, body.progress.requiredTurns)
             },
+            periodId = "${body.missionId}:${body.periodKey}",
         )
     }
 }
