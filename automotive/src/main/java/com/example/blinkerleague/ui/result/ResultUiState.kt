@@ -144,6 +144,13 @@ internal fun TripResult.toPlaysUiState(zone: ZoneId): PlaysUiState {
         distanceKm = distanceKm,
         goals = goals,
         conceded = turns.size - goals,
-        plays = turns.sortedBy { it.occurredAtMs }.map { PlayCard(time(it.occurredAtMs), it.direction, it.signalOn) },
+        plays = turns.sortedBy { it.occurredAtMs }.map {
+            PlayCard(
+                time = time(it.occurredAtMs),
+                direction = it.direction,
+                goal = it.signalOn,
+                position = (it.occurredAtMs - startedAtMs).toFloat() / (endedAtMs - startedAtMs),
+            )
+        },
     )
 }
