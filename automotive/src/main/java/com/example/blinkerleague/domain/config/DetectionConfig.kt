@@ -17,6 +17,7 @@ data class DetectionConfig(
     val point: PointConfig = PointConfig(),
     val signalCancel: SignalCancelConfig = SignalCancelConfig(),
     val harsh: HarshConfig = HarshConfig(),
+    val night: NightConfig = NightConfig(),
 ) {
     companion object {
         /** 서버 기본 기준값의 팁 문구. 깜빡이는 앱 판정 기준(회전 5초 전)에 맞춘 문구 */
@@ -126,4 +127,18 @@ data class GradeThreshold(val grade: String, val minScore: Int) {
         fun gradeOf(score: Int?, thresholds: List<GradeThreshold>): String? =
             score?.let { s -> thresholds.sortedByDescending { it.minScore }.firstOrNull { s >= it.minScore }?.grade }
     }
+}
+
+/** 위도 · 경도 (도). SDK 타입 대신 쓰는 단순 좌표 */
+data class Coordinate(val latitude: Double, val longitude: Double)
+
+/**
+ * 야간 전조등 기준. 일출 · 일몰은 실제 위치가 아니라 등록 지역의 대표 좌표로 계산함 (원시 위치 미사용)
+ */
+data class NightConfig(
+    /** 지역 코드(시군구, 법정동 코드 앞 5자리) → 대표 좌표 */
+    val regionCoordinates: Map<String, Coordinate> = emptyMap(),
+) {
+    /** 지역 코드의 대표 좌표. 목록에 없으면 null */
+    fun representativeCoordinate(regionCode: String): Coordinate? = null
 }
