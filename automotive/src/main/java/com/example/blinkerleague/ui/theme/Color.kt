@@ -19,3 +19,16 @@ val SuccessContainer = Color(0xFF16324F)
 val OnSuccessContainer = Color(0xFF9CC8FF)
 val WarningContainer = Color(0xFF3D2A12)
 val OnWarningContainer = Color(0xFFF6C07D)
+
+// 게임 연출 (game-ui 목업). 득점 · 실점 색은 위의 파랑 · 주황을 그대로 씀
+val Gold = Color(0xFFFFCC4D)
+val Silver = Color(0xFFC9D1DB)
+val Bronze = Color(0xFFD9925B)
+val Flame = Color(0xFFFF7A45)
+val GoldContainer = Color(0xFF3A2C08)
+
+// 등급색: 기준값(config.grades)에서 minScore가 높은 순서로 금 · 하늘 · 민트 · 보라, 그 아래나 등급 없음은 회색
+private val GradeSky = Color(0xFF7CC4FF)
+private val GradeMint = Color(0xFF8BE0B4)
+private val GradePurple = Color(0xFFC9B6FF)
+internal val GradeColors = listOf(Gold, GradeSky, GradeMint, GradePurple)
