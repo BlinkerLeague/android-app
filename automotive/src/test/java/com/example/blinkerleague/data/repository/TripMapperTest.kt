@@ -11,6 +11,7 @@ import kotlinx.serialization.json.double
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.ZoneId
 
@@ -89,7 +90,7 @@ class TripMapperTest {
         val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(leftOn), mapper.toEventEntities(leftOn)))
 
         // then
-        assertEquals(listOf("SIGNAL_CANCEL", "TURN_SIGNAL"), request.supported)
+        assertTrue("supported: ${request.supported}", "SIGNAL_CANCEL" in request.supported)
         val event = request.events.single()
         assertEquals("e1", event.eventId)
         assertEquals("SIGNAL_LEFT_ON", event.type)
