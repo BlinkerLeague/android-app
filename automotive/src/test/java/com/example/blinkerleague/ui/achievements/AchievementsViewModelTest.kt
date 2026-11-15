@@ -75,7 +75,7 @@ class AchievementsViewModelTest {
 
         // then
         val state = vm.uiState.value as AchievementsUiState.Loaded
-        assertEquals(StreakCard(3, false, daysToReward = 2, rewardPoint = 30), state.streak)
+        assertEquals(StreakCard(3, false, daysToReward = 2, rewardPoint = 30, period = 5), state.streak)
     }
 
     @Test
