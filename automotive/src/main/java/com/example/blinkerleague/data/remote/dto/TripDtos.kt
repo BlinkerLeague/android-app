@@ -52,6 +52,13 @@ data class NightSegmentPayload(
     val headlightOffSec: Int,
 )
 
+/** `SEAT_BELT` 이벤트 payload (openapi `TripEventRequest.payload`). 운행당 1건 */
+@Serializable
+data class SeatBeltPayload(
+    val buckledAtDeparture: Boolean,
+    val unbuckledMovingSec: Int,
+)
+
 /**
  * `POST /api/trips` 응답과 `GET /api/trips/{id}/score` 응답 (서버 plan.md 3.5 `TripResult`).
  * 서버가 아직 안 주는 필드도 있으므로 [score] 이후는 모두 선택값
@@ -153,6 +160,9 @@ object TripEventType {
 
     /** 야간 주행 구간. payload는 [NightSegmentPayload] */
     const val NIGHT_SEGMENT = "NIGHT_SEGMENT"
+
+    /** 안전벨트 (운행당 1건, 출발 시각). payload는 [SeatBeltPayload] */
+    const val SEAT_BELT = "SEAT_BELT"
 }
 
 object ScoreStatus {
