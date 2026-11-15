@@ -39,6 +39,7 @@ data class TripRecording(
  * - 거기에 속도(SPEED)까지 지원되면 깜빡이를 켠 채 잊은 이벤트도 만듦
  * - 속도(SPEED)와 브레이크(BRAKE)가 지원되면 급가속 · 급감속 이벤트를 만듦 (운행 구간 안의 것만)
  * - 하향등(HEADLIGHT)이 지원되고 대표 좌표가 있으면 야간 구간 이벤트를 만듦
+ * - 안전벨트(SEAT_BELT)와 속도(SPEED)가 지원되면 운행당 안전벨트 이벤트 하나를 출발 시각에 만듦 (출발 시점 상태를 모르면 만들지 않음)
  * - 이벤트는 발생 시각 순으로 정렬함
  * - 핸들 각도·위치는 운행 구간 안의 것만 씀
  * - id 생성은 밖에서 주입 ([newId]) — 테스트에서 고정값을 쓸 수 있게
@@ -51,6 +52,7 @@ class TripAssembler(
     private val judge = SignalJudge(config.turn)
     private val signalCancelDetector = SignalCancelDetector(config.signalCancel)
     private val harshDetector = HarshDrivingDetector(config.harsh)
+    private val seatBeltJudge = SeatBeltJudge(config.seatBelt)
 
     fun assemble(
         tripId: String,
@@ -123,6 +125,21 @@ class TripAssembler(
             emptyList()
         }
 
+        val seatBeltEvents = if (SignalType.SEAT_BELT in supported && SignalType.SPEED in supported) {
+            listOfNotNull(
+                seatBeltJudge.judge(recording.seatBelts, recording.speeds, recording.vehicleStates, startedAtMs, endedAtMs)?.let {
+                    TripEvent.SeatBeltEvent(
+                        id = newId(),
+                        occurredAtMs = it.occurredAtMs,
+                        buckledAtDeparture = it.buckledAtDeparture,
+                        unbuckledMovingSec = it.unbuckledMovingSec,
+                    )
+                },
+            )
+        } else {
+            emptyList()
+        }
+
         return Trip(
             id = tripId,
             startedAtMs = startedAtMs,
@@ -133,7 +150,7 @@ class TripAssembler(
                 TripDistance.km(locations)
             },
             supported = supported,
-            events = (turnEvents + signalLeftOnEvents + harshEvents + nightEvents).sortedBy { it.occurredAtMs },
+            events = (turnEvents + signalLeftOnEvents + harshEvents + nightEvents + seatBeltEvents).sortedBy { it.occurredAtMs },
         )
     }
 }
