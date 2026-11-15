@@ -23,7 +23,7 @@ object VoiceScript {
         val total = result.turns.size
         val success = result.turns.count { it.signalOn }
         return when {
-            result.distanceKm < minDistanceKm -> "운행이 끝났어요. 짧은 운행이라 점수에는 반영되지 않아요."
+            result.distanceKm < minDistanceKm -> "경기 종료. 짧은 이동이라 경기에 반영되지 않아요."
             total == 0 -> "운행이 끝났어요. 이번에는 측정할 회전이 없었어요."
             success == total && total == 1 -> "운행이 끝났어요. 회전할 때 깜빡이를 제때 켰어요. 멋져요."
             success == total -> "운행이 끝났어요. 회전 ${count(total)} 모두 깜빡이를 제때 켰어요. 멋져요."
