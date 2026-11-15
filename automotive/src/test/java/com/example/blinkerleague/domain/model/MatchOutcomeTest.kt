@@ -1,6 +1,7 @@
 package com.example.blinkerleague.domain.model
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class MatchOutcomeTest {
@@ -39,5 +40,14 @@ class MatchOutcomeTest {
 
         // then
         assertEquals(MatchOutcome.PERFECT, outcome)
+    }
+
+    @Test
+    fun `회전이 없으면 승패가 없다`() {
+        // when
+        val outcome = MatchOutcome.of(goals = 0, conceded = 0)
+
+        // then
+        assertNull(outcome)
     }
 }
