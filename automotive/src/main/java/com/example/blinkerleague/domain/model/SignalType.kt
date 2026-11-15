@@ -12,4 +12,7 @@ enum class SignalType {
     BRAKE,
     HEADLIGHT,
     SAFETY_WARNING,
+
+    /** 차량 속도. 깜빡이 켜 둔 채 잊음(signalCancel) 판정에 씀. 업로드 supported(ScoreItem)로는 나가지 않음 */
+    SPEED,
 }
