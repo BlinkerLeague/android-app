@@ -41,7 +41,8 @@ class HomeViewModel(
     private val loadQuest: suspend () -> TodayMission?,
     private val loadStreak: suspend () -> Streak? = { null },
     private val refreshRecent: suspend () -> Unit,
-    private val grades: List<GradeThreshold>,
+    /** 등급 기준 (최근 경기 등급 도장 색, 맨 위 등급이 금색) */
+    val grades: List<GradeThreshold>,
     private val showDemoEntry: Boolean,
     private val clock: () -> Long,
     private val zone: ZoneId,
