@@ -58,4 +58,24 @@ class SignalCancelDetectorTest {
         // then
         assertEquals(emptyList<SignalLeftOn>(), result)
     }
+
+    @Test
+    fun `minSpeedKmh 미만으로 달린 시간은 세지 않는다`() {
+        // given
+        // 20km/h로 천천히 달리며 10s에 왼쪽 깜빡이를 켜고 50s에 끔 (40초, 회전 없음)
+        val signals = listOf(SignalSample(10_000, LEFT), SignalSample(50_000, OFF))
+        val speeds = constantSpeed(0, 120_000, 20f)
+
+        // when
+        val result = detector.detect(
+            signals = signals,
+            turns = emptyList(),
+            speeds = speeds,
+            tripStartMs = 0,
+            tripEndMs = 120_000,
+        )
+
+        // then
+        assertEquals(emptyList<SignalLeftOn>(), result)
+    }
 }
