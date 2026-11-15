@@ -100,7 +100,7 @@ fun HomeContent(
             horizontalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             QuestPanel(state, onOpenQuest, Modifier.weight(1f).fillMaxHeight())
-            state.streakDays?.let { StreakPanel(it, state.streakTodayAchieved, Modifier.weight(0.6f).fillMaxHeight()) }
+            state.streak?.let { StreakPanel(it.days, it.todayAchieved, Modifier.weight(0.6f).fillMaxHeight()) }
             RecentTripsPanel(state.recentTrips, onOpenTrip, Modifier.weight(1f).fillMaxHeight())
         }
         StatusBar(state.recordingStatus, state.showDemoEntry, onOpenDemo)

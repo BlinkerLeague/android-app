@@ -22,6 +22,8 @@ data class StreakCard(
     val daysToReward: Int,
     /** 연속 보상 포인트 (서버 기준값 point.streakRewardPoint) */
     val rewardPoint: Int = PointConfig().streakRewardPoint,
+    /** 연속 보상 주기 = 진행 점 칸 수 (서버 기준값 point.streakRewardDays) */
+    val period: Int = PointConfig().streakRewardDays,
 )
 
 data class BadgeCard(

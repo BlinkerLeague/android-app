@@ -1,15 +1,18 @@
 package com.example.blinkerleague.ui.home
 
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.config.PointConfig
 import com.example.blinkerleague.domain.model.MatchOutcome
 import com.example.blinkerleague.domain.model.MissionStatus
 import com.example.blinkerleague.domain.model.PermissionStatus
 import com.example.blinkerleague.domain.model.ScoreState
+import com.example.blinkerleague.domain.model.Streak
 import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.domain.model.TripResult
 import com.example.blinkerleague.domain.model.TurnDirection
 import com.example.blinkerleague.domain.model.TurnRecord
 import com.example.blinkerleague.service.RecordingStatus
+import com.example.blinkerleague.ui.achievements.StreakCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -153,12 +156,32 @@ class HomeViewModelTest {
         )
         backgroundScope.launch { vm.uiState.collect {} }
         runCurrent()
-        assertNull(vm.uiState.value.streakDays)
+        assertNull(vm.uiState.value.streak)
 
         vm.refresh()
         runCurrent()
-        assertEquals(5, vm.uiState.value.streakDays)
-        assertTrue(vm.uiState.value.streakTodayAchieved)
+        assertEquals(5, vm.uiState.value.streak?.days)
+        assertTrue(vm.uiState.value.streak?.todayAchieved == true)
+    }
+
+    @Test
+    fun `홈 연승 카드는 기준값 주기로 남은 날과 보상 포인트를 담는다`() = runTest(dispatcher) {
+        // given
+        // 서버 기준값: 5일마다 30P, 지금 3일 연속이고 오늘 클리어
+        val vm = HomeViewModel(
+            recentTrips = trips, recordingStatus = status, speedPermission = speed,
+            loadQuest = { null }, loadStreak = { Streak(3, true) },
+            refreshRecent = {}, grades = GradeThreshold.DEFAULT, showDemoEntry = false, clock = { now }, zone = zone,
+            rule = { PointConfig(streakRewardDays = 5, streakRewardPoint = 30) },
+        )
+        backgroundScope.launch { vm.uiState.collect {} }
+
+        // when
+        vm.refresh()
+        runCurrent()
+
+        // then
+        assertEquals(StreakCard(3, true, daysToReward = 2, rewardPoint = 30, period = 5), vm.uiState.value.streak)
     }
 
     @Test

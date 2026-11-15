@@ -3,12 +3,15 @@ package com.example.blinkerleague.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.config.PointConfig
 import com.example.blinkerleague.domain.model.MatchOutcome
 import com.example.blinkerleague.domain.model.PermissionStatus
 import com.example.blinkerleague.domain.model.Streak
 import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.domain.model.TripResult
 import com.example.blinkerleague.service.RecordingStatus
+import com.example.blinkerleague.ui.achievements.StreakCard
+import com.example.blinkerleague.ui.achievements.daysToReward
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -40,6 +43,7 @@ class HomeViewModel(
     private val showDemoEntry: Boolean,
     private val clock: () -> Long,
     private val zone: ZoneId,
+    private val rule: () -> PointConfig = { PointConfig() },
 ) : ViewModel() {
 
     private val quest = MutableStateFlow<QuestLoad>(QuestLoad.Loading)
@@ -52,8 +56,7 @@ class HomeViewModel(
         speedPermission,
     ) { (quest, streak), trips, status, speed ->
         HomeUiState(
-            streakDays = streak?.days,
-            streakTodayAchieved = streak?.todayAchieved ?: false,
+            streak = streak?.let { StreakCard(it.days, it.todayAchieved, daysToReward(it.days)) },
             quest = (quest as? QuestLoad.Loaded)?.mission,
             questLoading = quest == QuestLoad.Loading,
             recentTrips = trips.map(::toRow),

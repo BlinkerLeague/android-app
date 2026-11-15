@@ -4,15 +4,15 @@ import com.example.blinkerleague.domain.model.MatchOutcome
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.service.RecordingStatus
+import com.example.blinkerleague.ui.achievements.StreakCard
 
 data class HomeUiState(
     /** 오늘의 퀘스트. 불러오기 전이거나 못 받으면 null */
     val quest: TodayMission? = null,
     val questLoading: Boolean = true,
     val recentTrips: List<RecentTripRow> = emptyList(),
-    /** 미션 연속 달성 (2차, 서버 D6에 따라 다시 보임). 못 받으면 null → 카드 숨김 */
-    val streakDays: Int? = null,
-    val streakTodayAchieved: Boolean = false,
+    /** 퀘스트 연승 (2차, 서버 D6에 따라 다시 보임). 못 받으면 null → 카드 숨김 */
+    val streak: StreakCard? = null,
     val recordingStatus: RecordingStatus = RecordingStatus.OFF,
     val notices: List<HomeNotice> = emptyList(),
     /** 시나리오 재생 진입 버튼 (디버그 빌드만, screen-plan 1장) */
