@@ -114,6 +114,20 @@ class ResultUiStateTest {
     }
 
     @Test
+    fun `실점이 있으면 다음 경기 팁으로 깜빡이 팁을 담는다`() {
+        // given
+        // 깜빡이 켬 · 안 켬 · 켬 → 실점 1
+        val trip = result(ScoreState.SCORED, 67, signals = listOf(true, false, true))
+        val tips = mapOf("TURN_SIGNAL" to "회전 전에 깜빡이를 미리 켜 보세요")
+
+        // when
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, tips = tips)
+
+        // then
+        assertEquals("회전 전에 깜빡이를 미리 켜 보세요", state.tip)
+    }
+
+    @Test
     fun `업로드 전이면 집계 중, 50점 미만은 등급 없음`() {
         assertEquals(MetricValue.Pending, metric(result(ScoreState.PENDING, null).toResultUiState(null, GradeThreshold.DEFAULT)))
         assertNull(result(ScoreState.SCORED, 33).toResultUiState(null, GradeThreshold.DEFAULT).grade)

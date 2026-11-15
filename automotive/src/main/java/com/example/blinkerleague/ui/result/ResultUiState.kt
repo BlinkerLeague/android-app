@@ -38,6 +38,8 @@ sealed interface ResultUiState {
         val outcome: MatchOutcome? = null,
         /** 기준값에서 가장 높은 등급일 때만 축하 연출(꽃가루) */
         val celebrate: Boolean = false,
+        /** 다음 경기 팁. 없으면 null (카드 숨김) */
+        val tip: String? = null,
     ) : ResultUiState
 }
 
@@ -93,6 +95,8 @@ internal fun TripResult.toResultUiState(
     mission: TodayMission?,
     grades: List<GradeThreshold>,
     earnedPoints: Int? = null,
+    /** 항목별 팁 문구 (기준값 `tips`, 키는 MetricItem 이름) */
+    tips: Map<String, String> = emptyMap(),
 ): ResultUiState.Loaded {
     val goals = turns.count { it.signalOn }
     val canMeasureTurns = SignalType.TURN_SIGNAL in supported && SignalType.STEERING_ANGLE in supported
