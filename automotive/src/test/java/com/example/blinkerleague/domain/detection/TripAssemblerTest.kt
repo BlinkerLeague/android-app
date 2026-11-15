@@ -394,4 +394,70 @@ class TripAssemblerTest {
         // 40s 회전 1개만
         assertEquals(listOf("event-1" to 40_000L), trip.events.map { it.id to it.occurredAtMs })
     }
+
+    @Test
+    fun `기록 샘플이 하나도 없는 신호는 supported에서 뺀다`() {
+        // given
+        // 운행 0s ~ 60s. 속도 · 하향등은 샘플이 있고, 빠진 신호는 샘플 0개
+        val speeds = (0L..60_000L step 1_000).map { SpeedSample(it, 30f) }
+        val headlights = listOf(HeadlightSample(0, on = true))
+        // 40s ~ 45s 왼쪽 회전
+        val steering = listOf(
+            SteeringSample(0, 0f),
+            SteeringSample(40_000, 30f),
+            SteeringSample(42_000, 100f),
+            SteeringSample(45_000, 0f),
+        )
+        fun supportedOf(recording: TripRecording, supported: Set<SignalType>, coordinate: Coordinate? = null) =
+            assembler.assemble(
+                tripId = "t",
+                startedAtMs = 0,
+                endedAtMs = 60_000,
+                recording = recording,
+                supported = supported,
+                coordinate = coordinate,
+            ).supported
+
+        // when
+        val results = listOf(
+            // a) 브레이크 샘플 없음
+            supportedOf(
+                TripRecording(emptyList(), emptyList(), emptyList(), emptyList(), speeds = speeds),
+                setOf(SignalType.SPEED, SignalType.BRAKE),
+            ),
+            // b) 하향등 샘플 없음 (서울 대표 좌표)
+            supportedOf(
+                TripRecording(emptyList(), emptyList(), emptyList(), emptyList()),
+                setOf(SignalType.HEADLIGHT),
+                coordinate = Coordinate(37.57, 126.98),
+            ),
+            // c) 경고등 샘플 없음
+            supportedOf(
+                TripRecording(emptyList(), emptyList(), emptyList(), emptyList(), speeds = speeds),
+                setOf(SignalType.SAFETY_WARNING, SignalType.SPEED),
+            ),
+            // d) 와이퍼 샘플 없음
+            supportedOf(
+                TripRecording(emptyList(), emptyList(), emptyList(), emptyList(), headlights = headlights),
+                setOf(SignalType.WIPER, SignalType.HEADLIGHT),
+            ),
+            // e) 회전은 있지만 속도 샘플 없음
+            supportedOf(
+                TripRecording(steering, emptyList(), emptyList(), emptyList()),
+                setOf(SignalType.TURN_SIGNAL, SignalType.STEERING_ANGLE, SignalType.SPEED),
+            ),
+        )
+
+        // then
+        assertEquals(
+            listOf(
+                setOf(SignalType.SPEED),
+                emptySet(),
+                setOf(SignalType.SPEED),
+                setOf(SignalType.HEADLIGHT),
+                setOf(SignalType.TURN_SIGNAL, SignalType.STEERING_ANGLE),
+            ),
+            results,
+        )
+    }
 }
