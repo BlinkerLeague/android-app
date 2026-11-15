@@ -22,7 +22,7 @@ enum class ScoreItem {
          * 지원 신호 → 측정 가능한 점수 항목.
          * - 깜빡이 항목은 방향지시등과 핸들 각도(회전 감지)가 모두 있어야 함
          * - 깜빡이 끄기 · 회전 속도 항목은 그에 더해 속도도 있어야 함
-         * - 부드러운 주행(급가감속)은 P1이라 아직 넣지 않음
+         * - 부드러운 주행(급가속 · 급감속)은 속도와 브레이크(급감속 판정)가 모두 있어야 함
          */
         fun measurable(signals: Set<SignalType>): Set<ScoreItem> = buildSet {
             if (SignalType.TURN_SIGNAL in signals && SignalType.STEERING_ANGLE in signals) add(TURN_SIGNAL)
@@ -30,6 +30,7 @@ enum class ScoreItem {
                 add(SIGNAL_CANCEL)
                 add(TURN_SPEED)
             }
+            if (SignalType.SPEED in signals && SignalType.BRAKE in signals) add(SMOOTH_DRIVING)
             if (SignalType.SAFETY_WARNING in signals) add(SAFETY_WARNING)
             if (SignalType.HEADLIGHT in signals) add(NIGHT_HEADLIGHT)
         }
