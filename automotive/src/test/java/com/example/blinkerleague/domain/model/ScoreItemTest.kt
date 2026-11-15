@@ -1,5 +1,6 @@
 package com.example.blinkerleague.domain.model
 
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -40,5 +41,17 @@ class ScoreItemTest {
 
         // then
         assertTrue("측정 항목: $items", ScoreItem.SMOOTH_DRIVING in items)
+    }
+
+    @Test
+    fun `브레이크가 없으면 SMOOTH_DRIVING을 넣지 않는다`() {
+        // given
+        val signals = setOf(SignalType.SPEED)
+
+        // when
+        val items = ScoreItem.measurable(signals)
+
+        // then
+        assertFalse("측정 항목: $items", ScoreItem.SMOOTH_DRIVING in items)
     }
 }
