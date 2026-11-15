@@ -35,7 +35,7 @@ object VoiceScript {
         if (result.distanceKm < minDistanceKm) return "경기 종료. 짧은 이동이라 경기에 반영되지 않아요."
         val tip = "다음 경기에선 회전 ${signalLeadSec}초 전에 깜빡이!"
         return when (MatchOutcome.of(goals, conceded)) {
-            null -> "경기 종료. 오늘은 회전 없는 경기였어요."
+            null -> "경기 종료. 이번 경기는 회전이 없었어요."
             MatchOutcome.PERFECT -> "경기 종료! $goals 대 0 퍼펙트 승리입니다!"
             MatchOutcome.WIN -> "경기 종료! $goals 대 $conceded 승리입니다. $HIGHLIGHT"
             MatchOutcome.DRAW -> "경기 종료! $goals 대 $conceded 무승부입니다. $HIGHLIGHT"
