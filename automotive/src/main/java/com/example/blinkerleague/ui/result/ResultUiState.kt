@@ -50,7 +50,8 @@ sealed interface ResultUiState {
 /** 지금 점수보다 한 단계 위 등급과 그 등급까지 남은 점수 */
 data class NextGrade(val grade: String, val points: Int)
 
-enum class MetricItem { TURN_SIGNAL, SMOOTH_DRIVING, SAFETY_WARNING, NIGHT_HEADLIGHT }
+/** 서버 점수 항목 8개 (openapi ScoreItem 순서). 결과 화면 행 순서이기도 함 */
+enum class MetricItem { TURN_SIGNAL, SMOOTH_DRIVING, SAFETY_WARNING, NIGHT_HEADLIGHT, SIGNAL_CANCEL, TURN_SPEED, SEAT_BELT, RAIN_DRIVING }
 
 /** 항목별 점수 한 줄. 값은 서버 `metrics`로 채우고, 서버 결과가 없으면 깜빡이는 기기 판정 · 나머지는 "준비 중" */
 data class MetricRow(val item: MetricItem, val value: MetricValue)
@@ -146,12 +147,9 @@ internal fun TripResult.toResultUiState(
         distanceKm = distanceKm,
         goals = goals,
         conceded = conceded,
-        metrics = listOf(
-            MetricRow(MetricItem.TURN_SIGNAL, turnValue),
-            MetricRow(MetricItem.SMOOTH_DRIVING, otherValue(MetricItem.SMOOTH_DRIVING)),
-            MetricRow(MetricItem.SAFETY_WARNING, otherValue(MetricItem.SAFETY_WARNING)),
-            MetricRow(MetricItem.NIGHT_HEADLIGHT, otherValue(MetricItem.NIGHT_HEADLIGHT)),
-        ),
+        metrics = MetricItem.entries.map {
+            MetricRow(it, if (it == MetricItem.TURN_SIGNAL) turnValue else otherValue(it))
+        },
         mission = mission,
         earnedPoints = earnedPoints?.takeIf { scoreState == ScoreState.SCORED && it > 0 },
         outcome = if (scoreState == ScoreState.EXCLUDED_SHORT) null else MatchOutcome.of(goals, conceded),

@@ -370,6 +370,10 @@ private fun MetricLine(row: MetricRow, clock: RevealClock, startMs: Int, onClick
             MetricItem.SMOOTH_DRIVING -> R.string.result_metric_smooth
             MetricItem.SAFETY_WARNING -> R.string.result_metric_safety
             MetricItem.NIGHT_HEADLIGHT -> R.string.result_metric_headlight
+            MetricItem.SIGNAL_CANCEL -> R.string.metric_signal_cancel
+            MetricItem.TURN_SPEED -> R.string.metric_turn_speed
+            MetricItem.SEAT_BELT -> R.string.metric_seat_belt
+            MetricItem.RAIN_DRIVING -> R.string.metric_rain_driving
         },
     )
     val value = row.value
