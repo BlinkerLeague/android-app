@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.blinkerleague.domain.config.PointConfig
 import com.example.blinkerleague.domain.model.Streak
 import com.example.blinkerleague.domain.model.TodayMission
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +22,11 @@ class QuestViewModel(
 
     init {
         viewModelScope.launch {
-            _uiState.value = loadMission()?.let { QuestUiState.Loaded(it) } ?: QuestUiState.Unavailable
+            val streak = async { loadStreak() }
+            val mission = loadMission()
+            _uiState.value = mission?.let { QuestUiState.Loaded(it, streak.await()?.let(::impactOf)) } ?: QuestUiState.Unavailable
         }
     }
+
+    private fun impactOf(streak: Streak): StreakImpact = StreakImpact(streak.days + 1, streak.todayAchieved)
 }

@@ -42,7 +42,8 @@ import com.example.blinkerleague.ui.theme.OnWarningContainer
 
 private val QuestViewModelFactory = viewModelFactory {
     initializer {
-        QuestViewModel((this[APPLICATION_KEY] as BlinkerLeagueApplication).container.missionRepository::todayMission)
+        val container = (this[APPLICATION_KEY] as BlinkerLeagueApplication).container
+        QuestViewModel(container.missionRepository::todayMission, container.rewardRepository::streak) { container.config.point }
     }
 }
 
