@@ -39,8 +39,8 @@ data class BadgeCard(
 internal fun daysToReward(days: Int, period: Int = PointConfig().streakRewardDays): Int = period - days % period
 
 /**
- * 연승 진행 점 중 채울 칸 수 (한 주기 [period]칸)
+ * 연승 진행 점 중 채울 칸 수 (한 주기 [period]칸): 0일이면 0, 3일이면 3, 7일 · 14일째면 7(보상 받는 날은 꽉 참)
  * period는 1 이상(ConfigRepository.mergedWith에서 보장)
  */
 internal fun streakDotsFilled(days: Int, period: Int = PointConfig().streakRewardDays): Int =
-    if (days <= 0) 0 else (days % period).let { if (it == 0) period else it }
+    if (days <= 0) 0 else (days - 1) % period + 1
