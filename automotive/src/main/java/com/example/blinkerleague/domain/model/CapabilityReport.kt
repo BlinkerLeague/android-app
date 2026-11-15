@@ -31,6 +31,7 @@ data class CapabilityReport(
             if (steering == Availability.SUPPORTED) add(SignalType.STEERING_ANGLE)
             if (speed == Availability.SUPPORTED) add(SignalType.SPEED)
             if (brake == Availability.SUPPORTED) add(SignalType.BRAKE)
+            if (headlight == Availability.SUPPORTED) add(SignalType.HEADLIGHT)
         }
 
     /** 회전 깜빡이 판정에는 방향지시등과 핸들 각도가 둘 다 필요함 */
