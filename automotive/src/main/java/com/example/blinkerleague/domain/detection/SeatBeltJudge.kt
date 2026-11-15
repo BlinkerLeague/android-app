@@ -1,6 +1,7 @@
 package com.example.blinkerleague.domain.detection
 
 import com.example.blinkerleague.domain.config.SeatBeltConfig
+import com.example.blinkerleague.domain.model.Gear
 import com.example.blinkerleague.domain.model.SeatBeltSample
 import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.VehicleStateSample
@@ -24,5 +25,19 @@ class SeatBeltJudge(private val config: SeatBeltConfig) {
         vehicleStates: List<VehicleStateSample>,
         tripStartMs: Long,
         tripEndMs: Long,
-    ): SeatBeltResult? = SeatBeltResult(occurredAtMs = tripStartMs, buckledAtDeparture = false, unbuckledMovingSec = 0)
+    ): SeatBeltResult? {
+        val departureMs = departureMs(vehicleStates, tripStartMs, tripEndMs)
+        val buckled = seatBelts.filter { it.timestampMs <= departureMs }.maxByOrNull { it.timestampMs }?.buckled ?: false
+        return SeatBeltResult(occurredAtMs = departureMs, buckledAtDeparture = buckled, unbuckledMovingSec = 0)
+    }
+
+    /** 운행 구간 안의 첫 P → D/R 전환 시각. 없으면 운행 시작 */
+    private fun departureMs(vehicleStates: List<VehicleStateSample>, tripStartMs: Long, tripEndMs: Long): Long =
+        vehicleStates.sortedBy { it.timestampMs }
+            .zipWithNext()
+            .firstOrNull { (prev, cur) ->
+                prev.gear == Gear.P && (cur.gear == Gear.D || cur.gear == Gear.R) && cur.timestampMs in tripStartMs..tripEndMs
+            }
+            ?.second?.timestampMs
+            ?: tripStartMs
 }
