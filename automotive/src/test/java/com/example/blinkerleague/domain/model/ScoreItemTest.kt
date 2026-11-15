@@ -78,4 +78,16 @@ class ScoreItemTest {
         // then
         assertFalse("측정 항목: $items", ScoreItem.SEAT_BELT in items)
     }
+
+    @Test
+    fun `경고등 신호가 있어도 속도가 없으면 SAFETY_WARNING 항목을 넣지 않는다`() {
+        // given
+        val signals = setOf(SignalType.SAFETY_WARNING)
+
+        // when
+        val items = ScoreItem.measurable(signals)
+
+        // then
+        assertFalse("측정 항목: $items", ScoreItem.SAFETY_WARNING in items)
+    }
 }
