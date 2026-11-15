@@ -45,6 +45,8 @@ data class TripConfig(
     val parkEndMinutes: Int = 3,
     /** 시연 녹화용(디버그 빌드 `--ei parkEndSec N`): 있으면 [parkEndMinutes] 대신 이 초를 씀. 서버 설정에는 없음 */
     val parkEndSec: Int? = null,
+    /** 운행 한 건에 올리는 이벤트 수 상한 (서버 trip.maxEvents) */
+    val maxEvents: Int = 2000,
 ) {
     val parkEndMs: Long get() = parkEndSec?.let { it * 1_000L } ?: (parkEndMinutes * 60_000L)
 }

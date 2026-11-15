@@ -24,6 +24,7 @@ data class ThresholdsResponse(
 data class TripThresholdsDto(
     val minDistanceKm: Double? = null,
     val parkEndMinutes: Int? = null,
+    val maxEvents: Int? = null,
 )
 
 /** 핸들 각도 항목(steering*, mergeGapSec)은 서버 요청 1·7번. 서버가 주기 전까지는 앱 기본값 */
