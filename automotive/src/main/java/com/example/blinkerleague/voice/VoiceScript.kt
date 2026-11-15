@@ -27,6 +27,7 @@ object VoiceScript {
             total == 0 -> "경기 종료. 오늘은 회전 없는 경기였어요."
             success == total -> "경기 종료! $success 대 0 퍼펙트 승리입니다!"
             success > total - success -> "경기 종료! $success 대 ${total - success} 승리입니다. 화면에서 하이라이트를 볼 수 있어요."
+            success == total - success -> "경기 종료! $success 대 ${total - success} 무승부입니다. 화면에서 하이라이트를 볼 수 있어요."
             success == 0 -> "운행이 끝났어요. 다음 회전에는 깜빡이를 미리 켜 봐요."
             else -> "운행이 끝났어요. 회전 ${count(total)} 중 ${count(success)} 깜빡이를 제때 켰어요."
         }
