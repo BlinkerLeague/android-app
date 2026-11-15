@@ -19,6 +19,7 @@ data class DetectionConfig(
     val harsh: HarshConfig = HarshConfig(),
     val night: NightConfig = NightConfig(),
     val seatBelt: SeatBeltConfig = SeatBeltConfig(),
+    val safetyWarning: SafetyWarningConfig = SafetyWarningConfig(),
 ) {
     companion object {
         /** 서버 기본 기준값의 팁 문구. 깜빡이는 앱 판정 기준(회전 5초 전)에 맞춘 문구 */
@@ -110,6 +111,14 @@ data class HarshConfig(
 /** 안전벨트 기준 (앱 내부 값, 서버 설정에는 없음) */
 data class SeatBeltConfig(
     /** 이 속도 이상이면 주행 중으로 보고 미착용 시간을 셈 */
+    val movingMinSpeedKmh: Int = 10,
+)
+
+/** 안전 경고등 기준 (앱 내부 값). 대상 경고등 이름 목록은 SDK 확인 후 채움 */
+data class SafetyWarningConfig(
+    /** 셀 경고등 이름 */
+    val telltaleTypes: Set<String> = emptySet(),
+    /** 이 속도 이상이면 주행 중으로 봄 */
     val movingMinSpeedKmh: Int = 10,
 )
 
