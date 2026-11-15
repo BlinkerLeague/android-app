@@ -187,6 +187,22 @@ class ResultUiStateTest {
     }
 
     @Test
+    fun `출발과 도착 시각이 같으면 플레이 위치는 0`() {
+        // given
+        // 출발 · 도착 · 회전 모두 08:10
+        val trip = result(ScoreState.SCORED, 67).copy(
+            endedAtMs = start,
+            turns = listOf(TurnRecord(start, TurnDirection.LEFT, true)),
+        )
+
+        // when
+        val plays = trip.toPlaysUiState(zone)
+
+        // then
+        assertEquals(0f, plays.plays.single().position, 0.0001f)
+    }
+
+    @Test
     fun `타임라인 - 시각순 카드, 득점은 깜빡이 켠 회전`() {
         val plays = result(ScoreState.SCORED, 67).toPlaysUiState(zone)
         assertEquals("08:10", plays.startedAt)
