@@ -75,4 +75,45 @@ class HarshDrivingDetectorTest {
         // then
         assertEquals(listOf(HarshEvent(occurredAtMs = 2_000, kind = HarshKind.BRAKE)), result)
     }
+
+    @Test
+    fun `감속 전부터 밟고 있던 브레이크도 급감속으로 센다`() {
+        // given
+        // 0.5초 간격: 50 → 50 → 50 → 44 → 38 → 37km/h. 브레이크는 0.2s에 밟은 뒤 계속 밟고 있음
+        val speeds = listOf(
+            SpeedSample(0, 50f),
+            SpeedSample(500, 50f),
+            SpeedSample(1_000, 50f),
+            SpeedSample(1_500, 44f),
+            SpeedSample(2_000, 38f),
+            SpeedSample(2_500, 37f),
+        )
+        val brakes = listOf(BrakeSample(200, pressed = true))
+
+        // when
+        val result = detector.detect(speeds = speeds, brakes = brakes)
+
+        // then
+        assertEquals(listOf(HarshEvent(occurredAtMs = 2_000, kind = HarshKind.BRAKE)), result)
+    }
+
+    @Test
+    fun `브레이크를 밟지 않은 감속(타력)은 급감속으로 세지 않는다`() {
+        // given
+        // 0.5초 간격: 50 → 50 → 50 → 44 → 38 → 37km/h. 브레이크는 밟지 않음
+        val speeds = listOf(
+            SpeedSample(0, 50f),
+            SpeedSample(500, 50f),
+            SpeedSample(1_000, 50f),
+            SpeedSample(1_500, 44f),
+            SpeedSample(2_000, 38f),
+            SpeedSample(2_500, 37f),
+        )
+
+        // when
+        val result = detector.detect(speeds = speeds, brakes = emptyList())
+
+        // then
+        assertEquals(emptyList<HarshEvent>(), result)
+    }
 }
