@@ -1,11 +1,14 @@
 package com.example.blinkerleague.ui.home
 
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.model.MatchOutcome
 import com.example.blinkerleague.domain.model.MissionStatus
 import com.example.blinkerleague.domain.model.PermissionStatus
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.domain.model.TripResult
+import com.example.blinkerleague.domain.model.TurnDirection
+import com.example.blinkerleague.domain.model.TurnRecord
 import com.example.blinkerleague.service.RecordingStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -42,8 +45,14 @@ class HomeViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private fun trip(id: String, endedAt: ZonedDateTime, state: ScoreState, score: Int?) =
-        TripResult(id, 0, endedAt.toInstant().toEpochMilli(), 5.0, state, score, emptyList())
+    private fun trip(
+        id: String,
+        endedAt: ZonedDateTime,
+        state: ScoreState,
+        score: Int?,
+        turns: List<TurnRecord> = emptyList(),
+        distanceKm: Double = 5.0,
+    ) = TripResult(id, 0, endedAt.toInstant().toEpochMilli(), distanceKm, state, score, turns)
 
     private fun viewModel(quest: TodayMission?) = HomeViewModel(
         recentTrips = trips,
@@ -75,6 +84,27 @@ class HomeViewModelTest {
         assertEquals("S", rows[0].grade)
         assertNull(rows[1].grade)
         assertEquals(ScoreState.PENDING, rows[2].scoreState)
+    }
+
+    @Test
+    fun `최근 경기 행에 득점 · 실점 · 승패 · 거리를 담는다`() = runTest(dispatcher) {
+        // given
+        // 회전 4번 중 3번 깜빡이를 켬, 3.9km
+        val vm = viewModel(null)
+        backgroundScope.launch { vm.uiState.collect {} }
+        val ended = ZonedDateTime.of(2026, 11, 8, 8, 42, 0, 0, zone)
+        val turns = listOf(true, true, false, true).map { TurnRecord(0, TurnDirection.LEFT, signalOn = it) }
+
+        // when
+        trips.value = listOf(trip("a", ended, ScoreState.SCORED, 80, turns, distanceKm = 3.9))
+        runCurrent()
+
+        // then
+        val row = vm.uiState.value.recentTrips.single()
+        assertEquals(3, row.goals)
+        assertEquals(1, row.conceded)
+        assertEquals(MatchOutcome.WIN, row.outcome)
+        assertEquals(3.9, row.distanceKm, 0.0)
     }
 
     @Test

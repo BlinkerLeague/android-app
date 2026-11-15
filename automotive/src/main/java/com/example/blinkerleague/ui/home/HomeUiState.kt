@@ -1,5 +1,6 @@
 package com.example.blinkerleague.ui.home
 
+import com.example.blinkerleague.domain.model.MatchOutcome
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.service.RecordingStatus
@@ -30,6 +31,13 @@ data class RecentTripRow(
     val score: Int?,
     /** 50점 미만이거나 점수가 없으면 null */
     val grade: String?,
+    /** 득점: 깜빡이를 켠 회전 수 */
+    val goals: Int = 0,
+    /** 실점: 깜빡이를 켜지 않은 회전 수 */
+    val conceded: Int = 0,
+    /** 회전이 없으면 null */
+    val outcome: MatchOutcome? = null,
+    val distanceKm: Double = 0.0,
 )
 
 enum class TripDay { TODAY, YESTERDAY, OTHER }
