@@ -51,6 +51,8 @@ class DemoViewModel(private val container: AppContainer) : ViewModel() {
             clock = clock,
             newId = container::newId,
             tickIntervalMs = 1_000L / speed,
+            coordinate = container::regionCoordinate,
+            zone = container.zone,
         )
 
         job = viewModelScope.launch {

@@ -35,6 +35,7 @@ import com.example.blinkerleague.data.repository.TripMapper
 import com.example.blinkerleague.data.repository.TripRepository
 import com.example.blinkerleague.data.vehicle.PleosVehicleSignalSource
 import com.example.blinkerleague.data.vehicle.VehicleSignalSource
+import com.example.blinkerleague.domain.config.Coordinate
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.model.PermissionStatus
 import com.example.blinkerleague.service.RecordingStatus
@@ -58,7 +59,8 @@ class AppContainer(context: Context) {
 
     private val database = AppDatabase.create(context)
 
-    private val zone: ZoneId = ZoneId.systemDefault()
+    /** 앱 전체 시간대. 기기 시간대는 여기서만 읽고 나머지는 주입받음 */
+    val zone: ZoneId = ZoneId.systemDefault()
 
     /** 런타임 권한(속도·위치) 상태. 화면이 다시 보일 때 refresh */
     val permissions = PermissionRepository(context)
@@ -117,6 +119,9 @@ class AppContainer(context: Context) {
 
     /** 지금 기준값. 운행 기록·화면은 시작할 때 이 값을 읽음 */
     val config: DetectionConfig get() = configRepository.config.value
+
+    /** 등록 지역의 대표 좌표 (야간 판정용 일출 · 일몰 계산). 등록 전이거나 목록에 없는 지역이면 null */
+    fun regionCoordinate(): Coordinate? = tokens.profile()?.regionCode?.let(config.night::representativeCoordinate)
 
     /** 2차 보상: 포인트·연속 달성·배지·주간 리포트 */
     val rewardRepository = RewardRepository(rewardApi)
