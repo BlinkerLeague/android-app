@@ -223,4 +223,29 @@ class TripAssemblerTest {
             trip.events,
         )
     }
+
+    @Test
+    fun `출발 시점 벨트 상태를 모르는 운행은 supported에서 SEAT_BELT를 뺀다`() {
+        // given
+        // 운행 0s ~ 60s. 0s 기어 P → 5s D로 출발, 출발부터 1초 간격으로 30km/h
+        // 벨트 샘플은 하나도 받지 못함
+        val vehicleStates = listOf(
+            VehicleStateSample(0, ignitionOn = null, gear = Gear.P),
+            VehicleStateSample(5_000, ignitionOn = null, gear = Gear.D),
+        )
+        val speeds = (5_000L..60_000L step 1_000).map { SpeedSample(it, 30f) }
+
+        // when
+        val trip = assembler.assemble(
+            tripId = "t",
+            startedAtMs = 0,
+            endedAtMs = 60_000,
+            recording = TripRecording(emptyList(), emptyList(), vehicleStates, emptyList(), speeds = speeds),
+            supported = setOf(SignalType.SEAT_BELT, SignalType.SPEED),
+        )
+
+        // then
+        assertEquals(setOf(SignalType.SPEED), trip.supported)
+        assertEquals(emptyList<TripEvent>(), trip.events)
+    }
 }
