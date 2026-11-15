@@ -1,6 +1,7 @@
 package com.example.blinkerleague.domain.detection
 
 import com.example.blinkerleague.domain.config.DetectionConfig
+import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.LocationSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
@@ -18,6 +19,8 @@ data class TripRecording(
     val locations: List<LocationSample>,
     /** 차량 속도. 거리(적분)와 저속 회전 제외에 씀. 없으면 위치로 계산함 */
     val speeds: List<SpeedSample> = emptyList(),
+    /** 브레이크 페달 상태 변화. 급감속 판정에 씀 */
+    val brakes: List<BrakeSample> = emptyList(),
 )
 
 /**

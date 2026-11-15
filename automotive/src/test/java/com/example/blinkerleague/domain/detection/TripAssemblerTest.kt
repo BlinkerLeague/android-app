@@ -2,6 +2,7 @@ package com.example.blinkerleague.domain.detection
 
 import com.example.blinkerleague.data.scenario.Scenarios
 import com.example.blinkerleague.domain.config.DetectionConfig
+import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.SteeringSample
@@ -118,5 +119,40 @@ class TripAssemblerTest {
         // then
         val turn = trip.events.filterIsInstance<TripEvent.TurnEvent>().single()
         assertEquals(35.0, turn.maxSpeedKmh)
+    }
+
+    @Test
+    fun `속도 · 브레이크가 지원되면 HARSH_ACCEL과 HARSH_BRAKE 이벤트를 만든다`() {
+        // given
+        // 운행 0s ~ 60s, 1초 간격 속도. 10s까지 30km/h → 11s 45km/h(급가속) → 30s까지 45km/h → 31s 30km/h
+        // 브레이크는 30.5s에 밟고 32s에 뗌 → 31s 급감속 (기본 기준 1초에 10km/h)
+        val speeds = (0L..60_000L step 1_000).map { t ->
+            val kmh = when {
+                t <= 10_000 -> 30f
+                t <= 30_000 -> 45f
+                else -> 30f
+            }
+            SpeedSample(t, kmh)
+        }
+        val brakes = listOf(BrakeSample(30_500, pressed = true), BrakeSample(32_000, pressed = false))
+        val supported = setOf(SignalType.SPEED, SignalType.BRAKE)
+
+        // when
+        val trip = assembler.assemble(
+            tripId = "t",
+            startedAtMs = 0,
+            endedAtMs = 60_000,
+            recording = TripRecording(emptyList(), emptyList(), emptyList(), emptyList(), speeds, brakes),
+            supported = supported,
+        )
+
+        // then
+        assertEquals(
+            listOf(
+                TripEvent.HarshAccelEvent(id = "event-1", occurredAtMs = 11_000),
+                TripEvent.HarshBrakeEvent(id = "event-2", occurredAtMs = 31_000),
+            ),
+            trip.events,
+        )
     }
 }

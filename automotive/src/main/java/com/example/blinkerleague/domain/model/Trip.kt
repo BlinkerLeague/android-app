@@ -34,4 +34,16 @@ sealed interface TripEvent {
         override val occurredAtMs: Long,
         val durationSec: Int,
     ) : TripEvent
+
+    /** 급가속 */
+    data class HarshAccelEvent(
+        override val id: String,
+        override val occurredAtMs: Long,
+    ) : TripEvent
+
+    /** 급감속 (브레이크를 밟은 채 1초 사이 속도가 기준 이상 줄어듦) */
+    data class HarshBrakeEvent(
+        override val id: String,
+        override val occurredAtMs: Long,
+    ) : TripEvent
 }

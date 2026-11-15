@@ -64,6 +64,8 @@ class TripMapper(
                 occurredAtMs = event.occurredAtMs,
                 payload = json.encodeToString(SignalLeftOnPayload(event.durationSec)),
             )
+            is TripEvent.HarshAccelEvent -> TODO()
+            is TripEvent.HarshBrakeEvent -> TODO()
         }
     }
 
