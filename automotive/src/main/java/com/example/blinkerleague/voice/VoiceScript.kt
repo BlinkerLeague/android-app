@@ -20,7 +20,7 @@ object VoiceScript {
         mission == null -> "깜빡이리그, 경기 시작합니다! 회전할 때 깜빡이를 미리 켜 주세요."
         mission.status == MissionStatus.ACHIEVED -> "경기 시작합니다! 오늘의 퀘스트는 이미 클리어했어요, 이번 경기도 깜빡이 잊지 마세요."
         // 진행 중·지난 날 미달성 모두: 퀘스트는 운행 1건 안에서 판정하므로(서버 D25) 이번 운행에서 처음부터 셈
-        else -> "${if (streakDays != null) "${streakDays}연승 중" else "깜빡이리그"}, 경기 시작합니다! 오늘의 퀘스트는 ${mission.title}, 회전 ${count(mission.requiredTurns)} 모두 득점해 볼까요?"
+        else -> "${if (streakDays != null && streakDays >= 2) "${streakDays}연승 중" else "깜빡이리그"}, 경기 시작합니다! 오늘의 퀘스트는 ${mission.title}, 회전 ${count(mission.requiredTurns)} 모두 득점해 볼까요?"
     }
 
     /** 운행 종료 시 1회: 이번 운행 결과 (기기에서 판정한 회전 기준, 서버 점수를 기다리지 않음) */
