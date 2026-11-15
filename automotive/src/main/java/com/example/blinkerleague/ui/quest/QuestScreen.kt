@@ -36,6 +36,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.first
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,18 +63,22 @@ import com.example.blinkerleague.ui.theme.OnWarningContainer
 private val QuestViewModelFactory = viewModelFactory {
     initializer {
         val container = (this[APPLICATION_KEY] as BlinkerLeagueApplication).container
-        QuestViewModel(container.missionRepository::todayMission, container.rewardRepository::streak) { container.config.point }
+        QuestViewModel(
+            container.missionRepository::todayMission,
+            container.rewardRepository::streak,
+            celebrations = container.questCelebrations,
+        ) { container.config.point }
     }
 }
 
 @Composable
 fun QuestScreen(onBack: () -> Unit, viewModel: QuestViewModel = viewModel(factory = QuestViewModelFactory)) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    QuestContent(state, onBack)
+    QuestContent(state, onBack, viewModel::onCelebrated)
 }
 
 @Composable
-fun QuestContent(state: QuestUiState, onBack: () -> Unit) {
+fun QuestContent(state: QuestUiState, onBack: () -> Unit, onCelebrated: () -> Unit = {}) {
     Box(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 24.dp)) {
         when (state) {
             QuestUiState.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
@@ -85,13 +92,13 @@ fun QuestContent(state: QuestUiState, onBack: () -> Unit) {
                     Text(stringResource(R.string.mission_back), style = MaterialTheme.typography.labelLarge)
                 }
             }
-            is QuestUiState.Loaded -> Loaded(state, onBack)
+            is QuestUiState.Loaded -> Loaded(state, onBack, onCelebrated)
         }
     }
 }
 
 /**
- * 진입 연출 순서 (ms): 왼쪽 판 0 → 오른쪽 판 200 → 조건 막대 채움 300~1100 → CLEAR 도장 900 → 꽃가루 1000(클리어일 때만, 1회).
+ * 진입 연출 순서 (ms): 왼쪽 판 0 → 오른쪽 판 200 → 조건 막대 채움 300~1100 → CLEAR 도장 900 → 꽃가루 1000(클리어 회차당 1회, plan-ui 결정 11).
  * 정차 화면에서만 재생하고 한 번 본 뒤에는 다시 재생하지 않음. 탭하면 끝으로 건너뜀
  */
 private object QuestMotion {
@@ -104,7 +111,7 @@ private object QuestMotion {
 }
 
 @Composable
-private fun Loaded(state: QuestUiState.Loaded, onBack: () -> Unit) {
+private fun Loaded(state: QuestUiState.Loaded, onBack: () -> Unit, onCelebrated: () -> Unit) {
     val mission = state.mission
     val clock = rememberRevealClock(QuestMotion.TOTAL)
     val cleared = mission.status == MissionStatus.ACHIEVED
@@ -142,8 +149,14 @@ private fun Loaded(state: QuestUiState.Loaded, onBack: () -> Unit) {
                 }
             }
         }
-        // 퀘스트 클리어일 때만 한 번 (터치를 받지 않음)
-        if (cleared) Confetti(clock, QuestMotion.CONFETTI)
+        // 퀘스트 클리어 회차당 한 번 (터치를 받지 않음). 꽃가루가 시작되면(또는 건너뛰면) 본 것으로 기억
+        if (state.celebrate) {
+            Confetti(clock, QuestMotion.CONFETTI)
+            LaunchedEffect(clock) {
+                snapshotFlow { clock.elapsedMs >= QuestMotion.CONFETTI }.first { it }
+                onCelebrated()
+            }
+        }
     }
 }
 
@@ -278,6 +291,7 @@ private fun QuestPreview() = BlinkerLeagueTheme {
             QuestUiState.Loaded(
                 TodayMission("회전 깜빡이 완벽", MissionStatus.ACHIEVED, 3, 3, 3, rewardPoint = 20),
                 StreakImpact(days = 6, todayCleared = true),
+                celebrate = true,
             ),
             onBack = {},
         )

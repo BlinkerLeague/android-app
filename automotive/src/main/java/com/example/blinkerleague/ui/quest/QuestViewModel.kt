@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.blinkerleague.data.celebration.CelebrationStore
 import com.example.blinkerleague.domain.config.PointConfig
+import com.example.blinkerleague.domain.model.MissionStatus
 import com.example.blinkerleague.domain.model.Streak
 import com.example.blinkerleague.domain.model.TodayMission
 import kotlinx.coroutines.async
@@ -27,12 +28,25 @@ class QuestViewModel(
         viewModelScope.launch {
             val streak = async { loadStreak() }
             val mission = loadMission()
-            _uiState.value = mission?.let { QuestUiState.Loaded(it, streak.await()?.let(::impactOf)) } ?: QuestUiState.Unavailable
+            _uiState.value = mission?.let {
+                QuestUiState.Loaded(it, streak.await()?.let(::impactOf), celebrate = shouldCelebrate(it))
+            } ?: QuestUiState.Unavailable
         }
     }
 
     /** 화면이 클리어 축하(꽃가루)를 보여 줬을 때 */
-    fun onCelebrated() = Unit
+    fun onCelebrated() {
+        val mission = (_uiState.value as? QuestUiState.Loaded)?.mission ?: return
+        // 지금 화면의 꽃가루는 그대로 두고, 다음에 열 때부터 끔
+        mission.periodId?.let { celebrations?.markCelebrated(it) }
+    }
+
+    /** 클리어했고 이 회차를 아직 축하하지 않았으면. 회차 키를 모르면 기억할 수 없으므로 화면 진입마다 축하 */
+    private fun shouldCelebrate(mission: TodayMission): Boolean {
+        if (mission.status != MissionStatus.ACHIEVED) return false
+        val key = mission.periodId ?: return true
+        return celebrations?.isCelebrated(key) != true
+    }
 
     /**
      * 오늘 클리어 전이면 클리어할 때 이어질 일수(+1), 이미 클리어면 지금 일수.
