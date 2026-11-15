@@ -75,4 +75,26 @@ class SeatBeltJudgeTest {
         // then
         assertEquals(40, result?.unbuckledMovingSec)
     }
+
+    @Test
+    fun `벨트 상태를 한 번도 받지 못했거나 출발 시점 상태를 모르면 결과를 내지 않는다`() {
+        // given
+        // 10:00:00 P → 10:00:10 D로 출발, 운행 끝 10:10:00. 속도는 출발부터 내내 30km/h
+        // (a) 벨트 샘플 없음
+        // (b) 첫 벨트 샘플이 출발 뒤 10:01:00 (미착용) → 출발 시점 상태를 모름
+        val judge = SeatBeltJudge(SeatBeltConfig())
+        val speeds = (kst(10, 0, 10)..kst(10, 10, 0) step 1_000L).map { SpeedSample(it, speedKmh = 30f) }
+        val vehicleStates = listOf(
+            VehicleStateSample(kst(10, 0, 0), ignitionOn = true, gear = Gear.P),
+            VehicleStateSample(kst(10, 0, 10), ignitionOn = true, gear = Gear.D),
+        )
+        val onlyAfterDeparture = listOf(SeatBeltSample(kst(10, 1, 0), buckled = false))
+
+        // when
+        val noSamples = judge.judge(emptyList(), speeds, vehicleStates, tripStartMs = kst(10, 0, 0), tripEndMs = kst(10, 10, 0))
+        val unknownAtDeparture = judge.judge(onlyAfterDeparture, speeds, vehicleStates, tripStartMs = kst(10, 0, 0), tripEndMs = kst(10, 10, 0))
+
+        // then
+        assertEquals(listOf(null, null), listOf(noSamples, unknownAtDeparture))
+    }
 }
