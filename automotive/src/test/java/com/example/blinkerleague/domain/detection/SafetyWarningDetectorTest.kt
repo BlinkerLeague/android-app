@@ -144,4 +144,24 @@ class SafetyWarningDetectorTest {
         // then
         assertEquals(emptyList<SafetyWarningHit>(), result)
     }
+
+    @Test
+    fun `경고등이 켜져 있는 동안 속도가 기준을 넘나들어도 한 번만 센다`() {
+        // given
+        // 0 ~ 60초 ABS 계속 켜짐(1초 폴링). 속도는 1초 간격으로 8km/h(짝수 초) · 12km/h(홀수 초) 번갈아 (기준 10km/h)
+        val speeds = (0..60).map { sec -> SpeedSample(sec * 1_000L, if (sec % 2 == 1) 12f else 8f) }
+        val telltales = (0..60).map { sec -> TelltaleSample(sec * 1_000L, setOf("ABS")) }
+
+        // when
+        val result = detector.detect(
+            telltales = telltales,
+            speeds = speeds,
+            tripStartMs = 0,
+            tripEndMs = 60_000,
+        )
+
+        // then
+        // 처음 12km/h가 된 1초에 한 건
+        assertEquals(listOf(SafetyWarningHit(occurredAtMs = 1_000, type = "ABS")), result)
+    }
 }
