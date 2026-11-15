@@ -57,6 +57,19 @@ class VoiceScriptTest {
     }
 
     @Test
+    fun `시동 - 2일 이상 연승 중이면 연승으로 시작한다`() {
+        // given
+        // 5일 연승 중, 오늘 퀘스트 진행 중
+        val inProgress = mission(MissionStatus.IN_PROGRESS, 0)
+
+        // when
+        val script = VoiceScript.tripStart(inProgress, streakDays = 5)
+
+        // then
+        assertEquals("5연승 중, 경기 시작합니다! 오늘의 퀘스트는 회전 깜빡이 완벽, 회전 세 번 모두 득점해 볼까요?", script)
+    }
+
+    @Test
     fun `종료 - 짧은 이동이면 경기에 반영되지 않는다고 말한다`() {
         // given
         // 기준 1km보다 짧은 0.5km 이동, 회전 한 번 득점
