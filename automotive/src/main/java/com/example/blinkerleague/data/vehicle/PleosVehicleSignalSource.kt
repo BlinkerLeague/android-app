@@ -2,17 +2,21 @@ package com.example.blinkerleague.data.vehicle
 
 import ai.pleos.playground.vehicle.Vehicle
 import ai.pleos.playground.vehicle.api.model.area.SeatArea
+import ai.pleos.playground.vehicle.api.model.area.WindowArea
 import ai.pleos.playground.vehicle.api.model.telltale.Telltales
 import ai.pleos.playground.vehicle.constant.area.SeatValue
 import ai.pleos.playground.vehicle.constant.area.TurnSignalValue
+import ai.pleos.playground.vehicle.constant.area.WindowValue
 import ai.pleos.playground.vehicle.constant.control.LightState
 import ai.pleos.playground.vehicle.constant.control.VehicleGear
+import ai.pleos.playground.vehicle.constant.control.WiperState
 import ai.pleos.playground.vehicle.constant.telltale.TelltaleState
 import ai.pleos.playground.vehicle.listener.BrakePedalStatusListener
 import ai.pleos.playground.vehicle.listener.GearSelectionListener
 import ai.pleos.playground.vehicle.listener.LightStateListener
 import ai.pleos.playground.vehicle.listener.SteeringWheelAngleListener
 import ai.pleos.playground.vehicle.listener.TurnSignalStateListener
+import ai.pleos.playground.vehicle.listener.WiperStateListener
 import android.car.Car
 import android.car.VehiclePropertyIds
 import android.car.hardware.CarPropertyValue
@@ -33,6 +37,7 @@ import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.TelltaleSample
 import com.example.blinkerleague.domain.model.TurnSignalState
 import com.example.blinkerleague.domain.model.VehicleStateSample
+import com.example.blinkerleague.domain.model.WiperSample
 import kotlin.coroutines.resume
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.ProducerScope
@@ -49,7 +54,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * 실제 차량 신호 공급원: Pleos Vehicle SDK 2.3.2(방향지시등·핸들 각도·기어·브레이크·하향등) + CarPropertyManager(속도).
+ * 실제 차량 신호 공급원: Pleos Vehicle SDK 2.3.2(방향지시등·핸들 각도·기어·브레이크·하향등·안전벨트·경고등·와이퍼) + CarPropertyManager(속도).
  *
  * API·권한은 SDK 클래스(javap)와 에뮬레이터 실측으로 확인함 (docs/platform-capabilities.md):
  * - 방향지시등 `TurnSignal.registerTurnSignalState` — `pleos.car.permission.CAR_LIGHTS`
@@ -61,6 +66,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  *   (변경 콜백은 에뮬레이터 콘솔로 바꿀 수 없어 확인 못 함 → 폴링) — `CAR_SEATS`
  * - 경고등 `Safety.getTelltalesInfo`를 [com.example.blinkerleague.domain.config.SafetyWarningConfig.pollIntervalSec]마다 읽음 — `CAR_SAFETY`.
  *   `registerTelltales`·`checkTelltalesCapabilities`는 `PRIVATE_CAR_SAFETY`라 쓰지 않음 → capability도 get 성공 여부로 판단
+ * - 앞 유리 와이퍼 `Wiper.registerWiperState(FRONT_WINDSHIELD)` (`ON`만 켜짐, `SERVICE`·`OTHER`는 꺼짐으로 봄) — `CAR_WINDOWS`
  * - 속도 CarProperty `PERF_VEHICLE_SPEED` (m/s, 약 10Hz) — `android.car.permission.CAR_SPEED`(런타임)
  * - 시동 상태 API는 없음 → [VehicleStateSample.ignitionOn]은 항상 null
  *
@@ -98,6 +104,14 @@ class PleosVehicleSignalSource(
         speed = speedAvailability(),
         brake = check { ok, fail -> vehicle.getBrake().checkBrakePedalStatusCapabilities({ ok() }, fail) },
         headlight = check { ok, fail -> vehicle.getLight().checkLowBeamLightStateCapabilities({ _, _ -> ok() }, fail) },
+        wiper = check { ok, fail ->
+            vehicle.getWiper().checkWiperStateCapabilities(
+                { states: Map<WindowArea, List<WiperState>> ->
+                    if (states.keys.any { FRONT_WIPER in it.values }) ok() else fail(UnsupportedOperationException("앞 유리 와이퍼 없음"))
+                },
+                fail,
+            )
+        },
         safetyWarning = check { ok, fail -> vehicle.getSafety().getTelltalesInfo({ ok() }, fail) },
         seatBelt = check { ok, fail ->
             vehicle.getSeat().checkSeatBeltBuckledCapabilities(
@@ -270,6 +284,22 @@ class PleosVehicleSignalSource(
             }
         }
 
+    override val wipers: Flow<WiperSample> = callbackFlow {
+        val wiper = vehicle.getWiper()
+        val area = WindowArea(FRONT_WIPER)
+        val listener = object : WiperStateListener {
+            override fun onWiperStateUpdated(state: WiperState?) {
+                state?.let { trySend(WiperSample(clock(), on = it == WiperState.ON)) }
+            }
+            override fun onFailed(exception: Exception) {
+                AppLog.w(TAG, "와이퍼 미지원: $exception")
+                close()
+            }
+        }
+        if (!register("와이퍼") { wiper.registerWiperState(area, listener) }) return@callbackFlow
+        awaitClose { wiper.unregisterWiperState(area, listener) }
+    }
+
     /** 리스너 등록. 권한이 없어 SecurityException이 나면 수집을 멈추지 않고 이 Flow만 끝냄 */
     private fun ProducerScope<*>.register(name: String, block: () -> Unit): Boolean =
         try {
@@ -337,5 +367,8 @@ class PleosVehicleSignalSource(
 
         /** 운전석. 좌핸들 기준 (국내 판매 차량) */
         val DRIVER_SEAT = SeatValue.ROW_1_LEFT
+
+        /** 우천 판정에 쓰는 와이퍼 (앞 유리) */
+        val FRONT_WIPER = WindowValue.FRONT_WINDSHIELD
     }
 }
