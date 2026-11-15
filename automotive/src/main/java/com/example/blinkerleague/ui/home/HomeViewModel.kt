@@ -10,6 +10,7 @@ import com.example.blinkerleague.domain.model.PermissionStatus
 import com.example.blinkerleague.domain.model.Streak
 import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.domain.model.TripResult
+import com.example.blinkerleague.domain.region.Regions
 import com.example.blinkerleague.service.RecordingStatus
 import com.example.blinkerleague.ui.achievements.StreakCard
 import com.example.blinkerleague.ui.achievements.daysToReward
@@ -62,6 +63,7 @@ class HomeViewModel(
                 val r = rule()
                 StreakCard(it.days, it.todayAchieved, daysToReward(it.days, r.streakRewardDays), r.streakRewardPoint, r.streakRewardDays)
             },
+            player = profile()?.let { PlayerCard(it.nickname, Regions.label(it.regionCode)) },
             quest = (quest as? QuestLoad.Loaded)?.mission,
             questLoading = quest == QuestLoad.Loading,
             recentTrips = trips.map(::toRow),

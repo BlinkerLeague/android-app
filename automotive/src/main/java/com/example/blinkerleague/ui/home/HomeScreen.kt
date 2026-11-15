@@ -65,6 +65,7 @@ private val HomeViewModelFactory = viewModelFactory {
             clock = System::currentTimeMillis,
             zone = ZoneId.systemDefault(),
             rule = { container.config.point },
+            profile = container::profile,
         )
     }
 }

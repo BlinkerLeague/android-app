@@ -1,6 +1,7 @@
 package com.example.blinkerleague
 
 import android.content.Context
+import com.example.blinkerleague.data.auth.DriverProfile
 import com.example.blinkerleague.data.auth.PrefsTokenStore
 import com.example.blinkerleague.data.auth.TokenStore
 import com.example.blinkerleague.data.config.ConfigRepository
@@ -122,6 +123,9 @@ class AppContainer(context: Context) {
 
     /** 등록 지역의 대표 좌표 (야간 판정용 일출 · 일몰 계산). 등록 전이거나 목록에 없는 지역이면 null */
     fun regionCoordinate(): Coordinate? = tokens.profile()?.regionCode?.let(config.night::representativeCoordinate)
+
+    /** 등록한 닉네임 · 지역 (홈 선수 카드). 등록 전이면 null */
+    fun profile(): DriverProfile? = tokens.profile()
 
     /** 2차 보상: 포인트·연속 달성·배지·주간 리포트 */
     val rewardRepository = RewardRepository(rewardApi)
