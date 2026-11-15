@@ -136,6 +136,13 @@ internal fun TripResult.toResultUiState(
 
 internal fun TripResult.toPlaysUiState(zone: ZoneId): PlaysUiState {
     fun time(ms: Long) = Instant.ofEpochMilli(ms).atZone(zone).format(TIME)
+
+    /** 출발(0)부터 도착(1)까지 중 [ms]의 위치. 운행 시간이 0이면 0 */
+    fun position(ms: Long): Float {
+        val duration = endedAtMs - startedAtMs
+        if (duration == 0L) return 0f
+        return ((ms - startedAtMs).toFloat() / duration).coerceIn(0f, 1f)
+    }
     val goals = turns.count { it.signalOn }
     return PlaysUiState(
         loading = false,
@@ -149,7 +156,7 @@ internal fun TripResult.toPlaysUiState(zone: ZoneId): PlaysUiState {
                 time = time(it.occurredAtMs),
                 direction = it.direction,
                 goal = it.signalOn,
-                position = if (endedAtMs == startedAtMs) 0f else ((it.occurredAtMs - startedAtMs).toFloat() / (endedAtMs - startedAtMs)).coerceIn(0f, 1f),
+                position = position(it.occurredAtMs),
             )
         },
     )
