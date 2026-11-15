@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -17,6 +18,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.blinkerleague.ui.driving.DrivingGuardViewModel
 import com.example.blinkerleague.ui.driving.DrivingScreen
 import com.example.blinkerleague.service.TripCollectionService
+import com.example.blinkerleague.ui.common.game.LocalParked
 import com.example.blinkerleague.ui.navigation.BlinkerNavHost
 import com.example.blinkerleague.ui.theme.BlinkerLeagueTheme
 import kotlinx.coroutines.flow.map
@@ -49,10 +51,13 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val guard by viewModel<DrivingGuardViewModel>(factory = guardFactory).uiState.collectAsStateWithLifecycle()
                     // 정차 화면(NavHost)은 주행 중에도 그대로 두어 P로 돌아오면 보던 화면이 남음.
-                    // 주행 중에는 기록 중 화면이 위를 덮고(터치 차단), 아래 화면은 접근성 트리에서도 숨김
+                    // 주행 중에는 기록 중 화면이 위를 덮고(터치 차단), 아래 화면은 접근성 트리에서도 숨김.
+                    // 덮인 화면의 반복 · 순차 연출도 멈추도록 정차 여부를 LocalParked로 내려 줌
                     Box(Modifier.fillMaxSize()) {
                         Box(if (guard.showParkedScreens) Modifier.fillMaxSize() else Modifier.fillMaxSize().clearAndSetSemantics { }) {
-                            BlinkerNavHost()
+                            CompositionLocalProvider(LocalParked provides guard.showParkedScreens) {
+                                BlinkerNavHost()
+                            }
                         }
                         if (!guard.showParkedScreens) DrivingScreen(guard)
                     }
