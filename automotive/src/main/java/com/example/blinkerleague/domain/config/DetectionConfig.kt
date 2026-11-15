@@ -18,6 +18,7 @@ data class DetectionConfig(
     val signalCancel: SignalCancelConfig = SignalCancelConfig(),
     val harsh: HarshConfig = HarshConfig(),
     val night: NightConfig = NightConfig(),
+    val seatBelt: SeatBeltConfig = SeatBeltConfig(),
 ) {
     companion object {
         /** 서버 기본 기준값의 팁 문구. 깜빡이는 앱 판정 기준(회전 5초 전)에 맞춘 문구 */
@@ -104,6 +105,12 @@ data class HarshConfig(
     val deltaKmhPerSec: Int = 10,
     /** 속도 샘플 간격이 이 초를 넘으면 판정하지 않음 (앱 내부 값, 서버 설정에는 없음) */
     val maxGapSec: Int = 2,
+)
+
+/** 안전벨트 기준 (앱 내부 값, 서버 설정에는 없음) */
+data class SeatBeltConfig(
+    /** 이 속도 이상이면 주행 중으로 보고 미착용 시간을 셈 */
+    val movingMinSpeedKmh: Int = 10,
 )
 
 /** 주행 안전 가드 기준 (docs/screen-plan.md 3장) */
