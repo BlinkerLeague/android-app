@@ -1,5 +1,6 @@
 package com.example.blinkerleague.ui.home
 
+import com.example.blinkerleague.data.auth.DriverProfile
 import com.example.blinkerleague.domain.config.GradeThreshold
 import com.example.blinkerleague.domain.config.PointConfig
 import com.example.blinkerleague.domain.model.MatchOutcome
@@ -182,6 +183,25 @@ class HomeViewModelTest {
 
         // then
         assertEquals(StreakCard(3, true, daysToReward = 2, rewardPoint = 30, period = 5), vm.uiState.value.streak)
+    }
+
+    @Test
+    fun `홈에 등록한 닉네임과 지역 이름을 담는다`() = runTest(dispatcher) {
+        // given
+        // 마포구(11440)로 등록한 운전자
+        val vm = HomeViewModel(
+            recentTrips = trips, recordingStatus = status, speedPermission = speed,
+            loadQuest = { null }, refreshRecent = {}, grades = GradeThreshold.DEFAULT,
+            showDemoEntry = false, clock = { now }, zone = zone,
+            profile = { DriverProfile("깜빡왕", "11440") },
+        )
+
+        // when
+        backgroundScope.launch { vm.uiState.collect {} }
+        runCurrent()
+
+        // then
+        assertEquals(PlayerCard("깜빡왕", "서울 마포구"), vm.uiState.value.player)
     }
 
     @Test

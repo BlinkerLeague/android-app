@@ -2,6 +2,7 @@ package com.example.blinkerleague.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.blinkerleague.data.auth.DriverProfile
 import com.example.blinkerleague.domain.config.GradeThreshold
 import com.example.blinkerleague.domain.config.PointConfig
 import com.example.blinkerleague.domain.model.MatchOutcome
@@ -44,6 +45,7 @@ class HomeViewModel(
     private val clock: () -> Long,
     private val zone: ZoneId,
     private val rule: () -> PointConfig = { PointConfig() },
+    private val profile: () -> DriverProfile? = { null },
 ) : ViewModel() {
 
     private val quest = MutableStateFlow<QuestLoad>(QuestLoad.Loading)

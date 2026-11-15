@@ -13,6 +13,8 @@ data class HomeUiState(
     val recentTrips: List<RecentTripRow> = emptyList(),
     /** 퀘스트 연승 (2차, 서버 D6에 따라 다시 보임). 못 받으면 null → 카드 숨김 */
     val streak: StreakCard? = null,
+    /** 선수 카드 (등록한 닉네임 · 지역). 등록 전이면 null → 카드 숨김 */
+    val player: PlayerCard? = null,
     val recordingStatus: RecordingStatus = RecordingStatus.OFF,
     val notices: List<HomeNotice> = emptyList(),
     /** 시나리오 재생 진입 버튼 (디버그 빌드만, screen-plan 1장) */
@@ -38,6 +40,13 @@ data class RecentTripRow(
     /** 회전이 없으면 null */
     val outcome: MatchOutcome? = null,
     val distanceKm: Double = 0.0,
+)
+
+/** 선수 카드: 앱에 있는 등록 정보만 (경험치 · 리그 단계 · 포인트는 데이터가 없어 넣지 않음, plan-ui 결정 2 · 6) */
+data class PlayerCard(
+    val nickname: String,
+    /** 예: "서울 마포구". 앱 지역 목록에 없는 코드면 null */
+    val regionLabel: String?,
 )
 
 enum class TripDay { TODAY, YESTERDAY, OTHER }
