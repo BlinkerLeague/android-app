@@ -15,6 +15,9 @@ enum class ScoreItem {
 
     /** 회전 속도 (서버 기준값 `turnSpeedKmh`) */
     TURN_SPEED,
+
+    /** 안전벨트 (출발 시 착용 · 주행 중 미착용 시간) */
+    SEAT_BELT,
     ;
 
     companion object {
