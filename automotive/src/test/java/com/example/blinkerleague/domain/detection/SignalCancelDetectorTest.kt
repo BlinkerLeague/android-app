@@ -7,6 +7,7 @@ import com.example.blinkerleague.domain.model.Turn
 import com.example.blinkerleague.domain.model.TurnDirection
 import com.example.blinkerleague.domain.model.TurnSignalState.LEFT
 import com.example.blinkerleague.domain.model.TurnSignalState.OFF
+import com.example.blinkerleague.domain.model.TurnSignalState.RIGHT
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -117,5 +118,26 @@ class SignalCancelDetectorTest {
 
         // then
         assertEquals(listOf(SignalLeftOn(occurredAtMs = 10_000, durationSec = 50)), result)
+    }
+
+    @Test
+    fun `깜빡이 방향이 바뀌면 새 구간으로 센다`() {
+        // given
+        // 운행 0s ~ 120s, 회전 없이 50km/h. 10s에 왼쪽(15초) → 25s에 오른쪽(35초) → 60s에 끔
+        val signals = listOf(SignalSample(10_000, LEFT), SignalSample(25_000, RIGHT), SignalSample(60_000, OFF))
+        val speeds = constantSpeed(0, 120_000, 50f)
+
+        // when
+        val result = detector.detect(
+            signals = signals,
+            turns = emptyList(),
+            speeds = speeds,
+            tripStartMs = 0,
+            tripEndMs = 120_000,
+        )
+
+        // then
+        // 왼쪽 15초는 기준(20초) 미만이라 잡지 않고, 오른쪽 35초만 잡음
+        assertEquals(listOf(SignalLeftOn(occurredAtMs = 25_000, durationSec = 35)), result)
     }
 }
