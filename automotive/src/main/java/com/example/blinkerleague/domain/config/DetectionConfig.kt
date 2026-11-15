@@ -29,6 +29,10 @@ data class DetectionConfig(
             "SMOOTH_DRIVING" to "출발은 부드럽게, 정지는 미리 천천히 해 보세요.",
             "SAFETY_WARNING" to "앞차와 거리를 넉넉히 두고 주변을 살펴 보세요.",
             "NIGHT_HEADLIGHT" to "해가 지면 전조등을 꼭 켜 주세요.",
+            "SIGNAL_CANCEL" to "회전이 끝나면 깜빡이가 꺼졌는지 확인해 보세요.",
+            "TURN_SPEED" to "회전할 때는 속도를 충분히 줄여 보세요.",
+            "SEAT_BELT" to "출발 전에 안전벨트를 꼭 매 주세요.",
+            "RAIN_DRIVING" to "비가 오면 전조등을 켜고 속도를 줄여 보세요.",
         )
 
         val DEFAULT = DetectionConfig()
