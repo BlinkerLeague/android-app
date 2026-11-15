@@ -25,4 +25,11 @@ sealed interface TripEvent {
         val signalOn: Boolean,
         val uTurn: Boolean?,
     ) : TripEvent
+
+    /** 깜빡이를 켠 채 잊음. [durationSec]는 회전 뒤 minSpeedKmh 이상으로 달리며 켜 둔 시간 */
+    data class SignalLeftOnEvent(
+        override val id: String,
+        override val occurredAtMs: Long,
+        val durationSec: Int,
+    ) : TripEvent
 }

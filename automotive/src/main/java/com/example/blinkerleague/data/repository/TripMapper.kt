@@ -48,6 +48,7 @@ class TripMapper(
                 occurredAtMs = event.occurredAtMs,
                 payload = json.encodeToString(TurnPayload(event.direction.name, event.signalOn, event.uTurn)),
             )
+            is TripEvent.SignalLeftOnEvent -> TODO()
         }
     }
 

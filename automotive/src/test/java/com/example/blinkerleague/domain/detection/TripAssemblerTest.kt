@@ -2,10 +2,12 @@ package com.example.blinkerleague.domain.detection
 
 import com.example.blinkerleague.data.scenario.Scenarios
 import com.example.blinkerleague.domain.config.DetectionConfig
+import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.TripEvent
 import com.example.blinkerleague.domain.model.TurnDirection
+import com.example.blinkerleague.domain.model.TurnSignalState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -67,5 +69,26 @@ class TripAssemblerTest {
         val trip = assemble(endedAtMs = 30_000)
         assertTrue(trip.events.isEmpty())
         assertTrue(trip.distanceKm < assemble().distanceKm / 4)
+    }
+
+    @Test
+    fun `방향지시등 · 핸들 각도 · 속도가 지원되면 조립 결과에 SIGNAL_LEFT_ON 이벤트를 만든다`() {
+        // given
+        // 운행 0s ~ 120s, 회전 없이 50km/h. 10s에 왼쪽 깜빡이를 켜고 50s에 끔 (40초, 기본 기준 20초 초과)
+        val signals = listOf(SignalSample(10_000, TurnSignalState.LEFT), SignalSample(50_000, TurnSignalState.OFF))
+        val speeds = (0L..120_000L step 1_000).map { SpeedSample(it, 50f) }
+        val supported = setOf(SignalType.TURN_SIGNAL, SignalType.STEERING_ANGLE, SignalType.SPEED)
+
+        // when
+        val trip = assembler.assemble(
+            tripId = "t",
+            startedAtMs = 0,
+            endedAtMs = 120_000,
+            recording = TripRecording(emptyList(), signals, emptyList(), emptyList(), speeds),
+            supported = supported,
+        )
+
+        // then
+        assertEquals(listOf(TripEvent.SignalLeftOnEvent(id = "event-1", occurredAtMs = 10_000, durationSec = 40)), trip.events)
     }
 }
