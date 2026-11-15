@@ -197,12 +197,15 @@ class TripAssembler(
         )
     }
 
-    /** 이벤트가 [maxEvents]를 넘으면 횟수형 이벤트(급가속 · 급감속 · 안전 경고)를 늦은 것부터 뺌. [events]는 시각 순 */
+    /**
+     * 이벤트가 [maxEvents]를 넘으면 횟수형 이벤트(급가속 · 급감속 · 안전 경고)를 늦은 것부터 뺌.
+     * 그래도 넘치면 이른 것부터 [maxEvents]개만 남김. [events]는 시각 순
+     */
     private fun capEvents(events: List<TripEvent>): List<TripEvent> {
         val excess = events.size - maxEvents
         if (excess <= 0) return events
         val dropped = events.filter { it.isCountType() }.takeLast(excess).toSet()
-        return events.filterNot { it in dropped }
+        return events.filterNot { it in dropped }.take(maxEvents)
     }
 
     private fun TripEvent.isCountType(): Boolean =
