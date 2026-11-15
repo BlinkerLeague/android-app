@@ -15,6 +15,6 @@ sealed interface QuestHint {
 
     companion object {
         fun of(mission: TodayMission): QuestHint =
-            if (mission.status == MissionStatus.ACHIEVED) Cleared else NextTrip(0)
+            if (mission.status == MissionStatus.ACHIEVED) Cleared else NextTrip(mission.requiredTurns)
     }
 }
