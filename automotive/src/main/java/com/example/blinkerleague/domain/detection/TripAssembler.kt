@@ -35,6 +35,7 @@ data class TripRecording(
  * - 방향지시등(TURN_SIGNAL)과 핸들 각도(STEERING_ANGLE)가 모두 지원돼야 회전 이벤트를 만듦 (아니면 서버에서 항목 제외)
  * - 거기에 속도(SPEED)까지 지원되면 깜빡이를 켠 채 잊은 이벤트도 만듦
  * - 속도(SPEED)와 브레이크(BRAKE)가 지원되면 급가속 · 급감속 이벤트를 만듦 (운행 구간 안의 것만)
+ * - 하향등(HEADLIGHT)이 지원되고 대표 좌표가 있으면 야간 구간 이벤트를 만듦
  * - 이벤트는 발생 시각 순으로 정렬함
  * - 핸들 각도·위치는 운행 구간 안의 것만 씀
  * - id 생성은 밖에서 주입 ([newId]) — 테스트에서 고정값을 쓸 수 있게
@@ -106,6 +107,19 @@ class TripAssembler(
             emptyList()
         }
 
+        val nightEvents = if (SignalType.HEADLIGHT in supported && coordinate != null) {
+            NightSegmentDetector(zone).detect(recording.headlights, startedAtMs, endedAtMs, coordinate).map {
+                TripEvent.NightSegmentEvent(
+                    id = newId(),
+                    occurredAtMs = it.occurredAtMs,
+                    durationSec = it.durationSec,
+                    headlightOffSec = it.headlightOffSec,
+                )
+            }
+        } else {
+            emptyList()
+        }
+
         return Trip(
             id = tripId,
             startedAtMs = startedAtMs,
@@ -116,7 +130,7 @@ class TripAssembler(
                 TripDistance.km(locations)
             },
             supported = supported,
-            events = (turnEvents + signalLeftOnEvents + harshEvents).sortedBy { it.occurredAtMs },
+            events = (turnEvents + signalLeftOnEvents + harshEvents + nightEvents).sortedBy { it.occurredAtMs },
         )
     }
 }
