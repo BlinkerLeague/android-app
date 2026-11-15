@@ -102,6 +102,19 @@ class VoiceScriptTest {
     }
 
     @Test
+    fun `종료 - 득점과 실점이 같으면 무승부라고 말한다`() {
+        // given
+        // 회전 두 번 중 한 번 깜빡이 켬 → 1 대 1
+        val draw = result(5.0, true, false)
+
+        // when
+        val script = VoiceScript.tripEnd(draw, 1.0)
+
+        // then
+        assertEquals("경기 종료! 1 대 1 무승부입니다. 화면에서 하이라이트를 볼 수 있어요.", script)
+    }
+
+    @Test
     fun `횟수는 고유어로, 10 넘으면 숫자`() {
         assertEquals("한 번", VoiceScript.count(1))
         assertEquals("열 번", VoiceScript.count(10))
