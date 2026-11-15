@@ -9,13 +9,14 @@ class CapabilityReportTest {
 
     @Test
     fun `방향지시등과 핸들 각도가 둘 다 있어야 회전 측정 가능`() {
-        // 속도 · 브레이크 · 하향등 · 안전벨트 · 경고등은 이 테스트와 무관하므로 빼 둠
+        // 속도 · 브레이크 · 하향등 · 안전벨트 · 경고등 · 와이퍼는 이 테스트와 무관하므로 빼 둠
         val all = CapabilityReport.ALL_SUPPORTED.copy(
             speed = Availability.UNSUPPORTED,
             brake = Availability.UNSUPPORTED,
             headlight = Availability.UNSUPPORTED,
             seatBelt = Availability.UNSUPPORTED,
             safetyWarning = Availability.UNSUPPORTED,
+            wiper = Availability.UNSUPPORTED,
         )
         assertTrue(all.canMeasureTurns)
         assertEquals(setOf(SignalType.TURN_SIGNAL, SignalType.STEERING_ANGLE), all.supportedSignals)
@@ -33,6 +34,7 @@ class CapabilityReportTest {
             headlight = Availability.UNSUPPORTED,
             seatBelt = Availability.UNSUPPORTED,
             safetyWarning = Availability.UNSUPPORTED,
+            wiper = Availability.UNSUPPORTED,
         )
         assertTrue(noSpeed.canMeasureTurns)
         assertEquals(setOf(SignalType.TURN_SIGNAL, SignalType.STEERING_ANGLE), noSpeed.supportedSignals)
@@ -41,12 +43,13 @@ class CapabilityReportTest {
     @Test
     fun `속도가 SUPPORTED이면 supportedSignals에 SPEED를 넣는다`() {
         // given
-        // 브레이크 · 하향등 · 안전벨트 · 경고등은 이 테스트와 무관하므로 빼 둠
+        // 브레이크 · 하향등 · 안전벨트 · 경고등 · 와이퍼는 이 테스트와 무관하므로 빼 둠
         val report = CapabilityReport.ALL_SUPPORTED.copy(
             brake = Availability.UNSUPPORTED,
             headlight = Availability.UNSUPPORTED,
             seatBelt = Availability.UNSUPPORTED,
             safetyWarning = Availability.UNSUPPORTED,
+            wiper = Availability.UNSUPPORTED,
         )
 
         // when
@@ -130,5 +133,24 @@ class CapabilityReportTest {
 
         // then
         assertEquals(setOf(SignalType.SAFETY_WARNING), signals)
+    }
+
+    @Test
+    fun `와이퍼가 SUPPORTED이면 supportedSignals에 WIPER를 넣는다`() {
+        // given
+        // 와이퍼만 지원하는 차량
+        val report = CapabilityReport(
+            turnSignal = Availability.UNSUPPORTED,
+            steering = Availability.UNSUPPORTED,
+            gear = Availability.UNSUPPORTED,
+            speed = Availability.UNSUPPORTED,
+            wiper = Availability.SUPPORTED,
+        )
+
+        // when
+        val signals = report.supportedSignals
+
+        // then
+        assertEquals(setOf(SignalType.WIPER), signals)
     }
 }
