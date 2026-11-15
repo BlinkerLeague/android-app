@@ -19,6 +19,7 @@ data class HarshEvent(
  * - 급가속: 속도가 deltaKmhPerSec 이상 늘어남
  * - 급감속: 속도가 deltaKmhPerSec 이상 줄고, 그 1초 동안 브레이크가 눌린 적이 있음
  * 기준 이상이 이어지는 동안은 첫 샘플만 한 건으로 셈 (급가속 · 급감속 따로).
+ * 1초 전 시점의 샘플이 그보다 maxGapSec 넘게 묵었으면(샘플 끊김) 판정하지 않음.
  */
 class HarshDrivingDetector(private val config: HarshConfig) {
 
@@ -31,6 +32,7 @@ class HarshDrivingDetector(private val config: HarshConfig) {
         for (sample in sorted) {
             val windowStartMs = sample.timestampMs - ONE_SECOND_MS
             val before = sorted.lastOrNull { it.timestampMs <= windowStartMs } ?: continue
+            if (windowStartMs - before.timestampMs > config.maxGapSec * 1_000L) continue
             val delta = sample.speedKmh - before.speedKmh
             val accelOver = delta >= config.deltaKmhPerSec
             val brakeOver = delta <= -config.deltaKmhPerSec && brakePressedDuring(sortedBrakes, windowStartMs, sample.timestampMs)
