@@ -15,12 +15,14 @@ import com.example.blinkerleague.data.vehicle.FakeVehicleSignalSource
 import com.example.blinkerleague.domain.config.Coordinate
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.config.SafetyWarningConfig
 import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.Gear
 import com.example.blinkerleague.domain.model.HeadlightSample
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.SeatBeltSample
 import com.example.blinkerleague.domain.model.SignalType
+import com.example.blinkerleague.domain.model.TelltaleSample
 import com.example.blinkerleague.domain.model.TurnDirection
 import com.example.blinkerleague.domain.model.TurnSignalState
 import com.example.blinkerleague.ui.result.toPlaysUiState
@@ -64,11 +66,11 @@ class TripRecorderTest {
     @After
     fun tearDown() = db.close()
 
-    private fun TestScope.recorder(s: Scenario) = TripRecorder(
+    private fun TestScope.recorder(s: Scenario, config: DetectionConfig = DetectionConfig.DEFAULT) = TripRecorder(
         vehicle = FakeVehicleSignalSource(s),
         location = FakeLocationSource(s),
         repository = repository,
-        config = DetectionConfig.DEFAULT,
+        config = config,
         clock = { testScheduler.currentTime },
         newId = { "id-${++seq}" },
     )
@@ -264,5 +266,35 @@ class TripRecorderTest {
         val finished = recorder.state.value as RecorderState.Finished
         val types = db.tripDao().trip(finished.tripId)!!.events.map { it.type }
         assertTrue("저장된 이벤트: $types", "SEAT_BELT" in types)
+    }
+
+    @Test
+    fun `운행 중 경고등 목록을 모아 SAFETY_WARNING을 저장한다`() = runTest {
+        // given
+        // 2초 정차 → 출발, 30km/h로 60초 → 종료
+        // 경고등은 운행 시작 전(0s)에 ABS가 켜진 것으로 한 번 읽은 뒤 더 들어오지 않음
+        val s = scenario("ABS 경고등 켜진 채 출발") {
+            stop(seconds = 2)
+            start()
+            straight(seconds = 60, speedKmh = 30f)
+            end()
+        }.let {
+            it.copy(
+                supported = it.supported + SignalType.SPEED + SignalType.SAFETY_WARNING,
+                telltales = listOf(TelltaleSample(0, active = setOf("ABS"))),
+            )
+        }
+        // 대상 경고등은 ABS (기본 설정의 목록은 비어 있어서 테스트에서 주입)
+        val config = DetectionConfig.DEFAULT.copy(safetyWarning = SafetyWarningConfig(telltaleTypes = setOf("ABS")))
+        val recorder = recorder(s, config)
+        backgroundScope.launch { recorder.run() }
+
+        // when
+        advanceTimeBy(s.durationMs + 1_000)
+
+        // then
+        val finished = recorder.state.value as RecorderState.Finished
+        val types = db.tripDao().trip(finished.tripId)!!.events.map { it.type }
+        assertTrue("저장된 이벤트: $types", "SAFETY_WARNING" in types)
     }
 }

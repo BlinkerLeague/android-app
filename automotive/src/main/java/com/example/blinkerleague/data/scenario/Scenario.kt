@@ -7,6 +7,7 @@ import com.example.blinkerleague.domain.model.SeatBeltSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.SteeringSample
+import com.example.blinkerleague.domain.model.TelltaleSample
 import com.example.blinkerleague.domain.model.VehicleStateSample
 
 /**
@@ -25,6 +26,8 @@ data class Scenario(
     val headlights: List<HeadlightSample> = emptyList(),
     /** 운전석 안전벨트 착용 상태를 읽은 값 */
     val seatBelts: List<SeatBeltSample> = emptyList(),
+    /** 그 시점에 켜진 경고등 이름 집합 (1초 폴링) */
+    val telltales: List<TelltaleSample> = emptyList(),
 ) {
     val durationMs: Long
         get() = listOfNotNull(

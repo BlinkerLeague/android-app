@@ -11,6 +11,7 @@ import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.SteeringSample
+import com.example.blinkerleague.domain.model.TelltaleSample
 import com.example.blinkerleague.domain.model.VehicleStateSample
 import kotlinx.coroutines.flow.Flow
 
@@ -36,6 +37,7 @@ class FakeVehicleSignalSource(
             brake = of(SignalType.BRAKE),
             headlight = of(SignalType.HEADLIGHT),
             seatBelt = of(SignalType.SEAT_BELT),
+            safetyWarning = of(SignalType.SAFETY_WARNING),
         )
     }
 
@@ -62,4 +64,7 @@ class FakeVehicleSignalSource(
 
     override val seatBelts: Flow<SeatBeltSample> =
         replay(scenario.seatBelts, { it.timestampMs }, speed) { it.copy(timestampMs = startMs + it.timestampMs) }
+
+    override val telltales: Flow<TelltaleSample> =
+        replay(scenario.telltales, { it.timestampMs }, speed) { it.copy(timestampMs = startMs + it.timestampMs) }
 }

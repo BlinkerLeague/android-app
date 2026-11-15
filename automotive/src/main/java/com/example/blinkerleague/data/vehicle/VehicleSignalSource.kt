@@ -8,6 +8,7 @@ import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.SteeringSample
+import com.example.blinkerleague.domain.model.TelltaleSample
 import com.example.blinkerleague.domain.model.VehicleStateSample
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -48,5 +49,9 @@ interface VehicleSignalSource {
 
     /** 운전석 안전벨트 착용 상태 (안전벨트 판정 입력). 출발 시와 주행 중 주기적으로 읽은 값. 기본은 보내지 않음(미지원) */
     val seatBelts: Flow<SeatBeltSample>
+        get() = emptyFlow()
+
+    /** 그 시점에 켜진 경고등 이름 집합 (안전 경고등 판정 입력, 1초 폴링). 기본은 보내지 않음(미지원) */
+    val telltales: Flow<TelltaleSample>
         get() = emptyFlow()
 }
