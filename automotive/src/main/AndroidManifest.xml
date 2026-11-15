@@ -81,7 +81,7 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="운행 중 차량 신호(방향지시등·핸들 각도·기어·속도)를 받아 회전 시 깜빡이 사용을 판정함. 앱이 화면에 없어도 운행 전체를 기록해야 해서 포그라운드 서비스로 실행" />
+                android:value="운행 중 차량 신호(방향지시등·핸들 각도·기어·속도·브레이크·하향등·안전벨트·경고등·와이퍼)를 받아 깜빡이 사용·급가감속·야간 전조등·안전벨트·안전 경고·우천 운행을 판정함. 앱이 화면에 없어도 운행 전체를 기록해야 해서 포그라운드 서비스로 실행" />
         </service>
 
     </application>

@@ -13,7 +13,7 @@ data class Trip(
     val events: List<TripEvent>,
 )
 
-/** 운행 중 판정된 이벤트. 서버 `trip_event.type`에 대응. 2차에서 HARSH_*, SAFETY_WARNING, NIGHT_SEGMENT 추가 */
+/** 운행 중 판정된 이벤트. 서버 `trip_event.type`에 대응 (payload는 openapi `TripEventRequest.payload`) */
 sealed interface TripEvent {
     val id: String
     val occurredAtMs: Long

@@ -39,7 +39,7 @@ sealed interface ResultUiState {
 
 enum class MetricItem { TURN_SIGNAL, SMOOTH_DRIVING, SAFETY_WARNING, NIGHT_HEADLIGHT }
 
-/** 항목별 점수 한 줄. P0은 깜빡이만 값이 있고 나머지는 "준비 중" */
+/** 항목별 점수 한 줄. 값은 서버 `metrics`로 채우고, 서버 결과가 없으면 깜빡이는 기기 판정 · 나머지는 "준비 중" */
 data class MetricRow(val item: MetricItem, val value: MetricValue)
 
 sealed interface MetricValue {
@@ -63,7 +63,7 @@ sealed interface MetricValue {
     /** 이 운행에는 해당 없음 (서버 NOT_APPLICABLE) */
     data object NotApplicable : MetricValue
 
-    /** P1 항목 */
+    /** 서버 항목 결과가 아직 없음 */
     data object ComingSoon : MetricValue
 }
 
