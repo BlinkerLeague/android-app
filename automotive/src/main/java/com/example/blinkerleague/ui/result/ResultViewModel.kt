@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.config.TurnConfig
 import com.example.blinkerleague.domain.model.MetricDetail
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.TodayMission
@@ -35,6 +36,8 @@ class ResultViewModel(
     private val tips: Map<String, String> = emptyMap(),
     /** 서버 항목 결과(metrics). 업로드 전이거나 실패면 null */
     private val loadMetrics: suspend () -> List<MetricDetail>? = { null },
+    /** 회전 몇 초 전에 깜빡이를 켜야 하는지 (기준값 turn.signalLeadSec). 다음 경기 팁에 씀 */
+    @Suppress("unused") private val signalLeadSec: Int = TurnConfig().signalLeadSec,
 ) : ViewModel() {
 
     private val mission = MutableStateFlow<TodayMission?>(null)

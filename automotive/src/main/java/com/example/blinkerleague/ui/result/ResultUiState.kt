@@ -1,6 +1,7 @@
 package com.example.blinkerleague.ui.result
 
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.config.TurnConfig
 import com.example.blinkerleague.domain.model.MatchOutcome
 import com.example.blinkerleague.domain.model.MetricDetail
 import com.example.blinkerleague.domain.model.ScoreState
@@ -41,6 +42,8 @@ sealed interface ResultUiState {
         val celebrate: Boolean = false,
         /** 다음 경기 팁. 없으면 null (카드 숨김) */
         val tip: String? = null,
+        /** 다음 경기 팁 "회전 N초 전에 깜빡이"의 N (기준값 turn.signalLeadSec). 실점이 없으면 null (카드 숨김) */
+        val tipLeadSec: Int? = null,
         /** "다음 등급까지 N점". 맨 위 등급이거나 점수가 없으면 null */
         val nextGrade: NextGrade? = null,
     ) : ResultUiState
@@ -110,6 +113,8 @@ internal fun TripResult.toResultUiState(
     tips: Map<String, String> = emptyMap(),
     /** 서버가 준 항목별 판정 결과 (점수 응답 `metrics`). 업로드 전·조회 실패면 비어 있음 */
     serverMetrics: List<MetricDetail> = emptyList(),
+    /** 회전 몇 초 전에 깜빡이를 켜야 하는지 (기준값 turn.signalLeadSec). 다음 경기 팁에 씀 */
+    @Suppress("UNUSED_PARAMETER") signalLeadSec: Int = TurnConfig().signalLeadSec,
 ): ResultUiState.Loaded {
     val goals = turns.count { it.signalOn }
     val conceded = turns.size - goals

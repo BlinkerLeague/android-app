@@ -134,17 +134,16 @@ class ResultUiStateTest {
     }
 
     @Test
-    fun `실점이 있으면 다음 경기 팁으로 깜빡이 팁을 담는다`() {
+    fun `실점이 있으면 다음 경기 팁에 기준값 signalLeadSec 초를 담는다`() {
         // given
-        // 깜빡이 켬 · 안 켬 · 켬 → 실점 1
+        // 깜빡이 켬 · 안 켬 · 켬 → 실점 1. 서버가 기준값을 7초로 바꿈
         val trip = result(ScoreState.SCORED, 67, signals = listOf(true, false, true))
-        val tips = mapOf("TURN_SIGNAL" to "회전 전에 깜빡이를 미리 켜 보세요")
 
         // when
-        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, tips = tips)
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, signalLeadSec = 7)
 
         // then
-        assertEquals("회전 전에 깜빡이를 미리 켜 보세요", state.tip)
+        assertEquals(7, state.tipLeadSec)
     }
 
     @Test
@@ -152,13 +151,12 @@ class ResultUiStateTest {
         // given
         // 회전 세 번 모두 깜빡이 켬 → 실점 0
         val trip = result(ScoreState.SCORED, 100, signals = listOf(true, true, true))
-        val tips = mapOf("TURN_SIGNAL" to "회전 전에 깜빡이를 미리 켜 보세요")
 
         // when
-        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, tips = tips)
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, signalLeadSec = 7)
 
         // then
-        assertNull(state.tip)
+        assertNull(state.tipLeadSec)
     }
 
     @Test
