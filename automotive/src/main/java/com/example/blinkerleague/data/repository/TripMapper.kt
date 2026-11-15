@@ -94,7 +94,13 @@ class TripMapper(
                 occurredAtMs = event.occurredAtMs,
                 payload = json.encodeToString(SeatBeltPayload(event.buckledAtDeparture, event.unbuckledMovingSec)),
             )
-            is TripEvent.SafetyWarningEvent -> TODO()
+            is TripEvent.SafetyWarningEvent -> TripEventEntity(
+                eventId = event.id,
+                tripId = trip.id,
+                type = TripEventType.SAFETY_WARNING,
+                occurredAtMs = event.occurredAtMs,
+                payload = EMPTY_PAYLOAD,
+            )
         }
     }
 
@@ -149,7 +155,7 @@ class TripMapper(
     private val lenientJson = Json { ignoreUnknownKeys = true }
 
     private companion object {
-        /** 급가속 · 급감속처럼 추가 정보가 없는 이벤트의 payload */
+        /** 급가속 · 급감속 · 안전 경고등처럼 추가 정보가 없는 이벤트의 payload */
         const val EMPTY_PAYLOAD = "{}"
     }
 

@@ -163,6 +163,9 @@ object TripEventType {
 
     /** 안전벨트 (운행당 1건, 출발 시각). payload는 [SeatBeltPayload] */
     const val SEAT_BELT = "SEAT_BELT"
+
+    /** 주행 중 켜진 안전 경고등. payload는 빈 객체 `{}` (중복 제거는 서버 mergeWindowSec) */
+    const val SAFETY_WARNING = "SAFETY_WARNING"
 }
 
 object ScoreStatus {
