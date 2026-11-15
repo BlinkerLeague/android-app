@@ -19,6 +19,9 @@ enum class SignalType {
     /** 와이퍼 작동 상태. 우천 구간 판정에 씀 */
     WIPER,
 
-    /** 차량 속도. 깜빡이 켜 둔 채 잊음(signalCancel) 판정에 씀. 업로드 supported(ScoreItem)로는 나가지 않음 */
+    /**
+     * 차량 속도. 깜빡이 끄기 · 회전 속도 · 급가감속 · 안전벨트 · 경고등 판정과 거리 적분에 씀.
+     * 업로드 supported(ScoreItem)로는 나가지 않음
+     */
     SPEED,
 }
