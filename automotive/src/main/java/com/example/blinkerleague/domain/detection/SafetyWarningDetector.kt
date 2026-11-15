@@ -12,7 +12,9 @@ data class SafetyWarningHit(
 
 /**
  * 주행 중 켜진 안전 경고등을 셈. 순수 함수.
- * 경고등 종류마다 "설정 대상이고 켜져 있고 속도가 movingMinSpeedKmh 이상"이 거짓 → 참이 되는 시각에 한 건 (운행 구간 안만).
+ * 설정 대상 경고등 종류마다 한 번 켜진 주기(켜짐 → 꺼짐)에 한 건만 셈 (운행 구간 안만).
+ * 그 주기에서 처음으로 속도가 movingMinSpeedKmh 이상이 된 시각에 셈. 속도가 기준을 넘나들어도 주기는 끝나지 않고,
+ * 경고등 샘플에서 그 종류가 빠져야 주기가 끝남.
  * 경고등 · 속도 샘플 사이는 앞 샘플 값이 유지된다고 봄.
  */
 class SafetyWarningDetector(private val config: SafetyWarningConfig) {
@@ -31,13 +33,17 @@ class SafetyWarningDetector(private val config: SafetyWarningConfig) {
             .distinct().sorted().toList()
 
         val hits = mutableListOf<SafetyWarningHit>()
-        var counting = emptySet<String>()
+        // 이번 켜짐 주기에서 이미 센 종류. 경고등이 꺼지면 지움
+        val counted = mutableSetOf<String>()
         for (t in times) {
-            val active = sortedTelltales.lastOrNull { it.timestampMs <= t }?.active.orEmpty()
+            val active = sortedTelltales.lastOrNull { it.timestampMs <= t }?.active.orEmpty() intersect config.telltaleTypes
+            counted.retainAll(active)
             val moving = (sortedSpeeds.lastOrNull { it.timestampMs <= t }?.speedKmh ?: 0f) >= config.movingMinSpeedKmh
-            val now = if (moving) active intersect config.telltaleTypes else emptySet()
-            (now - counting).sorted().forEach { hits += SafetyWarningHit(occurredAtMs = t, type = it) }
-            counting = now
+            if (!moving) continue
+            (active - counted).sorted().forEach {
+                hits += SafetyWarningHit(occurredAtMs = t, type = it)
+                counted += it
+            }
         }
         return hits
     }
