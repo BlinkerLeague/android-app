@@ -27,7 +27,8 @@ class SeatBeltJudge(private val config: SeatBeltConfig) {
         tripEndMs: Long,
     ): SeatBeltResult? {
         val departureMs = departureMs(vehicleStates, tripStartMs, tripEndMs)
-        val buckled = seatBelts.filter { it.timestampMs <= departureMs }.maxByOrNull { it.timestampMs }?.buckled ?: false
+        // 출발 시점 벨트 상태를 모르면(샘플이 없거나 출발 뒤에야 받음) 측정에서 뺌
+        val buckled = seatBelts.filter { it.timestampMs <= departureMs }.maxByOrNull { it.timestampMs }?.buckled ?: return null
         val unbuckledMovingMs = unbuckledIntervals(seatBelts, tripStartMs, tripEndMs).sumOf { (from, to) ->
             SpeedDuration.millisAtOrAbove(speeds, config.movingMinSpeedKmh.toFloat(), from, to)
         }
