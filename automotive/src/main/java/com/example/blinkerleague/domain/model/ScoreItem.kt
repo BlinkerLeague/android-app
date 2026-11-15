@@ -9,6 +9,9 @@ enum class ScoreItem {
     SMOOTH_DRIVING,
     SAFETY_WARNING,
     NIGHT_HEADLIGHT,
+
+    /** 깜빡이 켜 둔 채 잊음 (서버 기준값 `signalCancel`) */
+    SIGNAL_CANCEL,
     ;
 
     companion object {
