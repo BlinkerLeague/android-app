@@ -79,6 +79,27 @@ class AchievementsViewModelTest {
     }
 
     @Test
+    fun `업적 연승 카드에 기준값 주기와 채운 칸 수`() = runTest(dispatcher) {
+        // given
+        // 서버 기준값: 5일마다 보상, 지금 3일 연속
+        val vm = AchievementsViewModel(
+            { Streak(3, true) },
+            { emptyList() },
+            zone,
+            rule = { PointConfig(streakRewardDays = 5, streakRewardPoint = 30) },
+        )
+
+        // when
+        vm.refresh()
+        runCurrent()
+
+        // then
+        val streak = (vm.uiState.value as AchievementsUiState.Loaded).streak!!
+        assertEquals(5, streak.period)
+        assertEquals(3, streakDotsFilled(streak.days, streak.period))
+    }
+
+    @Test
     fun `7일마다 보상 - 남은 날 계산`() {
         assertEquals(7, daysToReward(0))
         assertEquals(4, daysToReward(3))
