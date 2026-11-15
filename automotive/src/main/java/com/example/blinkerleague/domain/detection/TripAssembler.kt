@@ -67,6 +67,7 @@ class TripAssembler(
                     direction = it.turn.direction,
                     signalOn = it.signalOn,
                     uTurn = it.turn.uTurn,
+                    maxSpeedKmh = TurnSpeed.maxKmh(it.turn, recording.speeds),
                 )
             }
         } else {
