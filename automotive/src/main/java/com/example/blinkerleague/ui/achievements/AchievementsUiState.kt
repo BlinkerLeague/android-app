@@ -43,4 +43,4 @@ internal fun daysToReward(days: Int, period: Int = PointConfig().streakRewardDay
  * period는 1 이상(ConfigRepository.mergedWith에서 보장)
  */
 internal fun streakDotsFilled(days: Int, period: Int = PointConfig().streakRewardDays): Int =
-    (days % period).let { if (it == 0) period else it }
+    if (days <= 0) 0 else (days % period).let { if (it == 0) period else it }
