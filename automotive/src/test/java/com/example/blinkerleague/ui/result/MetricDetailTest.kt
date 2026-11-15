@@ -104,4 +104,22 @@ class MetricDetailTest {
         // then
         assertNull(detail.weightPercent)
     }
+
+    @Test
+    fun `항목 상세는 서버 항목 결과를 행 값에 반영한다`() {
+        // given
+        // 총점은 67점, 서버 항목 점수는 깜빡이 50점 · 부드러운 가감속 0점
+        val server = listOf(
+            MetricDetail("TURN_SIGNAL", "SCORED", null, 50, mapOf("turns" to 3, "onTime" to 1, "late" to 1, "missed" to 1), weight = 0.5),
+            MetricDetail("SMOOTH_DRIVING", "SCORED", null, 0, emptyMap(), weight = 0.5),
+        )
+
+        // when
+        val turnSignal = trip.toMetricDetail(MetricItem.TURN_SIGNAL, server, GradeThreshold.DEFAULT, tips, zone)
+        val smooth = trip.toMetricDetail(MetricItem.SMOOTH_DRIVING, server, GradeThreshold.DEFAULT, tips, zone)
+
+        // then
+        assertEquals(MetricValue.Score(50), turnSignal.value)
+        assertEquals(MetricValue.Score(0), smooth.value)
+    }
 }
