@@ -1,6 +1,7 @@
 package com.example.blinkerleague.ui.result
 
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.model.MatchOutcome
 import com.example.blinkerleague.domain.model.MetricDetail
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.SignalType
@@ -8,7 +9,9 @@ import com.example.blinkerleague.domain.model.TripResult
 import com.example.blinkerleague.domain.model.TurnDirection
 import com.example.blinkerleague.domain.model.TurnRecord
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -69,6 +72,94 @@ class ResultUiStateTest {
     }
 
     @Test
+    fun `결과 화면 상태에 득점과 실점으로 정한 승패를 담는다`() {
+        // given
+        // 깜빡이 켬 · 안 켬 · 켬 → 2 대 1
+        val trip = result(ScoreState.SCORED, 67, signals = listOf(true, false, true))
+
+        // when
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT)
+
+        // then
+        assertEquals(MatchOutcome.WIN, state.outcome)
+    }
+
+    @Test
+    fun `짧은 이동 결과에는 승패를 담지 않는다`() {
+        // given
+        // 회전은 있었지만(2 대 1) 짧은 이동이라 경기에서 제외됨
+        val trip = result(ScoreState.EXCLUDED_SHORT, null, signals = listOf(true, false, true))
+
+        // when
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT)
+
+        // then
+        assertNull(state.outcome)
+    }
+
+    @Test
+    fun `기준값에서 가장 높은 등급이면 축하 연출을 켜고 그 아래 등급은 끈다`() {
+        // given
+        // 등급 이름이 아니라 기준값의 minScore 순서로 맨 위와 그다음 등급을 고름
+        val grades = GradeThreshold.DEFAULT.sortedByDescending { it.minScore }
+        val top = result(ScoreState.SCORED, grades[0].minScore)
+        val second = result(ScoreState.SCORED, grades[1].minScore)
+
+        // when
+        val topState = top.toResultUiState(null, GradeThreshold.DEFAULT)
+        val secondState = second.toResultUiState(null, GradeThreshold.DEFAULT)
+
+        // then
+        assertTrue(topState.celebrate)
+        assertFalse(secondState.celebrate)
+    }
+
+    @Test
+    fun `다음 등급과 남은 점수를 기준값 순서로 구하고 맨 위 등급이거나 점수가 없으면 비운다`() {
+        // given
+        // 등급 이름은 기준값에서 옴 (순서도 섞어 둠)
+        val grades = listOf(GradeThreshold("실버", 60), GradeThreshold("골드", 90), GradeThreshold("브론즈", 30))
+
+        // when
+        val silver = result(ScoreState.SCORED, 72).toResultUiState(null, grades)
+        val belowAll = result(ScoreState.SCORED, 20).toResultUiState(null, grades)
+        val top = result(ScoreState.SCORED, 93).toResultUiState(null, grades)
+        val pending = result(ScoreState.PENDING, null).toResultUiState(null, grades)
+
+        // then
+        assertEquals(NextGrade("골드", 18), silver.nextGrade)
+        assertEquals(NextGrade("브론즈", 10), belowAll.nextGrade)
+        assertNull(top.nextGrade)
+        assertNull(pending.nextGrade)
+    }
+
+    @Test
+    fun `실점이 있으면 다음 경기 팁에 기준값 signalLeadSec 초를 담는다`() {
+        // given
+        // 깜빡이 켬 · 안 켬 · 켬 → 실점 1. 서버가 기준값을 7초로 바꿈
+        val trip = result(ScoreState.SCORED, 67, signals = listOf(true, false, true))
+
+        // when
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, signalLeadSec = 7)
+
+        // then
+        assertEquals(7, state.tipLeadSec)
+    }
+
+    @Test
+    fun `실점이 없으면 다음 경기 팁을 비운다`() {
+        // given
+        // 회전 세 번 모두 깜빡이 켬 → 실점 0
+        val trip = result(ScoreState.SCORED, 100, signals = listOf(true, true, true))
+
+        // when
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, signalLeadSec = 7)
+
+        // then
+        assertNull(state.tipLeadSec)
+    }
+
+    @Test
     fun `업로드 전이면 집계 중, 50점 미만은 등급 없음`() {
         assertEquals(MetricValue.Pending, metric(result(ScoreState.PENDING, null).toResultUiState(null, GradeThreshold.DEFAULT)))
         assertNull(result(ScoreState.SCORED, 33).toResultUiState(null, GradeThreshold.DEFAULT).grade)
@@ -96,6 +187,55 @@ class ResultUiStateTest {
 
         val noSteering = result(ScoreState.NO_TURN, null, emptyList(), setOf(SignalType.TURN_SIGNAL)).toResultUiState(null, GradeThreshold.DEFAULT)
         assertEquals(MetricValue.Unsupported, metric(noSteering))
+    }
+
+    @Test
+    fun `플레이 위치는 출발부터 도착까지 중 회전 시각의 비율`() {
+        // given
+        // 08:10 출발, 08:42 도착, 08:26 회전 (32분 중 16분)
+        val trip = result(ScoreState.SCORED, 67).copy(
+            turns = listOf(TurnRecord(start + 16 * 60_000L, TurnDirection.LEFT, true)),
+        )
+
+        // when
+        val plays = trip.toPlaysUiState(zone)
+
+        // then
+        assertEquals(0.5f, plays.plays.single().position, 0.0001f)
+    }
+
+    @Test
+    fun `출발과 도착 시각이 같으면 플레이 위치는 0`() {
+        // given
+        // 출발 · 도착 · 회전 모두 08:10
+        val trip = result(ScoreState.SCORED, 67).copy(
+            endedAtMs = start,
+            turns = listOf(TurnRecord(start, TurnDirection.LEFT, true)),
+        )
+
+        // when
+        val plays = trip.toPlaysUiState(zone)
+
+        // then
+        assertEquals(0f, plays.plays.single().position, 0.0001f)
+    }
+
+    @Test
+    fun `출발 전이나 도착 뒤의 회전은 위치를 0과 1 사이로 자른다`() {
+        // given
+        // 08:10 출발, 08:42 도착. 회전은 08:08(출발 전)과 08:44(도착 뒤)
+        val trip = result(ScoreState.SCORED, 67).copy(
+            turns = listOf(
+                TurnRecord(start - 2 * 60_000L, TurnDirection.LEFT, true),
+                TurnRecord(start + 34 * 60_000L, TurnDirection.RIGHT, false),
+            ),
+        )
+
+        // when
+        val plays = trip.toPlaysUiState(zone)
+
+        // then
+        assertEquals(listOf(0f, 1f), plays.plays.map { it.position })
     }
 
     @Test

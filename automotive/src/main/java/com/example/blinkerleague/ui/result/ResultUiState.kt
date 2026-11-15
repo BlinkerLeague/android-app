@@ -1,6 +1,8 @@
 package com.example.blinkerleague.ui.result
 
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.config.TurnConfig
+import com.example.blinkerleague.domain.model.MatchOutcome
 import com.example.blinkerleague.domain.model.MetricDetail
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.SignalType
@@ -34,8 +36,19 @@ sealed interface ResultUiState {
         val earnedPoints: Int? = null,
         /** 머리말 "오늘의 N번째 경기 종료"의 N. 오늘 운행이 아니거나 모르면 null */
         val dayOrdinal: Int? = null,
+        /** 득점과 실점으로 정한 승패. 회전이 없으면 null */
+        val outcome: MatchOutcome? = null,
+        /** 기준값에서 가장 높은 등급일 때만 축하 연출(꽃가루) */
+        val celebrate: Boolean = false,
+        /** 다음 경기 팁 "회전 N초 전에 깜빡이"의 N (기준값 turn.signalLeadSec). 실점이 없으면 null (카드 숨김) */
+        val tipLeadSec: Int? = null,
+        /** "다음 등급까지 N점". 맨 위 등급이거나 점수가 없으면 null */
+        val nextGrade: NextGrade? = null,
     ) : ResultUiState
 }
+
+/** 지금 점수보다 한 단계 위 등급과 그 등급까지 남은 점수 */
+data class NextGrade(val grade: String, val points: Int)
 
 enum class MetricItem { TURN_SIGNAL, SMOOTH_DRIVING, SAFETY_WARNING, NIGHT_HEADLIGHT }
 
@@ -84,6 +97,8 @@ data class PlayCard(
     val direction: TurnDirection,
     /** 득점(깜빡이 켬) / 실점(안 켬) */
     val goal: Boolean,
+    /** 출발(0)부터 도착(1)까지 중 회전 시각의 비율. 타임라인 막대 위 점 위치 */
+    val position: Float = 0f,
 )
 
 private val TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
@@ -94,8 +109,11 @@ internal fun TripResult.toResultUiState(
     earnedPoints: Int? = null,
     /** 서버가 준 항목별 판정 결과 (점수 응답 `metrics`). 업로드 전·조회 실패면 비어 있음 */
     serverMetrics: List<MetricDetail> = emptyList(),
+    /** 회전 몇 초 전에 깜빡이를 켜야 하는지 (기준값 turn.signalLeadSec). 다음 경기 팁에 씀 */
+    signalLeadSec: Int = TurnConfig().signalLeadSec,
 ): ResultUiState.Loaded {
     val goals = turns.count { it.signalOn }
+    val conceded = turns.size - goals
     val canMeasureTurns = SignalType.TURN_SIGNAL in supported && SignalType.STEERING_ANGLE in supported
     fun serverScore(item: MetricItem): Int? = serverMetrics.firstOrNull { it.metric == item.name }?.score
     // 깜빡이 외 항목: 서버 판정(미지원 / 해당 없음 / 점수), 없으면 준비 중
@@ -120,13 +138,14 @@ internal fun TripResult.toResultUiState(
         scoreState == ScoreState.SCORED && score != null -> MetricValue.Score(score)
         else -> MetricValue.Pending
     }
+    val grade = if (scoreState == ScoreState.SCORED) GradeThreshold.gradeOf(score, grades) else null
     return ResultUiState.Loaded(
         scoreState = scoreState,
         score = score,
-        grade = if (scoreState == ScoreState.SCORED) GradeThreshold.gradeOf(score, grades) else null,
+        grade = grade,
         distanceKm = distanceKm,
         goals = goals,
-        conceded = turns.size - goals,
+        conceded = conceded,
         metrics = listOf(
             MetricRow(MetricItem.TURN_SIGNAL, turnValue),
             MetricRow(MetricItem.SMOOTH_DRIVING, otherValue(MetricItem.SMOOTH_DRIVING)),
@@ -135,11 +154,29 @@ internal fun TripResult.toResultUiState(
         ),
         mission = mission,
         earnedPoints = earnedPoints?.takeIf { scoreState == ScoreState.SCORED && it > 0 },
+        outcome = if (scoreState == ScoreState.EXCLUDED_SHORT) null else MatchOutcome.of(goals, conceded),
+        celebrate = grade != null && grade == grades.maxByOrNull { it.minScore }?.grade,
+        // 서버 tips 문구는 숫자가 박혀 있어 기준값과 어긋날 수 있으므로 기준값 초로 앱 문구를 만듦 (리뷰 6)
+        tipLeadSec = if (conceded > 0) signalLeadSec else null,
+        nextGrade = if (scoreState == ScoreState.SCORED) nextGradeOf(score, grades) else null,
     )
+}
+
+/** 기준값을 minScore 순으로 보고 [score]보다 높은 첫 등급. 점수가 없거나 맨 위 등급이면 null */
+private fun nextGradeOf(score: Int?, grades: List<GradeThreshold>): NextGrade? {
+    if (score == null) return null
+    return grades.sortedBy { it.minScore }.firstOrNull { it.minScore > score }?.let { NextGrade(it.grade, it.minScore - score) }
 }
 
 internal fun TripResult.toPlaysUiState(zone: ZoneId): PlaysUiState {
     fun time(ms: Long) = Instant.ofEpochMilli(ms).atZone(zone).format(TIME)
+
+    /** 출발(0)부터 도착(1)까지 중 [ms]의 위치. 운행 시간이 0이면 0 */
+    fun position(ms: Long): Float {
+        val duration = endedAtMs - startedAtMs
+        if (duration == 0L) return 0f
+        return ((ms - startedAtMs).toFloat() / duration).coerceIn(0f, 1f)
+    }
     val goals = turns.count { it.signalOn }
     return PlaysUiState(
         loading = false,
@@ -148,6 +185,13 @@ internal fun TripResult.toPlaysUiState(zone: ZoneId): PlaysUiState {
         distanceKm = distanceKm,
         goals = goals,
         conceded = turns.size - goals,
-        plays = turns.sortedBy { it.occurredAtMs }.map { PlayCard(time(it.occurredAtMs), it.direction, it.signalOn) },
+        plays = turns.sortedBy { it.occurredAtMs }.map {
+            PlayCard(
+                time = time(it.occurredAtMs),
+                direction = it.direction,
+                goal = it.signalOn,
+                position = position(it.occurredAtMs),
+            )
+        },
     )
 }

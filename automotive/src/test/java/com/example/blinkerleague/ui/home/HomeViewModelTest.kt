@@ -1,12 +1,19 @@
 package com.example.blinkerleague.ui.home
 
+import com.example.blinkerleague.data.auth.DriverProfile
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.config.PointConfig
+import com.example.blinkerleague.domain.model.MatchOutcome
 import com.example.blinkerleague.domain.model.MissionStatus
 import com.example.blinkerleague.domain.model.PermissionStatus
 import com.example.blinkerleague.domain.model.ScoreState
+import com.example.blinkerleague.domain.model.Streak
 import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.domain.model.TripResult
+import com.example.blinkerleague.domain.model.TurnDirection
+import com.example.blinkerleague.domain.model.TurnRecord
 import com.example.blinkerleague.service.RecordingStatus
+import com.example.blinkerleague.ui.achievements.StreakCard
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,8 +49,14 @@ class HomeViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private fun trip(id: String, endedAt: ZonedDateTime, state: ScoreState, score: Int?) =
-        TripResult(id, 0, endedAt.toInstant().toEpochMilli(), 5.0, state, score, emptyList())
+    private fun trip(
+        id: String,
+        endedAt: ZonedDateTime,
+        state: ScoreState,
+        score: Int?,
+        turns: List<TurnRecord> = emptyList(),
+        distanceKm: Double = 5.0,
+    ) = TripResult(id, 0, endedAt.toInstant().toEpochMilli(), distanceKm, state, score, turns)
 
     private fun viewModel(quest: TodayMission?) = HomeViewModel(
         recentTrips = trips,
@@ -75,6 +88,27 @@ class HomeViewModelTest {
         assertEquals("S", rows[0].grade)
         assertNull(rows[1].grade)
         assertEquals(ScoreState.PENDING, rows[2].scoreState)
+    }
+
+    @Test
+    fun `최근 경기 행에 득점 · 실점 · 승패 · 거리를 담는다`() = runTest(dispatcher) {
+        // given
+        // 회전 4번 중 3번 깜빡이를 켬, 3.9km
+        val vm = viewModel(null)
+        backgroundScope.launch { vm.uiState.collect {} }
+        val ended = ZonedDateTime.of(2026, 11, 8, 8, 42, 0, 0, zone)
+        val turns = listOf(true, true, false, true).map { TurnRecord(0, TurnDirection.LEFT, signalOn = it) }
+
+        // when
+        trips.value = listOf(trip("a", ended, ScoreState.SCORED, 80, turns, distanceKm = 3.9))
+        runCurrent()
+
+        // then
+        val row = vm.uiState.value.recentTrips.single()
+        assertEquals(3, row.goals)
+        assertEquals(1, row.conceded)
+        assertEquals(MatchOutcome.WIN, row.outcome)
+        assertEquals(3.9, row.distanceKm, 0.0)
     }
 
     @Test
@@ -123,12 +157,51 @@ class HomeViewModelTest {
         )
         backgroundScope.launch { vm.uiState.collect {} }
         runCurrent()
-        assertNull(vm.uiState.value.streakDays)
+        assertNull(vm.uiState.value.streak)
 
         vm.refresh()
         runCurrent()
-        assertEquals(5, vm.uiState.value.streakDays)
-        assertTrue(vm.uiState.value.streakTodayAchieved)
+        assertEquals(5, vm.uiState.value.streak?.days)
+        assertTrue(vm.uiState.value.streak?.todayAchieved == true)
+    }
+
+    @Test
+    fun `홈 연승 카드는 기준값 주기로 남은 날과 보상 포인트를 담는다`() = runTest(dispatcher) {
+        // given
+        // 서버 기준값: 5일마다 30P, 지금 3일 연속이고 오늘 클리어
+        val vm = HomeViewModel(
+            recentTrips = trips, recordingStatus = status, speedPermission = speed,
+            loadQuest = { null }, loadStreak = { Streak(3, true) },
+            refreshRecent = {}, grades = GradeThreshold.DEFAULT, showDemoEntry = false, clock = { now }, zone = zone,
+            rule = { PointConfig(streakRewardDays = 5, streakRewardPoint = 30) },
+        )
+        backgroundScope.launch { vm.uiState.collect {} }
+
+        // when
+        vm.refresh()
+        runCurrent()
+
+        // then
+        assertEquals(StreakCard(3, true, daysToReward = 2, rewardPoint = 30, period = 5), vm.uiState.value.streak)
+    }
+
+    @Test
+    fun `홈에 등록한 닉네임과 지역 이름을 담는다`() = runTest(dispatcher) {
+        // given
+        // 마포구(11440)로 등록한 운전자
+        val vm = HomeViewModel(
+            recentTrips = trips, recordingStatus = status, speedPermission = speed,
+            loadQuest = { null }, refreshRecent = {}, grades = GradeThreshold.DEFAULT,
+            showDemoEntry = false, clock = { now }, zone = zone,
+            profile = { DriverProfile("깜빡왕", "11440") },
+        )
+
+        // when
+        backgroundScope.launch { vm.uiState.collect {} }
+        runCurrent()
+
+        // then
+        assertEquals(PlayerCard("깜빡왕", "서울 마포구"), vm.uiState.value.player)
     }
 
     @Test

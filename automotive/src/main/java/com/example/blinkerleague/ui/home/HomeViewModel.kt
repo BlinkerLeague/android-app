@@ -2,12 +2,18 @@ package com.example.blinkerleague.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.blinkerleague.data.auth.DriverProfile
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.config.PointConfig
+import com.example.blinkerleague.domain.model.MatchOutcome
 import com.example.blinkerleague.domain.model.PermissionStatus
 import com.example.blinkerleague.domain.model.Streak
 import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.domain.model.TripResult
+import com.example.blinkerleague.domain.region.Regions
 import com.example.blinkerleague.service.RecordingStatus
+import com.example.blinkerleague.ui.achievements.StreakCard
+import com.example.blinkerleague.ui.achievements.daysToReward
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -35,10 +41,13 @@ class HomeViewModel(
     private val loadQuest: suspend () -> TodayMission?,
     private val loadStreak: suspend () -> Streak? = { null },
     private val refreshRecent: suspend () -> Unit,
-    private val grades: List<GradeThreshold>,
+    /** 등급 기준 (최근 경기 등급 도장 색, 맨 위 등급이 금색) */
+    val grades: List<GradeThreshold>,
     private val showDemoEntry: Boolean,
     private val clock: () -> Long,
     private val zone: ZoneId,
+    private val rule: () -> PointConfig = { PointConfig() },
+    private val profile: () -> DriverProfile? = { null },
 ) : ViewModel() {
 
     private val quest = MutableStateFlow<QuestLoad>(QuestLoad.Loading)
@@ -51,8 +60,11 @@ class HomeViewModel(
         speedPermission,
     ) { (quest, streak), trips, status, speed ->
         HomeUiState(
-            streakDays = streak?.days,
-            streakTodayAchieved = streak?.todayAchieved ?: false,
+            streak = streak?.let {
+                val r = rule()
+                StreakCard(it.days, it.todayAchieved, daysToReward(it.days, r.streakRewardDays), r.streakRewardPoint, r.streakRewardDays)
+            },
+            player = profile()?.let { PlayerCard(it.nickname, Regions.label(it.regionCode)) },
             quest = (quest as? QuestLoad.Loaded)?.mission,
             questLoading = quest == QuestLoad.Loading,
             recentTrips = trips.map(::toRow),
@@ -96,6 +108,8 @@ class HomeViewModel(
             today.minusDays(1) -> TripDay.YESTERDAY
             else -> TripDay.OTHER
         }
+        val goals = result.turns.count { it.signalOn }
+        val conceded = result.turns.size - goals
         return RecentTripRow(
             tripId = result.tripId,
             day = day,
@@ -104,6 +118,10 @@ class HomeViewModel(
             scoreState = result.scoreState,
             score = result.score,
             grade = GradeThreshold.gradeOf(result.score, grades),
+            goals = goals,
+            conceded = conceded,
+            outcome = MatchOutcome.of(goals, conceded),
+            distanceKm = result.distanceKm,
         )
     }
 

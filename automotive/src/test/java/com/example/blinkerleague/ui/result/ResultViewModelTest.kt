@@ -89,6 +89,27 @@ class ResultViewModelTest {
     }
 
     @Test
+    fun `결과 화면 팁은 기준값 signalLeadSec을 쓴다`() = runTest(dispatcher) {
+        // given
+        // 깜빡이를 켜지 않은 회전 하나 → 실점 1
+        val conceded = scored.copy(turns = listOf(TurnRecord(start + 5 * 60_000L, TurnDirection.LEFT, false)))
+        val vm = ResultViewModel(
+            result = flowOf(conceded),
+            sync = {},
+            loadMission = { null },
+            grades = GradeThreshold.DEFAULT,
+            signalLeadSec = 7,
+        )
+
+        // when
+        backgroundScope.launch { vm.uiState.collect {} }
+        advanceUntilIdle()
+
+        // then
+        assertEquals(7, (vm.uiState.value as ResultUiState.Loaded).tipLeadSec)
+    }
+
+    @Test
     fun `동기화가 끝나면 서버 항목 결과를 불러와 결과 행에 반영한다`() = runTest(dispatcher) {
         // given
         // 서버 항목 결과는 업로드가 끝난 뒤에만 있음. 부드러운 가감속은 SCORED 0점

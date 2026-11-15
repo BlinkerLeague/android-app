@@ -41,34 +41,37 @@ class FakeMissionApiTest {
         )
     }
 
+    /** 회차 키(periodId)는 MissionRepositoryTest에서 따로 봄 */
+    private suspend fun today() = repository.todayMission()?.copy(periodId = null)
+
     private fun mission(status: MissionStatus, turns: Int, success: Int) =
         TodayMission("회전 깜빡이 완벽", status, turns, success, 3, rewardPoint = 20)
 
     @Test
     fun `운행이 없으면 진행 중, 0회`() = runTest {
-        assertEquals(mission(MissionStatus.IN_PROGRESS, 0, 0), repository.todayMission())
+        assertEquals(mission(MissionStatus.IN_PROGRESS, 0, 0), today())
     }
 
     @Test
     fun `운행 1건 안에서 판정 - 여러 운행을 합산하지 않음`() = runTest {
         upload("2026-11-03T08:00:00+09:00", true, true)
-        assertEquals(mission(MissionStatus.IN_PROGRESS, 2, 2), repository.todayMission())
+        assertEquals(mission(MissionStatus.IN_PROGRESS, 2, 2), today())
 
         upload("2026-11-03T09:00:00+09:00", true) // 합하면 3회지만 라운드마다 따로 셈
-        assertEquals(mission(MissionStatus.IN_PROGRESS, 1, 1), repository.todayMission()) // 가장 최근 라운드
+        assertEquals(mission(MissionStatus.IN_PROGRESS, 1, 1), today()) // 가장 최근 라운드
 
         upload("2026-11-03T09:30:00+09:00", true, true, true)
-        assertEquals(mission(MissionStatus.ACHIEVED, 3, 3), repository.todayMission())
+        assertEquals(mission(MissionStatus.ACHIEVED, 3, 3), today())
     }
 
     @Test
     fun `실패한 라운드가 있어도 그날은 진행 중, 달성한 뒤 실패해도 달성 유지`() = runTest {
         upload("2026-11-03T08:00:00+09:00", true, false, true, true)
-        assertEquals(mission(MissionStatus.IN_PROGRESS, 4, 3), repository.todayMission())
+        assertEquals(mission(MissionStatus.IN_PROGRESS, 4, 3), today())
 
         upload("2026-11-03T08:30:00+09:00", true, true, true)
         upload("2026-11-03T09:00:00+09:00", false)
-        assertEquals(mission(MissionStatus.ACHIEVED, 3, 3), repository.todayMission()) // 달성한 라운드 진행도
+        assertEquals(mission(MissionStatus.ACHIEVED, 3, 3), today()) // 달성한 라운드 진행도
     }
 
     @Test
@@ -79,14 +82,14 @@ class FakeMissionApiTest {
         assertEquals(2, yesterday.turns)
 
         upload("2026-11-03T08:00:00+09:00", true)
-        assertEquals(mission(MissionStatus.IN_PROGRESS, 1, 1), repository.todayMission())
+        assertEquals(mission(MissionStatus.IN_PROGRESS, 1, 1), today())
     }
 
     @Test
     fun `짧은 운행은 집계하지 않고, 날짜는 종료 시각 기준`() = runTest {
         upload("2026-11-03T08:00:00+09:00", false, distanceKm = 0.5)
         upload("2026-11-03T00:00:00+09:00", true)
-        assertEquals(mission(MissionStatus.IN_PROGRESS, 1, 1), repository.todayMission())
+        assertEquals(mission(MissionStatus.IN_PROGRESS, 1, 1), today())
     }
 
     @Test

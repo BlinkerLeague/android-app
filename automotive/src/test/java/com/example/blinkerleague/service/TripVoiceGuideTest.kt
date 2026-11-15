@@ -1,8 +1,10 @@
 package com.example.blinkerleague.service
 
 import com.example.blinkerleague.domain.config.TripConfig
+import com.example.blinkerleague.domain.config.TurnConfig
 import com.example.blinkerleague.domain.model.MissionStatus
 import com.example.blinkerleague.domain.model.ScoreState
+import com.example.blinkerleague.domain.model.Streak
 import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.domain.model.TripResult
 import com.example.blinkerleague.domain.model.TurnDirection
@@ -48,8 +50,60 @@ class TripVoiceGuideTest {
 
         assertEquals(
             listOf(
-                "오늘의 퀘스트, 회전 깜빡이 완벽. 이번 운행에서 회전 세 번 모두 깜빡이를 미리 켜 보세요.",
-                "운행이 끝났어요. 회전할 때 깜빡이를 제때 켰어요. 멋져요.",
+                "깜빡이리그, 경기 시작합니다! 오늘의 퀘스트는 회전 깜빡이 완벽, 회전 세 번 모두 득점해 볼까요?",
+                "경기 종료! 1 대 0 퍼펙트 승리입니다!",
+            ),
+            announcer.spoken,
+        )
+    }
+
+    @Test
+    fun `종료 안내는 기준값 turn signalLeadSec을 쓴다`() = runTest {
+        // given
+        // 깜빡이를 켜지 않은 회전 하나(0 대 1), 기준값은 회전 7초 전
+        val conceded = result.copy(turns = listOf(TurnRecord(0, TurnDirection.LEFT, false)))
+        val guide = TripVoiceGuide(
+            announcer = announcer,
+            todayMission = { mission },
+            tripResult = { conceded },
+            tripConfig = { TripConfig() },
+            scope = this,
+            turnConfig = { TurnConfig(signalLeadSec = 7) },
+        )
+
+        // when
+        guide.onRecorderState(RecorderState.Finished("t1"))
+        advanceUntilIdle()
+
+        // then
+        assertEquals(listOf("경기 종료. 이번엔 아쉬웠어요. 다음 경기에선 회전 7초 전에 깜빡이!"), announcer.spoken)
+    }
+
+    @Test
+    fun `시동 안내에 연승을 받아 넣고 못 받으면 빼고 말한다`() = runTest {
+        // given
+        // 5일 연승 중인 운전자와, 연승을 받지 못한(서버 오류 등) 운전자
+        fun guideWith(streak: suspend () -> Streak?) = TripVoiceGuide(
+            announcer = announcer,
+            todayMission = { mission },
+            tripResult = { null },
+            tripConfig = { TripConfig() },
+            scope = this,
+            streak = streak,
+        )
+        val withStreak = guideWith { Streak(5, true) }
+        val noStreak = guideWith { null }
+
+        // when
+        withStreak.onRecorderState(RecorderState.Recording("t1", 0))
+        noStreak.onRecorderState(RecorderState.Recording("t2", 0))
+        advanceUntilIdle()
+
+        // then
+        assertEquals(
+            listOf(
+                "5연승 중, 경기 시작합니다! 오늘의 퀘스트는 회전 깜빡이 완벽, 회전 세 번 모두 득점해 볼까요?",
+                "깜빡이리그, 경기 시작합니다! 오늘의 퀘스트는 회전 깜빡이 완벽, 회전 세 번 모두 득점해 볼까요?",
             ),
             announcer.spoken,
         )
