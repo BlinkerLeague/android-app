@@ -213,6 +213,27 @@ class ConfigRepositoryTest {
     }
 
     @Test
+    fun `서버 기준값 trip의 maxEvents가 0 이하이면 기본값을 쓴다`() {
+        // given
+        // 서버가 운행 이벤트 상한을 0개, -10개로 잘못 보냄
+        val zero = json.decodeFromString<ThresholdsResponse>(
+            """{"version":2,"trip":{"maxEvents":0,"minDistanceKm":1.0}}""",
+        )
+        val negative = json.decodeFromString<ThresholdsResponse>(
+            """{"version":3,"trip":{"maxEvents":-10,"minDistanceKm":1.0}}""",
+        )
+
+        // when
+        val mergedZero = DetectionConfig.DEFAULT.mergedWith(zero)
+        val mergedNegative = DetectionConfig.DEFAULT.mergedWith(negative)
+
+        // then
+        // 앱 기본값 2000개
+        assertEquals(2000, mergedZero.trip.maxEvents)
+        assertEquals(2000, mergedNegative.trip.maxEvents)
+    }
+
+    @Test
     fun `version이 바뀐 경우에만 갱신하고 저장, 다시 켜면 저장 값으로 시작`() = runTest {
         val cache = MemoryCache()
         val api = FakeConfigApi(ApiResult.Success(response))
