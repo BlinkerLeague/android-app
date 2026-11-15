@@ -172,6 +172,21 @@ class ResultUiStateTest {
     }
 
     @Test
+    fun `플레이 위치는 출발부터 도착까지 중 회전 시각의 비율`() {
+        // given
+        // 08:10 출발, 08:42 도착, 08:26 회전 (32분 중 16분)
+        val trip = result(ScoreState.SCORED, 67).copy(
+            turns = listOf(TurnRecord(start + 16 * 60_000L, TurnDirection.LEFT, true)),
+        )
+
+        // when
+        val plays = trip.toPlaysUiState(zone)
+
+        // then
+        assertEquals(0.5f, plays.plays.single().position, 0.0001f)
+    }
+
+    @Test
     fun `타임라인 - 시각순 카드, 득점은 깜빡이 켠 회전`() {
         val plays = result(ScoreState.SCORED, 67).toPlaysUiState(zone)
         assertEquals("08:10", plays.startedAt)

@@ -87,6 +87,8 @@ data class PlayCard(
     val direction: TurnDirection,
     /** 득점(깜빡이 켬) / 실점(안 켬) */
     val goal: Boolean,
+    /** 출발(0)부터 도착(1)까지 중 회전 시각의 비율. 타임라인 막대 위 점 위치 */
+    val position: Float = 0f,
 )
 
 private val TIME: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
