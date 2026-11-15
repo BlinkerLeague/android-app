@@ -29,6 +29,13 @@ CLAUDE.md "작업 방식" 그대로입니다.
 - 동작이 바뀌지 않는 일(레이아웃 · 색 · 애니메이션 · Preview · 분기 없는 문구)은 테스트 없이 developer가 바로 고치고 `feat:`/`chore:`/`docs:`
 - JDK 17: `export JAVA_HOME=$(/usr/libexec/java_home -v 17)`
 
+### 진행 방식 변경 (2026-11-15, 사용량)
+
+사용량을 줄이려고 사용자가 이 작업의 진행 방식을 바꿨습니다. PR-A 화면 작업부터 적용합니다.
+1. **PR마다 새 에이전트 하나**가 그 PR을 처음부터 끝까지 맡음
+2. TDD 사이클은 **한 에이전트가 red → green을 직접** 함. 커밋은 그대로 나눔(`test:` 다음 `feat:`/`fix:`, 필요하면 `refactor:`)
+3. **lead는 더 쓰지 않음**(이 문서의 계획이 lead 결과를 대신함). **reviewer는 PR마다가 아니라 A · B · C가 모두 끝난 뒤 한 번**만 검토
+
 ## 3. 결정 사항
 
 | # | 항목 | 결정 | 이유 |
@@ -67,7 +74,7 @@ CLAUDE.md "작업 방식" 그대로입니다.
 
 | PR | 브랜치 | 범위 | 상태 |
 | --- | --- | --- | --- |
-| A | `feature/game-ui` | 공통 모션 부품, SCR-02 결과, C안 음성(시동 · 종료 중계 톤), SCR-02a 하이라이트 | **진행 중**: TDD 28개 완료, 화면 작업(T1~T5) 진행 중 |
+| A | `feature/game-ui` | 공통 모션 부품, SCR-02 결과, C안 음성(시동 · 종료 중계 톤), SCR-02a 하이라이트 | **구현 · 문서 완료**: TDD 28개, T1~T5 · T10 · T11, 검증(단위 테스트 312 · 빌드 · lint 15). 에뮬레이터 확인 · PR 남음, 리뷰는 마지막 한 번으로 미룸 |
 | B | `feature/game-ui-lobby` (A 머지 뒤 develop에서) | SCR-01 홈 로비, SCR-03 퀘스트 | 대기 |
 | C | `feature/game-ui-shelf` (B 머지 뒤) | SCR-05 업적 진열장, SCR-04 리그, 문서 마무리 | 대기 |
 
@@ -116,23 +123,24 @@ CLAUDE.md "작업 방식" 그대로입니다.
 
 `feature/game-ui`의 최신 커밋으로 어디까지 됐는지 확인할 것(`git log --oneline 9cbb707..origin/feature/game-ui`).
 
-- [ ] **T1 `LocalParked`**: `MainActivity`에서 `CompositionLocalProvider(LocalParked provides guard.showParkedScreens)`로 NavHost를 감쌈. 불꽃 · 발광 · `rememberInfiniteTransition`은 false면 정지 상태로 그림. 순차 등장 · 카운트업도 P가 아니면 시작 안 함. DrivingGuard 판정 · 덮는 방식은 그대로
-- [ ] **T2 `ui/common/game/*`**: 7.1의 부품. 시간: 카운트업 600ms ease-out, 도장 550ms spring(0.45), 링 · 막대 800~1000ms, 카드 400ms 간격 150~300ms, 꽃가루 2초 1회. 점멸 없음(상태줄도). 무한 연출 6% 이내. `StaggeredReveal`은 탭 → 최종 상태, `rememberSaveable`로 하이라이트에 갔다 와도 다시 재생 안 함
-- [ ] **T3 테마**: 7.1의 색 추가. 득점 · 실점 색은 기존 유지
-- [ ] **T4 `ResultScreen.kt` 교체**: 왼쪽 스코어보드(득점 : 실점 큰 숫자 카운트업 + outcome 문구 "완승 / 승리! / 무승부 / 아쉬운 경기", 회전 0회면 "오늘은 회전 없는 경기"), 등급 도장(0.9초 뒤), 평점 카운트업, "+NP 적립" 카운트업(0P면 숨김 그대로), `celebrate`일 때만 Confetti. 오른쪽 스탯 막대 채움(ComingSoon · Unsupported 행은 HatchedBox + 기존 문구 "준비 중" · "이 차량 미지원"), "다음 경기 팁"(`tip`) 카드, 퀘스트 배너(QuestChip 확대), 플레이 보기 · 확인 버튼 64dp. 베스트 플레이 카드 없음. Preview: S(꽃가루) · A · Pending · NoTurn · Excluded × 1280×720 · 720 폭
-- [ ] **T5 `PlaysScreen.kt`**: 출발~도착 막대 위 `position`대로 점(득점 · 실점 색), 점 누르면 `LazyRow` `animateScrollToItem`(터치 64dp), 카드: 큰 판정 단어 "GOAL!" / "MISS" + 방향 화살표 + 근거 "깜빡이 켬 / 안 켬"(기존 strings). N초 전 · BEST 없음
-- [ ] **T10** 새 문구는 모두 strings.xml(game_ 또는 화면 접두사). 속도 재촉 표현 금지
-- [ ] **T11** 효과음 없음 (확인만)
+- [x] **T1 `LocalParked`**: `MainActivity`에서 `CompositionLocalProvider(LocalParked provides guard.showParkedScreens)`로 NavHost를 감쌈. 불꽃 · 발광 · `rememberInfiniteTransition`은 false면 정지 상태로 그림. 순차 등장 · 카운트업도 P가 아니면 시작 안 함. DrivingGuard 판정 · 덮는 방식은 그대로
+- [x] **T2 `ui/common/game/*`**: 7.1의 부품. 시간: 카운트업 600ms ease-out, 도장 550ms spring(0.45), 링 · 막대 800~1000ms, 카드 400ms 간격 150~300ms, 꽃가루 2초 1회. 점멸 없음(상태줄도). 무한 연출 6% 이내. `StaggeredReveal`은 탭 → 최종 상태, `rememberSaveable`로 하이라이트에 갔다 와도 다시 재생 안 함
+- [x] **T3 테마**: 7.1의 색 추가. 득점 · 실점 색은 기존 유지
+- [x] **T4 `ResultScreen.kt` 교체**: 왼쪽 스코어보드(득점 : 실점 큰 숫자 카운트업 + outcome 문구 "완승 / 승리! / 무승부 / 아쉬운 경기", 회전 0회면 "오늘은 회전 없는 경기"), 등급 도장(0.9초 뒤), 평점 카운트업, "+NP 적립" 카운트업(0P면 숨김 그대로), `celebrate`일 때만 Confetti. 오른쪽 스탯 막대 채움(ComingSoon · Unsupported 행은 HatchedBox + 기존 문구 "준비 중" · "이 차량 미지원"), "다음 경기 팁"(`tip`) 카드, 퀘스트 배너(QuestChip 확대), 플레이 보기 · 확인 버튼 64dp. 베스트 플레이 카드 없음. Preview: S(꽃가루) · A · Pending · NoTurn · Excluded × 1280×720 · 720 폭
+- [x] **T5 `PlaysScreen.kt`**: 출발~도착 막대 위 `position`대로 점(득점 · 실점 색), 점 누르면 `LazyRow` `animateScrollToItem`(터치 64dp), 카드: 큰 판정 단어 "GOAL!" / "MISS" + 방향 화살표 + 근거 "깜빡이 켬 / 안 켬"(기존 strings). N초 전 · BEST 없음
+- [x] **T10** 새 문구는 모두 strings.xml(game_ 또는 화면 접두사). 속도 재촉 표현 금지
+- [x] **T11** 효과음 없음 (확인만)
 
 ### 7.4 PR-A 남은 단계
 
-1. [ ] T1~T5 완료 (developer). 기존 테스트가 UI 문구 때문에 깨지면 developer가 고치지 말고 tester에게 넘김
-2. [ ] 전체 검증 (tester): `./gradlew :automotive:testDebugUnitTest :automotive:assembleDebug :automotive:lintDebug`. lint 경고는 기준선 15건을 넘지 않음
+1. [x] T1~T5 완료 (developer, 11.15). UI 문구 때문에 깨진 기존 테스트 없음. develop(점수 항목 확장 #81)을 병합하며 결과 화면 상태 · ViewModel 충돌을 양쪽 기능 모두 살려 해결
+2. [x] 전체 검증 (11.15, 병합 뒤): 단위 테스트 312개 통과, assembleDebug 성공, lint 경고 15(기준선과 같음).
+    `./gradlew :automotive:testDebugUnitTest :automotive:assembleDebug :automotive:lintDebug`. lint 경고는 기준선 15건을 넘지 않음
 3. [ ] 에뮬레이터 확인: Pleos 에뮬레이터(`docs/emulator-setup.md`), 디버그 홈 "시나리오 재생"으로 결과 · 하이라이트 화면. Pleos는 사용자 10이라 adb로 켤 때 `adb shell am start --user 10 -n com.example.blinkerleague/.MainActivity`
-4. [ ] 문서 (developer): `plan.md` 2차 표에 "#20 정차 화면 게임 UI"(PR-A/B/C 하위 항목, #16 연승 표시 보강은 B · C, #17 VOC-02는 "퍼펙트 문구"만 A), 일정 표 2차 범위에 추가, 결정 기록(3장 결정 + 승패 규칙 + 축하는 맨 위 등급 · 퀘스트 클리어만 + 반복 연출은 P일 때만 + 음성 C안 2회 유지 · 초 단위는 `turn.signalLeadSec`). `docs/screen-plan.md` 4.3(결과) · 4.4(하이라이트) · 6장(모션 규칙 표, 색) · 9장(결정 1 · 2 · 4)
-5. [ ] reviewer: 브랜치 전체 검토 → `review/<날짜>-feature-game-ui.md`. 확인 포인트는 아래 7.5
+4. [x] 문서 (developer, 11.15. plan.md의 #20은 이미 '점수 항목 확장'이 써서 **#22**로 적음. screen-plan은 결과 = 4.4, 하이라이트 = 4.5): `plan.md` 2차 표에 "#20 정차 화면 게임 UI"(PR-A/B/C 하위 항목, #16 연승 표시 보강은 B · C, #17 VOC-02는 "퍼펙트 문구"만 A), 일정 표 2차 범위에 추가, 결정 기록(3장 결정 + 승패 규칙 + 축하는 맨 위 등급 · 퀘스트 클리어만 + 반복 연출은 P일 때만 + 음성 C안 2회 유지 · 초 단위는 `turn.signalLeadSec`). `docs/screen-plan.md` 4.3(결과) · 4.4(하이라이트) · 6장(모션 규칙 표, 색) · 9장(결정 1 · 2 · 4)
+5. [ ] ~~reviewer~~ **미룸**: 진행 방식 변경(2장)에 따라 PR-C까지 끝난 뒤 한 번만 검토. 그때: 브랜치 전체 검토 → `review/<날짜>-feature-game-ui.md`. 확인 포인트는 아래 7.5
 6. [ ] 리뷰 파일 커밋 · push · PR(develop). **머지는 사용자 확인 후** (develop은 squash merge)
-7. [ ] 시연 녹화 스크립트(`scripts/record_demo.py`, 저장소 밖 로컬 전용)는 화면 글자로 버튼을 찾음. "플레이 보기" · "확인" · "운행을 기다리고 있어요" 등 문구가 바뀌면 녹화가 깨질 수 있으니 확인
+7. [ ] 시연 녹화 스크립트(`scripts/record_demo.py`, 저장소 밖 로컬 전용)는 화면 글자로 버튼을 찾음. "플레이 보기" · "확인" · "운행을 기다리고 있어요" 등 문구가 바뀌면 녹화가 깨질 수 있으니 확인. PR-A에서 "플레이 보기" · "확인" · "돌아가기"는 그대로. 바뀐 문구: 결과 "항목별 점수" → "이번 경기 스탯", "측정할 회전이 없었어요" 삭제(→ "오늘은 회전 없는 경기"), "득점 N · 실점 M" 줄 → 큰 숫자(접근성 설명으로만 남음), 퀘스트 칩 → 배너(같은 문구), 하이라이트 안내 "좌우로 넘겨 전체 플레이 보기" → "타임라인의 점을 누르면 해당 플레이로 이동". 결과 화면은 진입 연출 동안 글자가 투명하게 시작함(약 3초, 화면을 누르면 바로 최종 상태)
 
 ### 7.5 reviewer 확인 포인트 (PR-A)
 
