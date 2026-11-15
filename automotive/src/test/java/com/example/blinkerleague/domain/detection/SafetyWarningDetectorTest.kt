@@ -102,4 +102,46 @@ class SafetyWarningDetectorTest {
         // then
         assertEquals(listOf(SafetyWarningHit(occurredAtMs = 20_000, type = "ABS")), result)
     }
+
+    @Test
+    fun `운행 시작 전에 켜진 경고등은 운행 시작 때 이미 달리고 있으면 운행 시작 시각에 센다`() {
+        // given
+        // 운행 시작 10초, 끝 30초. 0초부터 30km/h로 달리고 ABS는 5초부터 계속 켜짐
+        val speeds = (0..30).map { SpeedSample(it * 1_000L, 30f) }
+        val telltales = (0..30).map { sec ->
+            TelltaleSample(sec * 1_000L, if (sec >= 5) setOf("ABS") else emptySet())
+        }
+
+        // when
+        val result = detector.detect(
+            telltales = telltales,
+            speeds = speeds,
+            tripStartMs = 10_000,
+            tripEndMs = 30_000,
+        )
+
+        // then
+        assertEquals(listOf(SafetyWarningHit(occurredAtMs = 10_000, type = "ABS")), result)
+    }
+
+    @Test
+    fun `운행이 끝난 뒤의 샘플로는 세지 않는다`() {
+        // given
+        // 운행 0 ~ 30초, 0 ~ 40초 동안 30km/h. ABS는 운행이 끝난 뒤인 31초부터 켜짐
+        val speeds = (0..40).map { SpeedSample(it * 1_000L, 30f) }
+        val telltales = (0..40).map { sec ->
+            TelltaleSample(sec * 1_000L, if (sec >= 31) setOf("ABS") else emptySet())
+        }
+
+        // when
+        val result = detector.detect(
+            telltales = telltales,
+            speeds = speeds,
+            tripStartMs = 0,
+            tripEndMs = 30_000,
+        )
+
+        // then
+        assertEquals(emptyList<SafetyWarningHit>(), result)
+    }
 }
