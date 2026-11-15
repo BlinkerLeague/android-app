@@ -1,6 +1,7 @@
 package com.example.blinkerleague.ui.result
 
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.model.MetricDetail
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.TodayMission
@@ -88,6 +89,8 @@ internal fun TripResult.toResultUiState(
     mission: TodayMission?,
     grades: List<GradeThreshold>,
     earnedPoints: Int? = null,
+    /** 서버가 준 항목별 판정 결과 (점수 응답 `metrics`). 업로드 전·조회 실패면 비어 있음 */
+    serverMetrics: List<MetricDetail> = emptyList(),
 ): ResultUiState.Loaded {
     val goals = turns.count { it.signalOn }
     val canMeasureTurns = SignalType.TURN_SIGNAL in supported && SignalType.STEERING_ANGLE in supported

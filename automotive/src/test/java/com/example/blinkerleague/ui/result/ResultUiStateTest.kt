@@ -1,6 +1,7 @@
 package com.example.blinkerleague.ui.result
 
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.model.MetricDetail
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.TripResult
@@ -95,6 +96,24 @@ class ResultUiStateTest {
 
         val noSteering = result(ScoreState.NO_TURN, null, emptyList(), setOf(SignalType.TURN_SIGNAL)).toResultUiState(null, GradeThreshold.DEFAULT)
         assertEquals(MetricValue.Unsupported, metric(noSteering))
+    }
+
+    @Test
+    fun `서버 metrics에 TURN_SIGNAL 점수가 있으면 깜빡이 행은 총점 대신 항목 점수를 보인다`() {
+        // given
+        // 서버 총점은 72점, 그중 깜빡이 항목 점수는 90점
+        val trip = result(ScoreState.SCORED, 72)
+        val serverMetrics = listOf(
+            MetricDetail(metric = "TURN_SIGNAL", status = "SCORED", reason = null, score = 90, counts = emptyMap(), weight = 0.5),
+            MetricDetail(metric = "SMOOTH_DRIVING", status = "SCORED", reason = null, score = 54, counts = emptyMap(), weight = 0.5),
+        )
+
+        // when
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, serverMetrics = serverMetrics)
+
+        // then
+        assertEquals(72, state.score)
+        assertEquals(MetricValue.Score(90), metric(state))
     }
 
     @Test
