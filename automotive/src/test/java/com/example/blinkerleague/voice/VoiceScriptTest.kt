@@ -45,11 +45,6 @@ class VoiceScriptTest {
     }
 
     @Test
-    fun `종료 안내 - 결과별 문구`() {
-        assertEquals("운행이 끝났어요. 다음 회전에는 깜빡이를 미리 켜 봐요.", VoiceScript.tripEnd(result(5.0, false), 1.0))
-    }
-
-    @Test
     fun `종료 - 짧은 이동이면 경기에 반영되지 않는다고 말한다`() {
         // given
         // 기준 1km보다 짧은 0.5km 이동, 회전 한 번 득점
@@ -125,6 +120,19 @@ class VoiceScriptTest {
 
         // then
         assertEquals("경기 종료. 1 대 3, 아쉬운 경기였어요. 다음 경기에선 회전 7초 전에 깜빡이!", script)
+    }
+
+    @Test
+    fun `종료 - 하나도 못 켜면 다음 경기 팁을 말한다`() {
+        // given
+        // 회전 두 번 모두 깜빡이 안 켬 → 0 대 2, 기준값은 회전 7초 전
+        val noGoal = result(5.0, false, false)
+
+        // when
+        val script = VoiceScript.tripEnd(noGoal, 1.0, signalLeadSec = 7)
+
+        // then
+        assertEquals("경기 종료. 이번엔 아쉬웠어요. 다음 경기에선 회전 7초 전에 깜빡이!", script)
     }
 
     @Test
