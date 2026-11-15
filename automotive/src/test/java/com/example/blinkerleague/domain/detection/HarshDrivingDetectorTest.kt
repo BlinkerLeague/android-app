@@ -116,4 +116,22 @@ class HarshDrivingDetectorTest {
         // then
         assertEquals(emptyList<HarshEvent>(), result)
     }
+
+    @Test
+    fun `기준 샘플이 maxGapSec보다 오래 끊겼으면 판정하지 않는다`() {
+        // given
+        // maxGapSec 2초. 0s 20km/h 뒤 5s까지 샘플이 끊겼다가 40 → 41km/h
+        // 5s의 1초 전(4s)에 유지 중인 샘플은 0s 것으로 4초 묵음
+        val speeds = listOf(
+            SpeedSample(0, 20f),
+            SpeedSample(5_000, 40f),
+            SpeedSample(5_500, 41f),
+        )
+
+        // when
+        val result = detector.detect(speeds = speeds, brakes = emptyList())
+
+        // then
+        assertEquals(emptyList<HarshEvent>(), result)
+    }
 }
