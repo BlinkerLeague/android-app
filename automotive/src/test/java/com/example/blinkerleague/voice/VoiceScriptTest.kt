@@ -70,6 +70,21 @@ class VoiceScriptTest {
     }
 
     @Test
+    fun `시동 - 연승이 1일 이하이거나 모르면 연승을 말하지 않는다`() {
+        // given
+        val inProgress = mission(MissionStatus.IN_PROGRESS, 0)
+
+        // when
+        val oneDay = VoiceScript.tripStart(inProgress, streakDays = 1)
+        val unknown = VoiceScript.tripStart(inProgress, streakDays = null)
+
+        // then
+        val plain = "깜빡이리그, 경기 시작합니다! 오늘의 퀘스트는 회전 깜빡이 완벽, 회전 세 번 모두 득점해 볼까요?"
+        assertEquals(plain, oneDay)
+        assertEquals(plain, unknown)
+    }
+
+    @Test
     fun `종료 - 짧은 이동이면 경기에 반영되지 않는다고 말한다`() {
         // given
         // 기준 1km보다 짧은 0.5km 이동, 회전 한 번 득점
