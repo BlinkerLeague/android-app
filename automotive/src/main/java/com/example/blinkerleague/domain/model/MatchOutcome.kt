@@ -10,6 +10,7 @@ enum class MatchOutcome {
 
     companion object {
         /** 회전이 없으면(0:0) 승패가 없으므로 null. */
-        fun of(goals: Int, conceded: Int): MatchOutcome? = WIN
+        fun of(goals: Int, conceded: Int): MatchOutcome? =
+            if (goals == conceded) DRAW else WIN
     }
 }
