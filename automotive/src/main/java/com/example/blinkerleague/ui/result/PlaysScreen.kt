@@ -3,7 +3,7 @@ package com.example.blinkerleague.ui.result
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -34,9 +34,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,6 +66,7 @@ import com.example.blinkerleague.ui.theme.OnWarningContainer
 import com.example.blinkerleague.ui.theme.SuccessContainer
 import com.example.blinkerleague.ui.theme.WarningContainer
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 import java.time.ZoneId
 
 private val PlaysViewModelFactory = viewModelFactory {
@@ -87,6 +93,9 @@ private object PlaysMotion {
 
 /** 타임라인 점의 터치 영역 (주행 안전 원칙: 64dp 이상) */
 private val DotTouch = 64.dp
+
+/** 타임라인 위에 보이는 점 크기 (터치는 [DotTouch]) */
+private val DotSize = 34.dp
 
 @Composable
 fun PlaysContent(state: PlaysUiState, onBack: () -> Unit, onOpenCard: () -> Unit = {}) {
@@ -188,6 +197,16 @@ private fun Timeline(state: PlaysUiState, clock: RevealClock, onSelect: (Int) ->
                 )
             }
             val travel = maxWidth - DotTouch
+            // 점끼리 가까우면 64dp 터치 상자가 겹쳐 뒤 점이 앞 점의 터치를 가로챔 → 줄 전체에서 누른 x와 가장 가까운 점 하나를 고름 (리뷰 4)
+            val density = LocalDensity.current
+            val centers = state.plays.map { with(density) { (DotTouch / 2 + travel * it.position).toPx() } }
+            Box(
+                Modifier.fillMaxSize().pointerInput(centers) {
+                    detectTapGestures { tap ->
+                        centers.withIndex().minByOrNull { abs(it.value - tap.x) }?.let { onSelect(it.index) }
+                    }
+                },
+            )
             state.plays.forEachIndexed { index, play ->
                 val (ring, dot) = if (play.goal) SuccessContainer to OnSuccessContainer else WarningContainer to OnWarningContainer
                 val description = stringResource(R.string.plays_dot_description, index + 1, play.time)
@@ -195,12 +214,15 @@ private fun Timeline(state: PlaysUiState, clock: RevealClock, onSelect: (Int) ->
                     Modifier
                         .offset(x = travel * play.position)
                         .size(DotTouch)
-                        .clip(CircleShape)
-                        .clickable { onSelect(index) }
-                        .semantics { contentDescription = description },
+                        // 터치는 위 줄 전체가 받음. 접근성 서비스용 동작만 점마다 둠
+                        .semantics {
+                            contentDescription = description
+                            role = Role.Button
+                            onClick { onSelect(index); true }
+                        },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Box(Modifier.size(22.dp).border(5.dp, ring, CircleShape).padding(5.dp).clip(CircleShape).background(dot))
+                    Box(Modifier.size(DotSize).border(7.dp, ring, CircleShape).padding(7.dp).clip(CircleShape).background(dot))
                 }
             }
         }
