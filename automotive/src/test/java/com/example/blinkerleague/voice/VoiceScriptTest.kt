@@ -50,7 +50,19 @@ class VoiceScriptTest {
         assertEquals("운행이 끝났어요. 회전 두 번 모두 깜빡이를 제때 켰어요. 멋져요.", VoiceScript.tripEnd(result(5.0, true, true), 1.0))
         assertEquals("운행이 끝났어요. 다음 회전에는 깜빡이를 미리 켜 봐요.", VoiceScript.tripEnd(result(5.0, false), 1.0))
         assertEquals("운행이 끝났어요. 이번에는 측정할 회전이 없었어요.", VoiceScript.tripEnd(result(5.0), 1.0))
-        assertEquals("운행이 끝났어요. 짧은 운행이라 점수에는 반영되지 않아요.", VoiceScript.tripEnd(result(0.5, true), 1.0))
+    }
+
+    @Test
+    fun `종료 - 짧은 이동이면 경기에 반영되지 않는다고 말한다`() {
+        // given
+        // 기준 1km보다 짧은 0.5km 이동, 회전 한 번 득점
+        val short = result(0.5, true)
+
+        // when
+        val script = VoiceScript.tripEnd(short, 1.0)
+
+        // then
+        assertEquals("경기 종료. 짧은 이동이라 경기에 반영되지 않아요.", script)
     }
 
     @Test
