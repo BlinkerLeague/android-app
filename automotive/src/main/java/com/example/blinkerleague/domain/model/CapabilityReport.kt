@@ -40,6 +40,7 @@ data class CapabilityReport(
             if (headlight == Availability.SUPPORTED) add(SignalType.HEADLIGHT)
             if (seatBelt == Availability.SUPPORTED) add(SignalType.SEAT_BELT)
             if (safetyWarning == Availability.SUPPORTED) add(SignalType.SAFETY_WARNING)
+            if (wiper == Availability.SUPPORTED) add(SignalType.WIPER)
         }
 
     /** 회전 깜빡이 판정에는 방향지시등과 핸들 각도가 둘 다 필요함 */
