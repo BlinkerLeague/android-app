@@ -13,6 +13,8 @@ data class TodayMission(
     val rewardPoint: Int? = null,
     /** 조건별 진행도 (SCR-03). 서버가 안 주면 회전 수·사용률로 만듦 */
     val conditions: List<MissionCondition> = MissionCondition.derive(turns, successTurns, requiredTurns),
+    /** 이 퀘스트 한 회차(서버 missionId + periodKey)를 가리키는 키. 클리어 축하를 회차당 한 번만 보여 줄 때 씀. 모르면 null */
+    val periodId: String? = null,
 )
 
 enum class ConditionType {

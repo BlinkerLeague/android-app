@@ -47,4 +47,16 @@ class MissionRepositoryTest {
         assertEquals(listOf(2 to 3, 50 to 100), mission.conditions.map { it.current to it.target })
         assertEquals(listOf(false, false), mission.conditions.map { it.met })
     }
+
+    @Test
+    fun `퀘스트 회차 키는 서버 missionId와 periodKey로 만든다`() = runTest {
+        // given
+        val response = base.copy(missionId = 7, periodKey = "2026-11-15")
+
+        // when
+        val mission = repository(response).todayMission()!!
+
+        // then
+        assertEquals("7:2026-11-15", mission.periodId)
+    }
 }
