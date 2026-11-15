@@ -3,6 +3,8 @@ package com.example.blinkerleague.domain.detection
 import com.example.blinkerleague.domain.config.SignalCancelConfig
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SpeedSample
+import com.example.blinkerleague.domain.model.Turn
+import com.example.blinkerleague.domain.model.TurnDirection
 import com.example.blinkerleague.domain.model.TurnSignalState.LEFT
 import com.example.blinkerleague.domain.model.TurnSignalState.OFF
 import org.junit.Assert.assertEquals
@@ -34,5 +36,26 @@ class SignalCancelDetectorTest {
 
         // then
         assertEquals(listOf(SignalLeftOn(occurredAtMs = 10_000, durationSec = 30)), result)
+    }
+
+    @Test
+    fun `회전 전에 오래 켜 둔 깜빡이는 잡지 않는다`() {
+        // given
+        // 50km/h로 달리다 10s에 왼쪽 깜빡이를 켜고, 40s ~ 45s 왼쪽 회전 뒤 46s에 끔 (회전 전 30초 켜 둠)
+        val signals = listOf(SignalSample(10_000, LEFT), SignalSample(46_000, OFF))
+        val turns = listOf(Turn(40_000, 45_000, TurnDirection.LEFT, 90f, uTurn = false))
+        val speeds = constantSpeed(0, 120_000, 50f)
+
+        // when
+        val result = detector.detect(
+            signals = signals,
+            turns = turns,
+            speeds = speeds,
+            tripStartMs = 0,
+            tripEndMs = 120_000,
+        )
+
+        // then
+        assertEquals(emptyList<SignalLeftOn>(), result)
     }
 }
