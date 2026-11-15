@@ -12,6 +12,9 @@ enum class ScoreItem {
 
     /** 깜빡이 켜 둔 채 잊음 (서버 기준값 `signalCancel`) */
     SIGNAL_CANCEL,
+
+    /** 회전 속도 (서버 기준값 `turnSpeedKmh`) */
+    TURN_SPEED,
     ;
 
     companion object {
