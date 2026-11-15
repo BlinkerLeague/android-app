@@ -1,6 +1,8 @@
 package com.example.blinkerleague.data.vehicle
 
 import ai.pleos.playground.vehicle.Vehicle
+import ai.pleos.playground.vehicle.api.model.area.SeatArea
+import ai.pleos.playground.vehicle.constant.area.SeatValue
 import ai.pleos.playground.vehicle.constant.area.TurnSignalValue
 import ai.pleos.playground.vehicle.constant.control.LightState
 import ai.pleos.playground.vehicle.constant.control.VehicleGear
@@ -16,11 +18,13 @@ import android.car.hardware.property.CarPropertyManager
 import android.content.Context
 import android.content.pm.PackageManager
 import com.example.blinkerleague.AppLog
+import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.model.Availability
 import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.CapabilityReport
 import com.example.blinkerleague.domain.model.Gear
 import com.example.blinkerleague.domain.model.HeadlightSample
+import com.example.blinkerleague.domain.model.SeatBeltSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.SteeringSample
@@ -36,6 +40,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
@@ -49,6 +54,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  * - 기어 `Gear.registerGearSelection` (capability 확인 API 없음 → get 성공 여부로 판단) — `CAR_DRIVE`
  * - 브레이크 페달 `Brake.registerBrakePedalStatus` (값이 바뀔 때만 옴) — `CAR_DRIVE`
  * - 하향등 `Light.registerLowBeamLightState` (`ON`만 켜짐, `DAYTIME_RUNNING`은 꺼짐으로 봄) — `CAR_LIGHTS`
+ * - 운전석(`ROW_1_LEFT`) 안전벨트 `Seat.getCurrentSeatBeltBuckledState`를 [com.example.blinkerleague.domain.config.SeatBeltConfig.pollIntervalSec]마다 읽음
+ *   (변경 콜백은 에뮬레이터 콘솔로 바꿀 수 없어 확인 못 함 → 폴링) — `CAR_SEATS`
  * - 속도 CarProperty `PERF_VEHICLE_SPEED` (m/s, 약 10Hz) — `android.car.permission.CAR_SPEED`(런타임)
  * - 시동 상태 API는 없음 → [VehicleStateSample.ignitionOn]은 항상 null
  *
@@ -58,12 +65,14 @@ import kotlinx.coroutines.withTimeoutOrNull
  * @param clock 샘플 타임스탬프용 현재 시각 (epoch ms). 다른 공급원과 같은 기준
  * @param speedGranted 속도 권한 허용 여부 Flow ([com.example.blinkerleague.data.permission.PermissionRepository]).
  *   수집 중에 권한이 허용되면 그때 속도를 구독함. null이면 구독 시점에 한 번만 확인
+ * @param config 폴링 주기를 읽을 기준값. 읽을 때마다 호출하므로 서버 값이 바뀌면 다음 주기부터 반영됨
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class PleosVehicleSignalSource(
     context: Context,
     private val clock: () -> Long = System::currentTimeMillis,
     private val speedGranted: Flow<Boolean>? = null,
+    private val config: () -> DetectionConfig = { DetectionConfig.DEFAULT },
 ) : VehicleSignalSource {
 
     private val appContext = context.applicationContext
@@ -84,6 +93,14 @@ class PleosVehicleSignalSource(
         speed = speedAvailability(),
         brake = check { ok, fail -> vehicle.getBrake().checkBrakePedalStatusCapabilities({ ok() }, fail) },
         headlight = check { ok, fail -> vehicle.getLight().checkLowBeamLightStateCapabilities({ _, _ -> ok() }, fail) },
+        seatBelt = check { ok, fail ->
+            vehicle.getSeat().checkSeatBeltBuckledCapabilities(
+                { areas: List<SeatArea> ->
+                    if (areas.any { DRIVER_SEAT in it.values }) ok() else fail(UnsupportedOperationException("운전석 안전벨트 없음"))
+                },
+                fail,
+            )
+        },
     )
 
     private fun speedGranted() =
@@ -192,6 +209,50 @@ class PleosVehicleSignalSource(
         awaitClose { light.unregisterLowBeamLightState(listener) }
     }
 
+    override val seatBelts: Flow<SeatBeltSample> = poll("안전벨트", { config().seatBelt.pollIntervalSec }) { ok, fail ->
+        vehicle.getSeat().getCurrentSeatBeltBuckledState(SeatArea(DRIVER_SEAT), { buckled: Boolean? -> ok(buckled?.let { SeatBeltSample(clock(), it) }) }, fail)
+    }
+
+    /**
+     * SDK 단발 조회(get)를 구독 시작 즉시 한 번, 이후 [intervalSec]마다 반복함.
+     * 처음부터 [CHECK_ATTEMPTS]번 연속 실패하면 미지원으로 보고 Flow를 끝냄. 한 번이라도 받은 뒤의 실패는 그 회차만 건너뜀
+     */
+    private fun <T : Any> poll(
+        name: String,
+        intervalSec: () -> Int,
+        read: (ok: (T?) -> Unit, fail: (Exception) -> Unit) -> Unit,
+    ): Flow<T> = flow {
+        var received = false
+        var failures = 0
+        while (true) {
+            val value = readOnce(name, read)
+            if (value != null) {
+                received = true
+                emit(value)
+            } else if (!received && ++failures >= CHECK_ATTEMPTS) {
+                AppLog.w(TAG, "$name 미지원 또는 권한 없음 → 폴링 중단")
+                return@flow
+            }
+            delay(intervalSec().coerceAtLeast(1) * 1_000L)
+        }
+    }
+
+    /** SDK의 (onComplete, onFailed) 조회 하나를 값으로. 실패 · 시간 초과 · 권한 없음이면 null */
+    private suspend fun <T : Any> readOnce(name: String, read: (ok: (T?) -> Unit, fail: (Exception) -> Unit) -> Unit): T? =
+        withTimeoutOrNull(CHECK_TIMEOUT_MS) {
+            suspendCancellableCoroutine { cont ->
+                try {
+                    read({ if (cont.isActive) cont.resume(it) }) { e ->
+                        AppLog.i(TAG, "$name 조회 실패: $e")
+                        if (cont.isActive) cont.resume(null)
+                    }
+                } catch (e: SecurityException) {
+                    AppLog.w(TAG, "$name 권한 없음: $e")
+                    if (cont.isActive) cont.resume(null)
+                }
+            }
+        }
+
     /** 리스너 등록. 권한이 없어 SecurityException이 나면 수집을 멈추지 않고 이 Flow만 끝냄 */
     private fun ProducerScope<*>.register(name: String, block: () -> Unit): Boolean =
         try {
@@ -256,5 +317,8 @@ class PleosVehicleSignalSource(
         const val CHECK_ATTEMPTS = 2
         const val CHECK_TIMEOUT_MS = 3_000L
         const val CHECK_RETRY_MS = 1_000L
+
+        /** 운전석. 좌핸들 기준 (국내 판매 차량) */
+        val DRIVER_SEAT = SeatValue.ROW_1_LEFT
     }
 }

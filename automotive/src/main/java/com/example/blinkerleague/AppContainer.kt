@@ -70,7 +70,7 @@ class AppContainer(context: Context) {
 
     /** 실제 차량 신호 (Vehicle SDK + CarProperty). 처음 쓸 때 SDK에 연결함. 속도는 권한이 생기면 그때 구독 */
     val vehicleSignalSource: VehicleSignalSource by lazy {
-        PleosVehicleSignalSource(context, speedGranted = granted(RuntimePermission.SPEED))
+        PleosVehicleSignalSource(context, speedGranted = granted(RuntimePermission.SPEED), config = { config })
     }
 
     /** 실제 위치 (Pleos FusedLocation SDK). 권한이 생기면 그때 구독 */

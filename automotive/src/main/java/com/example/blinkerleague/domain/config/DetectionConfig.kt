@@ -113,6 +113,8 @@ data class HarshConfig(
 data class SeatBeltConfig(
     /** 이 속도 이상이면 주행 중으로 보고 미착용 시간을 셈 */
     val movingMinSpeedKmh: Int = 10,
+    /** 운전석 안전벨트 착용 상태를 SDK에서 읽는 주기(초). 변경 콜백을 쓰지 않고 폴링함 */
+    val pollIntervalSec: Int = 1,
 )
 
 /** 안전 경고등 기준 (앱 내부 값). 대상 경고등 이름 목록은 SDK 확인 후 채움 */
