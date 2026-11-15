@@ -117,13 +117,23 @@ data class SeatBeltConfig(
     val pollIntervalSec: Int = 1,
 )
 
-/** 안전 경고등 기준 (앱 내부 값). 대상 경고등 이름 목록은 SDK 확인 후 채움 */
+/** 안전 경고등 기준 (앱 내부 값, 서버 설정에는 없음) */
 data class SafetyWarningConfig(
-    /** 셀 경고등 이름 */
-    val telltaleTypes: Set<String> = emptySet(),
+    /** 셀 경고등 이름 (Vehicle SDK `TelltaleType` enum 이름). 방향지시등 · 안전벨트 · 전조등 같은 정보성 표시등은 넣지 않음 */
+    val telltaleTypes: Set<String> = DEFAULT_TELLTALE_TYPES,
     /** 이 속도 이상이면 주행 중으로 봄 */
     val movingMinSpeedKmh: Int = 10,
-)
+    /** 경고등 목록을 SDK에서 읽는 주기(초). 등록 API는 PRIVATE 권한이라 폴링함 */
+    val pollIntervalSec: Int = 1,
+) {
+    companion object {
+        /**
+         * ABS · 차체 자세 제어(ESC) · 타이어 공기압(TPMS) · 브레이크 계열(주차 브레이크 표시등은 브레이크 경고를 겸함, 전자식 주차 브레이크 고장).
+         * 주행 중(속도 기준 이상)에만 세므로 정차 중 주차 브레이크는 걸리지 않음
+         */
+        val DEFAULT_TELLTALE_TYPES = setOf("ABS", "ESC", "TPMS", "PARKING_BRAKE", "ELECTRONIC_PARKING_BRAKE")
+    }
+}
 
 /** 서버 기준값 `rain`. 우천 운행 구간 기준 */
 data class RainConfig(

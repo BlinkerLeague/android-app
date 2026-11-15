@@ -24,6 +24,8 @@
     <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
     <!-- 운전석 안전벨트 착용 상태: Seat.getCurrentSeatBeltBuckledState (@RequiresPermission CAR_SEATS) -->
     <uses-permission android:name="pleos.car.permission.CAR_SEATS" />
+    <!-- 경고등: Safety.getTelltalesInfo (@RequiresPermission CAR_SAFETY). 등록 API의 PRIVATE_CAR_SAFETY는 선언하지 않음 -->
+    <uses-permission android:name="pleos.car.permission.CAR_SAFETY" />
 
     <!-- 차량 속도: CarProperty PERF_VEHICLE_SPEED. dangerous → 런타임 허용 필요 -->
     <uses-permission android:name="android.car.permission.CAR_SPEED" />

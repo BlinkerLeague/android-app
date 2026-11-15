@@ -2,10 +2,12 @@ package com.example.blinkerleague.data.vehicle
 
 import ai.pleos.playground.vehicle.Vehicle
 import ai.pleos.playground.vehicle.api.model.area.SeatArea
+import ai.pleos.playground.vehicle.api.model.telltale.Telltales
 import ai.pleos.playground.vehicle.constant.area.SeatValue
 import ai.pleos.playground.vehicle.constant.area.TurnSignalValue
 import ai.pleos.playground.vehicle.constant.control.LightState
 import ai.pleos.playground.vehicle.constant.control.VehicleGear
+import ai.pleos.playground.vehicle.constant.telltale.TelltaleState
 import ai.pleos.playground.vehicle.listener.BrakePedalStatusListener
 import ai.pleos.playground.vehicle.listener.GearSelectionListener
 import ai.pleos.playground.vehicle.listener.LightStateListener
@@ -28,6 +30,7 @@ import com.example.blinkerleague.domain.model.SeatBeltSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.SteeringSample
+import com.example.blinkerleague.domain.model.TelltaleSample
 import com.example.blinkerleague.domain.model.TurnSignalState
 import com.example.blinkerleague.domain.model.VehicleStateSample
 import kotlin.coroutines.resume
@@ -56,6 +59,8 @@ import kotlinx.coroutines.withTimeoutOrNull
  * - 하향등 `Light.registerLowBeamLightState` (`ON`만 켜짐, `DAYTIME_RUNNING`은 꺼짐으로 봄) — `CAR_LIGHTS`
  * - 운전석(`ROW_1_LEFT`) 안전벨트 `Seat.getCurrentSeatBeltBuckledState`를 [com.example.blinkerleague.domain.config.SeatBeltConfig.pollIntervalSec]마다 읽음
  *   (변경 콜백은 에뮬레이터 콘솔로 바꿀 수 없어 확인 못 함 → 폴링) — `CAR_SEATS`
+ * - 경고등 `Safety.getTelltalesInfo`를 [com.example.blinkerleague.domain.config.SafetyWarningConfig.pollIntervalSec]마다 읽음 — `CAR_SAFETY`.
+ *   `registerTelltales`·`checkTelltalesCapabilities`는 `PRIVATE_CAR_SAFETY`라 쓰지 않음 → capability도 get 성공 여부로 판단
  * - 속도 CarProperty `PERF_VEHICLE_SPEED` (m/s, 약 10Hz) — `android.car.permission.CAR_SPEED`(런타임)
  * - 시동 상태 API는 없음 → [VehicleStateSample.ignitionOn]은 항상 null
  *
@@ -93,6 +98,7 @@ class PleosVehicleSignalSource(
         speed = speedAvailability(),
         brake = check { ok, fail -> vehicle.getBrake().checkBrakePedalStatusCapabilities({ ok() }, fail) },
         headlight = check { ok, fail -> vehicle.getLight().checkLowBeamLightStateCapabilities({ _, _ -> ok() }, fail) },
+        safetyWarning = check { ok, fail -> vehicle.getSafety().getTelltalesInfo({ ok() }, fail) },
         seatBelt = check { ok, fail ->
             vehicle.getSeat().checkSeatBeltBuckledCapabilities(
                 { areas: List<SeatArea> ->
@@ -212,6 +218,17 @@ class PleosVehicleSignalSource(
     override val seatBelts: Flow<SeatBeltSample> = poll("안전벨트", { config().seatBelt.pollIntervalSec }) { ok, fail ->
         vehicle.getSeat().getCurrentSeatBeltBuckledState(SeatArea(DRIVER_SEAT), { buckled: Boolean? -> ok(buckled?.let { SeatBeltSample(clock(), it) }) }, fail)
     }
+
+    /** 켜졌거나(ON) 깜빡이는(BLINK) 경고등의 SDK enum 이름 집합. 어떤 것을 셀지는 판정([com.example.blinkerleague.domain.config.SafetyWarningConfig.telltaleTypes])에서 고름 */
+    override val telltales: Flow<TelltaleSample> = poll("경고등", { config().safetyWarning.pollIntervalSec }) { ok, fail ->
+        vehicle.getSafety().getTelltalesInfo({ info: Telltales? -> ok(info?.let { TelltaleSample(clock(), it.activeNames()) }) }, fail)
+    }
+
+    private fun Telltales.activeNames(): Set<String> =
+        telltales.orEmpty()
+            .filter { it.state == TelltaleState.ON || it.state == TelltaleState.BLINK }
+            .mapNotNull { it.type?.name }
+            .toSet()
 
     /**
      * SDK 단발 조회(get)를 구독 시작 즉시 한 번, 이후 [intervalSec]마다 반복함.
