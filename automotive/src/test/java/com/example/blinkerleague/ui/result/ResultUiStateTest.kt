@@ -203,6 +203,24 @@ class ResultUiStateTest {
     }
 
     @Test
+    fun `출발 전이나 도착 뒤의 회전은 위치를 0과 1 사이로 자른다`() {
+        // given
+        // 08:10 출발, 08:42 도착. 회전은 08:08(출발 전)과 08:44(도착 뒤)
+        val trip = result(ScoreState.SCORED, 67).copy(
+            turns = listOf(
+                TurnRecord(start - 2 * 60_000L, TurnDirection.LEFT, true),
+                TurnRecord(start + 34 * 60_000L, TurnDirection.RIGHT, false),
+            ),
+        )
+
+        // when
+        val plays = trip.toPlaysUiState(zone)
+
+        // then
+        assertEquals(listOf(0f, 1f), plays.plays.map { it.position })
+    }
+
+    @Test
     fun `타임라인 - 시각순 카드, 득점은 깜빡이 켠 회전`() {
         val plays = result(ScoreState.SCORED, 67).toPlaysUiState(zone)
         assertEquals("08:10", plays.startedAt)
