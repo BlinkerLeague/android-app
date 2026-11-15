@@ -34,6 +34,7 @@ data class CapabilityReport(
             if (speed == Availability.SUPPORTED) add(SignalType.SPEED)
             if (brake == Availability.SUPPORTED) add(SignalType.BRAKE)
             if (headlight == Availability.SUPPORTED) add(SignalType.HEADLIGHT)
+            if (seatBelt == Availability.SUPPORTED) add(SignalType.SEAT_BELT)
         }
 
     /** 회전 깜빡이 판정에는 방향지시등과 핸들 각도가 둘 다 필요함 */
