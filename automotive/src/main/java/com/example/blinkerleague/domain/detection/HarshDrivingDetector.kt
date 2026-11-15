@@ -15,8 +15,20 @@ data class HarshEvent(
 
 /**
  * 1초 사이 속도 변화로 급가속 · 급감속을 찾음 (서버 기준값 `harsh`).
+ * 각 속도 샘플을 1초 전 시점의 속도(그 시각 이전의 마지막 샘플)와 비교함. 순수 함수.
  */
 class HarshDrivingDetector(private val config: HarshConfig) {
 
-    fun detect(speeds: List<SpeedSample>, brakes: List<BrakeSample>): List<HarshEvent> = emptyList()
+    fun detect(speeds: List<SpeedSample>, brakes: List<BrakeSample>): List<HarshEvent> {
+        val sorted = speeds.sortedBy { it.timestampMs }
+        return sorted.mapNotNull { sample ->
+            val before = sorted.lastOrNull { it.timestampMs <= sample.timestampMs - ONE_SECOND_MS } ?: return@mapNotNull null
+            val delta = sample.speedKmh - before.speedKmh
+            if (delta >= config.deltaKmhPerSec) HarshEvent(sample.timestampMs, HarshKind.ACCEL) else null
+        }
+    }
+
+    private companion object {
+        const val ONE_SECOND_MS = 1_000L
+    }
 }
