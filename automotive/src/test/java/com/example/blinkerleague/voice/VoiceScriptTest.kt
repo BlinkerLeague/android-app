@@ -115,6 +115,19 @@ class VoiceScriptTest {
     }
 
     @Test
+    fun `종료 - 득점이 적으면 아쉬운 경기와 기준값 초 전 팁을 말한다`() {
+        // given
+        // 회전 네 번 중 한 번 깜빡이 켬 → 1 대 3, 기준값은 회전 7초 전
+        val tough = result(5.0, true, false, false, false)
+
+        // when
+        val script = VoiceScript.tripEnd(tough, 1.0, signalLeadSec = 7)
+
+        // then
+        assertEquals("경기 종료. 1 대 3, 아쉬운 경기였어요. 다음 경기에선 회전 7초 전에 깜빡이!", script)
+    }
+
+    @Test
     fun `횟수는 고유어로, 10 넘으면 숫자`() {
         assertEquals("한 번", VoiceScript.count(1))
         assertEquals("열 번", VoiceScript.count(10))

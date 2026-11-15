@@ -19,7 +19,12 @@ object VoiceScript {
     }
 
     /** 운행 종료 시 1회: 이번 운행 결과 (기기에서 판정한 회전 기준, 서버 점수를 기다리지 않음) */
-    fun tripEnd(result: TripResult, minDistanceKm: Double): String {
+    fun tripEnd(
+        result: TripResult,
+        minDistanceKm: Double,
+        /** 회전 몇 초 전에 깜빡이를 켜야 하는지 (기준값 turn.signalLeadSec) */
+        signalLeadSec: Int = 5,
+    ): String {
         val total = result.turns.size
         val success = result.turns.count { it.signalOn }
         return when {
