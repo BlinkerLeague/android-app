@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  디버그 빌드 전용: SDK 조사(VehicleSdkSurveyTest, src/debug의 프로브·ProbeService)에 쓰는 권한과 컴포넌트.
+  릴리스 빌드에는 들어가지 않음. Vehicle SDK 권한은 Pleos App Market 사전 승인이 필요하므로
+  실제로 쓸 권한만 골라 main 매니페스트로 옮김.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
+    <uses-permission android:name="pleos.car.permission.CAR_LIGHTS" />
+    <uses-permission android:name="pleos.car.permission.CAR_SAFETY" />
+    <uses-permission android:name="pleos.car.permission.PRIVATE_CAR_SAFETY" />
+    <uses-permission android:name="pleos.car.permission.CAR_INFO" />
+    <uses-permission android:name="pleos.car.permission.CAR_ENERGY" />
+    <uses-permission android:name="pleos.car.permission.CAR_SEATS" />
+    <uses-permission android:name="pleos.car.permission.CAR_CLIMATE" />
+    <uses-permission android:name="pleos.car.permission.CAR_WINDOWS" />
+    <uses-permission android:name="pleos.car.permission.CAR_DOORS" />
+    <uses-permission android:name="pleos.car.permission.CAR_MIRRORS" />
+    <uses-permission android:name="pleos.car.permission.CAR_TOLL" />
+
+    <!-- 조사용: NaviHelper 이벤트·위치 조회(NAVI_ROUTE), 목적지 설정·취소(NAVI_ROUTE_SEARCH) -->
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
+    <!-- 조사용: CarProperty 기어(GEAR_SELECTION) 비교 -->
+    <uses-permission android:name="android.car.permission.CAR_POWERTRAIN" />
+
+    <!-- 로컬 서버(http://10.0.2.2) 접속용. 릴리스에는 들어가지 않음 -->
+    <application android:networkSecurityConfig="@xml/network_security_config">
+        <!-- exported는 adb(shell)에서 PROBE_TRIGGER를 보내기 위함. DUMP 권한은 shell만 가지므로 다른 앱은 보낼 수 없음 -->
+        <receiver
+            android:name=".service.ProbeStartReceiver"
+            android:exported="true"
+            android:permission="android.permission.DUMP">
+            <intent-filter>
+                <action android:name="com.example.blinkerleague.PROBE_TRIGGER" />
+            </intent-filter>
+        </receiver>
+
+        <!-- exported는 adb(shell)에서 프로브 시작·목적지 요청을 보내기 위함. DUMP 권한은 shell만 가지므로 다른 앱은 호출 못 함 -->
+        <service
+            android:name=".service.ProbeService"
+            android:exported="true"
+            android:foregroundServiceType="specialUse"
+            android:permission="android.permission.DUMP">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="차량 신호·내비 이벤트 조사용 로그 (디버그 빌드 전용)" />
+        </service>
+    </application>
+</manifest>

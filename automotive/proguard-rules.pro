@@ -1,3 +1,4 @@
+# isMinifyEnabled=false (2026-11-11 결정, plan.md 결정 기록). 켤 때는 Pleos SDK·kotlinx.serialization DTO keep 규칙과 release 회귀 확인 필요
 # Add project specific ProGuard rules here.
 # You can control the set of applied configuration files using the
 # proguardFiles setting in build.gradle.

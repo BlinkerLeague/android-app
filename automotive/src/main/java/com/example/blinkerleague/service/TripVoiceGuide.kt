@@ -1,0 +1,56 @@
+package com.example.blinkerleague.service
+
+import com.example.blinkerleague.domain.config.TripConfig
+import com.example.blinkerleague.domain.config.TurnConfig
+import com.example.blinkerleague.domain.model.Streak
+import com.example.blinkerleague.domain.model.TodayMission
+import com.example.blinkerleague.domain.model.TripResult
+import com.example.blinkerleague.voice.VoiceAnnouncer
+import com.example.blinkerleague.voice.VoiceScript
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+
+/**
+ * 운행 상태에 맞춰 음성 안내를 냄. 주행 안전 원칙: **운행당 시동 시 1회(퀘스트 안내), 종료 시 1회(결과)** 만.
+ * 같은 운행에서 상태가 여러 번 들어와도 한 번만 말함.
+ *
+ * 안내는 [scope](앱 수명)에서 실행하므로, 기록 작업이 끝나 취소돼도 종료 안내가 끊기지 않음.
+ */
+class TripVoiceGuide(
+    private val announcer: VoiceAnnouncer,
+    private val todayMission: suspend () -> TodayMission?,
+    private val tripResult: suspend (tripId: String) -> TripResult?,
+    /** 운행이 끝날 때의 기준값 (서버에서 바뀔 수 있음) */
+    private val tripConfig: () -> TripConfig,
+    private val scope: CoroutineScope,
+    /** 회전 기준값. 종료 안내의 "N초 전" 팁에 씀 (서버에서 바뀔 수 있음) */
+    private val turnConfig: () -> TurnConfig = { TurnConfig() },
+    /** 연승 기록. 못 받으면 null (시동 안내에서 연승을 뺌) */
+    private val streak: suspend () -> Streak? = { null },
+) {
+    private val startAnnounced = mutableSetOf<String>()
+    private val endAnnounced = mutableSetOf<String>()
+
+    fun onRecorderState(state: RecorderState) {
+        when (state) {
+            is RecorderState.Recording -> if (startAnnounced.add(state.tripId)) {
+                scope.launch {
+                    // 퀘스트와 연승을 동시에 받아 시동 안내가 늦어지지 않게 함.
+                    // UNDISPATCHED: 바로 요청을 시작해 디스패치를 한 번 더 거치지 않음 (시동 → 종료 안내 순서 유지)
+                    val mission = async(start = CoroutineStart.UNDISPATCHED) { todayMission() }
+                    val streak = async(start = CoroutineStart.UNDISPATCHED) { streak() }
+                    announcer.speak(VoiceScript.tripStart(mission.await(), streak.await()?.days))
+                }
+            }
+            is RecorderState.Finished -> if (endAnnounced.add(state.tripId)) {
+                scope.launch {
+                    val result = tripResult(state.tripId) ?: return@launch
+                    announcer.speak(VoiceScript.tripEnd(result, tripConfig().minDistanceKm, turnConfig().signalLeadSec))
+                }
+            }
+            RecorderState.Idle -> Unit
+        }
+    }
+}

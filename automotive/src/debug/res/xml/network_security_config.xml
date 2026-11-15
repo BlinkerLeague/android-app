@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 디버그 빌드 전용: 내 PC에서 띄운 로컬 서버(http)에 접속. 릴리스는 빌드 때 생성(build.gradle.kts generateReleaseNetworkSecurityConfig): http 서버 주소면 그 호스트만 평문 허용 -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+    </domain-config>
+</network-security-config>

@@ -1,3 +1,292 @@
 <resources>
     <string name="app_name">BlinkerLeague</string>
+
+    <!-- 시나리오 재생 (시연·테스트) -->
+    <string name="demo_title">시나리오 재생</string>
+    <string name="demo_subtitle">가짜 차량 신호로 운행 하나를 재생해요</string>
+    <string name="demo_speed">재생 속도</string>
+    <string name="demo_speed_option">%1$d배속</string>
+    <string name="demo_duration">%1$d초</string>
+    <string name="demo_running_recording">운행을 기록하고 있어요</string>
+    <string name="demo_running_waiting">시동을 기다리고 있어요</string>
+    <string name="demo_stop">중지</string>
+
+    <!-- 경기 결과 (SCR-02) -->
+    <string name="result_header">경기 종료 · %1$.1f km</string>
+    <string name="result_header_today">오늘의 %1$d번째 경기 종료 · %2$.1f km</string>
+    <string name="result_score">평점 %1$d</string>
+    <string name="result_next_grade">다음 등급 %1$s까지 %2$d점</string>
+    <string name="result_goals">득점 %1$d · 실점 %2$d</string>
+    <string name="result_pending">결과 집계 중</string>
+    <string name="result_pending_body">연결되면 자동으로 전송돼요</string>
+    <string name="result_no_turn_body">이번 경기는 평점 없이 기록돼요</string>
+    <string name="result_excluded_short">짧은 이동은 경기에서 제외돼요</string>
+    <string name="result_rejected">결과를 올리지 못했어요</string>
+    <string name="result_not_found">경기 기록을 찾지 못했어요</string>
+    <string name="result_metrics_title">이번 경기 스탯</string>
+    <string name="result_metrics_hint">탭하면 항목 상세</string>
+    <string name="result_metric_turn_signal">깜빡이 사용</string>
+    <string name="result_metric_smooth">부드러운 가감속</string>
+    <string name="result_metric_safety">안전 경고</string>
+    <string name="result_metric_headlight">야간 전조등</string>
+    <string name="result_metric_pending">집계 중</string>
+    <string name="result_metric_no_turn">회전 없음</string>
+    <string name="result_metric_unsupported">이 차량 미지원</string>
+    <string name="result_metric_excluded">경기 제외</string>
+    <string name="result_metric_not_scored">점수 없음</string>
+    <string name="result_metric_coming_soon">준비 중</string>
+    <string name="result_metric_not_applicable">이번 운행엔 해당 없음</string>
+    <string name="result_open_plays">플레이 보기</string>
+    <string name="result_points">+%1$dP 적립</string>
+    <string name="result_quest">퀘스트 · %1$s</string>
+    <string name="result_done">확인</string>
+    <string name="result_goals_label">득점 · 깜빡이 켬</string>
+    <string name="result_conceded_label">실점 · 안 켬</string>
+    <string name="result_outcome_perfect">완승</string>
+    <string name="result_outcome_win">승리!</string>
+    <string name="result_outcome_draw">무승부</string>
+    <string name="result_outcome_tough">아쉬운 경기</string>
+    <string name="result_no_turn_match">회전 없는 경기</string>
+    <string name="result_tip_title">다음 경기 팁</string>
+    <string name="result_tip_turn_signal">회전 %1$d초 전에 깜빡이를 켜 보세요.</string>
+
+    <!-- 항목 상세 (SCR-02b) -->
+    <string name="detail_score">%1$d점</string>
+    <string name="detail_counts">회전 %1$d번 · 제때 %2$d · 늦게 %3$d · 안 켬 %4$d</string>
+    <string name="detail_counts_local">서버 판정을 받기 전이라 기기 기록으로 셌어요</string>
+    <string name="metric_detail_weight">적용 가중치 %1$d%%</string>
+    <string name="detail_tip">이렇게 해 보세요</string>
+    <string name="detail_turns">이번 운행의 회전</string>
+    <string name="summary_turn_left_short">좌회전</string>
+    <string name="summary_turn_right_short">우회전</string>
+
+    <!-- 플레이 타임라인 (SCR-02a) -->
+    <string name="plays_header">%1$s ~ %2$s · %3$.1f km · 플레이 %4$d</string>
+    <string name="plays_left_goal">좌회전 득점</string>
+    <string name="plays_left_conceded">좌회전 실점</string>
+    <string name="plays_right_goal">우회전 득점</string>
+    <string name="plays_right_conceded">우회전 실점</string>
+    <string name="plays_signal_on">깜빡이 켬</string>
+    <string name="plays_signal_off">깜빡이 안 켬</string>
+    <string name="plays_empty">측정한 회전이 없어요</string>
+    <string name="plays_hint">타임라인의 점을 누르면 해당 플레이로 이동</string>
+    <string name="plays_title">경기 하이라이트</string>
+    <string name="plays_timeline_start">출발 %1$s</string>
+    <string name="plays_timeline_end">도착 %1$s</string>
+    <string name="plays_card_label">플레이 %1$d · %2$s</string>
+    <string name="plays_goal_word">GOAL!</string>
+    <string name="plays_miss_word">MISS</string>
+    <string name="plays_dot_description">플레이 %1$d · %2$s 보기</string>
+    <string name="plays_back">돌아가기</string>
+
+    <!-- 오늘의 퀘스트 -->
+    <string name="mission_label">오늘의 퀘스트</string>
+    <string name="mission_status_in_progress">진행 중</string>
+    <string name="mission_status_achieved">달성</string>
+    <string name="mission_status_failed">지난 퀘스트 미달성</string>
+    <string name="mission_hint_achieved">오늘 퀘스트를 달성했어요</string>
+    <string name="mission_unavailable">퀘스트를 불러오지 못했어요</string>
+    <string name="mission_open">오늘의 퀘스트</string>
+    <string name="mission_back">돌아가기</string>
+
+    <!-- 온보딩 (SCR-00) -->
+    <string name="onboarding_title">깜빡이리그</string>
+    <string name="onboarding_nickname">닉네임 (리그에는 닉네임만 보여요)</string>
+    <string name="onboarding_nickname_hint">2~12자</string>
+    <string name="onboarding_nickname_length">닉네임은 2~12자로 입력해 주세요</string>
+    <string name="onboarding_nickname_taken">이미 쓰는 닉네임이에요</string>
+    <string name="onboarding_region">활동 지역</string>
+    <string name="onboarding_pick_region">활동 지역을 골라 주세요</string>
+    <string name="onboarding_capabilities">내 차량 측정 가능 항목</string>
+    <string name="onboarding_capabilities_checking">차량을 확인하고 있어요</string>
+    <string name="onboarding_cap_turn_signal">방향지시등</string>
+    <string name="onboarding_cap_steering">핸들 각도</string>
+    <string name="onboarding_cap_gear">기어</string>
+    <string name="onboarding_cap_speed">속도</string>
+    <string name="onboarding_cap_supported">측정</string>
+    <string name="onboarding_cap_unsupported">이 차량 미지원 · 점수 제외</string>
+    <string name="onboarding_cap_no_permission">권한 필요</string>
+    <string name="onboarding_speed_title">속도 권한</string>
+    <string name="onboarding_speed_body">천천히 움직일 때의 회전을 걸러내고 운행 거리를 재려고 차량 속도를 써요. 시스템 창에는 \"위치 정보\"로 표시돼요.</string>
+    <string name="onboarding_speed_request">속도 권한 허용하기</string>
+    <string name="onboarding_speed_granted">허용됨</string>
+    <string name="onboarding_speed_denied">허용하지 않아도 리그에 입장할 수 있어요. 판정 정확도가 조금 낮아져요</string>
+    <string name="onboarding_submit">리그 입장</string>
+    <string name="onboarding_submitting">등록하고 있어요</string>
+    <string name="onboarding_error_offline">연결되지 않아 등록하지 못했어요. 연결 후 다시 시도해 주세요</string>
+    <string name="onboarding_error_failed">등록하지 못했어요. 다시 시도해 주세요</string>
+
+    <!-- 홈 (SCR-01) -->
+    <string name="home_quest_label">오늘의 퀘스트</string>
+    <string name="home_quest_loading">퀘스트를 불러오고 있어요</string>
+    <string name="home_recent_title">최근 경기</string>
+    <string name="home_streak_today_done">오늘도 달성</string>
+    <string name="home_streak_today_todo">오늘 달성하면 이어져요</string>
+    <string name="home_recent_empty">아직 경기가 없어요\n운행을 마치면 여기에 보여요</string>
+    <string name="home_day_today">오늘 %1$s</string>
+    <string name="home_day_yesterday">어제 %1$s</string>
+    <string name="home_day_other">%1$s %2$s</string>
+    <string name="home_score">평점 %1$d</string>
+    <string name="home_state_pending">결과 집계 중</string>
+    <string name="home_state_no_turn">회전 없는 경기</string>
+    <string name="home_state_excluded_short">짧은 이동은 경기에서 제외돼요</string>
+    <string name="home_state_rejected">결과를 올리지 못했어요</string>
+    <string name="home_notice_no_speed">속도 권한이 없어 판정 정확도가 제한돼요</string>
+    <string name="home_notice_recording_off">기록이 꺼져 있어요 · 앱을 열면 다시 시작돼요</string>
+    <string name="home_status_waiting">출전 대기 중 · 출발하면 경기가 시작돼요</string>
+    <string name="home_status_recording">운행을 기록하고 있어요</string>
+    <string name="home_status_off">기록이 꺼져 있어요</string>
+    <string name="home_demo">시나리오 재생</string>
+
+    <!-- 하단 탭 (2차) -->
+    <string name="tab_home">홈</string>
+    <string name="tab_achievements">업적</string>
+    <string name="tab_wallet">지갑</string>
+
+    <!-- 리그 (SCR-04) -->
+    <string name="tab_league">리그</string>
+    <string name="league_season_month">%1$d월 시즌</string>
+    <string name="league_season_end">시즌 종료</string>
+    <string name="league_dday">D-%1$d</string>
+    <string name="league_my_rank">내 순위</string>
+    <string name="league_rank_unit">위</string>
+    <string name="league_rank_of">참여자 %1$d명 중</string>
+    <string name="league_me">%1$s (나)</string>
+    <string name="league_my_score">내 리그 점수</string>
+    <string name="league_not_ranked">아직 순위가 없어요 · 참여자 %1$d명</string>
+    <string name="league_rank_hidden">참여자가 %1$d명이 되면 순위가 공개돼요 (지금 %2$d명)</string>
+    <string name="league_qualified">이번 시즌 순위 자격을 채웠어요</string>
+    <string name="league_qualify_rule">이번 시즌 %1$dkm 또는 %2$d번 운행하면 순위에 올라요</string>
+    <string name="league_season_progress">이번 시즌 %1$.1fkm · %2$d번 운행</string>
+    <string name="league_score_breakdown">평균 %1$s점 + 시즌 포인트 %2$dP</string>
+    <string name="league_championships">우승 칭호 · %1$s</string>
+    <string name="league_championship_item">%1$s %2$s</string>
+    <string name="league_ranking">리그 순위</string>
+    <string name="league_regions">지역 안전지수</string>
+    <string name="league_regions_empty">순위가 공개된 지역이 아직 없어요</string>
+    <string name="league_no_region">내 지역의 리그가 아직 없어요</string>
+    <string name="league_unavailable">리그를 불러오지 못했어요\n서버에 리그가 열리면 볼 수 있어요</string>
+
+    <!-- 업적 (SCR-05) -->
+    <string name="achievements_streak">퀘스트 연속 달성</string>
+    <string name="achievements_today_done">오늘 퀘스트를 달성했어요</string>
+    <string name="achievements_today_todo">오늘 퀘스트를 달성하면 이어져요</string>
+    <string name="achievements_reward_in">%1$d일 더 달성하면 +%2$dP</string>
+    <string name="achievements_shelf">트로피 진열장</string>
+    <string name="achievements_earned_count">획득 %1$d</string>
+    <string name="achievements_count">획득 %1$d / 전체 %2$d</string>
+    <string name="achievements_badges_empty">아직 받을 수 있는 배지가 없어요</string>
+    <string name="achievements_locked">잠김</string>
+    <string name="achievements_earned">획득</string>
+    <string name="achievements_earned_on">%1$s 획득</string>
+    <string name="achievements_unavailable">업적을 불러오지 못했어요</string>
+
+    <!-- 주간 리포트 (SCR-07) -->
+    <string name="report_open">주간 리포트</string>
+    <string name="report_title">주간 리포트 · %1$s</string>
+    <string name="report_previous">이전 주</string>
+    <string name="report_next">다음 주</string>
+    <string name="report_back">돌아가기</string>
+    <string name="report_summary">이 주의 운행</string>
+    <string name="report_trips">운행 %1$d번 · %2$.1f km</string>
+    <string name="report_no_trips">이 주에는 운행이 없었어요</string>
+    <string name="report_last_mission">이 주의 맞춤 미션</string>
+    <string name="report_mission_achieved">달성</string>
+    <string name="report_mission_failed">미달성</string>
+    <string name="report_mission_assigned">진행 중</string>
+    <string name="report_next_mission">다음 주 맞춤 미션</string>
+    <string name="report_next_registered">다음 주 퀘스트로 등록됐어요</string>
+    <string name="report_mission_min_km">%1$.0fkm 이상 운행한 주에 판정</string>
+    <string name="report_metrics">항목별 점수 (지난주 대비)</string>
+    <string name="report_metrics_empty">점수가 난 운행이 없어 비교할 항목이 없어요</string>
+    <string name="report_weakest">가장 약한 항목</string>
+    <string name="report_no_record">기록 없음</string>
+    <string name="report_up">▲ %1$d</string>
+    <string name="report_down">▼ %1$d</string>
+    <string name="report_same">변화 없음</string>
+    <string name="report_unavailable">리포트를 불러오지 못했어요</string>
+    <string name="metric_signal_cancel">깜빡이 끄기</string>
+    <string name="metric_turn_speed">회전 속도</string>
+    <string name="metric_seat_belt">안전벨트</string>
+    <string name="metric_rain_driving">우천 운전</string>
+
+    <!-- 설정 (SCR-08) -->
+    <string name="tab_settings">설정</string>
+    <string name="settings_profile">내 정보</string>
+    <string name="settings_nickname">닉네임</string>
+    <string name="settings_region">활동 지역</string>
+    <string name="settings_profile_note">닉네임과 지역은 아직 바꿀 수 없어요</string>
+    <string name="settings_app">앱 정보</string>
+    <string name="settings_version">버전</string>
+    <string name="settings_mode">연결</string>
+    <string name="settings_mode_server">서버</string>
+    <string name="settings_mode_local">체험 모드 (서버 연결 없음)</string>
+    <string name="settings_permissions">권한</string>
+    <string name="settings_permission_denied">허용 안 됨</string>
+    <string name="settings_permission_not_requested">아직 묻지 않음</string>
+    <string name="settings_open_app_settings">시스템 설정에서 허용하기</string>
+    <string name="settings_recording">운행 기록</string>
+
+    <!-- 지갑 (SCR-06) -->
+    <string name="wallet_balance">내 포인트</string>
+    <string name="wallet_points">%1$,dP</string>
+    <string name="wallet_today">오늘 적립</string>
+    <string name="wallet_today_of_cap">%1$d / %2$dP</string>
+    <string name="wallet_cap_reached">오늘 적립 한도를 채웠어요. 내일 다시 쌓여요</string>
+    <string name="wallet_history">적립 내역</string>
+    <string name="wallet_empty">아직 적립한 포인트가 없어요\n운행을 마치면 쌓여요</string>
+    <string name="wallet_unavailable">포인트를 불러오지 못했어요</string>
+    <string name="wallet_reason_trip">운행 적립</string>
+    <string name="wallet_reason_mission">오늘의 퀘스트 달성</string>
+    <string name="wallet_reason_streak">7일 연속 달성</string>
+    <string name="wallet_reason_other">적립</string>
+    <string name="wallet_trip_detail">%1$s · %2$.1fkm × 평점 %3$d</string>
+    <string name="wallet_amount">+%1$dP</string>
+
+    <!-- 주행 중 화면 (점수·숫자 없음) -->
+    <string name="drv_recording">기록 중</string>
+    <string name="drv_recording_body">정차하면 결과를 볼 수 있어요</string>
+    <string name="drv_recording_off">기록이 꺼져 있어요</string>
+    <string name="drv_recording_off_body">앱을 열면 다시 시작돼요</string>
+    <string name="drv_vehicle_unknown">차량 상태를 확인할 수 없어요</string>
+    <string name="drv_vehicle_unknown_body">기어를 P에 두면 화면을 볼 수 있어요</string>
+    <string name="drv_checking">차량 상태를 확인하고 있어요</string>
+
+    <!-- 퀘스트 상세 (SCR-03) -->
+    <string name="quest_label">오늘의 퀘스트 · 일간</string>
+    <string name="quest_condition_turns">회전 %1$d회 이상</string>
+    <string name="quest_condition_rate">깜빡이 사용률 %1$d%%</string>
+    <string name="quest_progress_count">%1$d / %2$d</string>
+    <string name="quest_progress_rate">%1$d%%</string>
+    <string name="quest_status_failed">미달성</string>
+    <string name="quest_reward_label">달성 보상</string>
+    <string name="quest_reward">+%1$dP</string>
+    <string name="quest_retry">다음 경기에서 재도전</string>
+    <string name="quest_done">확인</string>
+
+    <!-- 운행 수집 서비스 알림 (점수·결과는 알림으로 보여주지 않음) -->
+    <string name="collection_channel">운행 기록</string>
+    <string name="collection_notification">깜빡이리그 · 기록 중</string>
+
+    <string name="settings_league">리그</string>
+    <string name="settings_league_visible">리그 순위에 내 닉네임 공개</string>
+    <string name="settings_league_visible_note">끄면 순위 · 지역 안전지수 · 시즌 우승에서 빠져요. 내 점수는 계속 볼 수 있어요</string>
+    <string name="settings_league_failed">저장하지 못했어요. 연결을 확인한 뒤 다시 눌러 주세요</string>
+    <!-- 게임 UI PR-B: 홈 로비 · 퀘스트 (plan-ui 8장) -->
+    <string name="game_quest_ring_unit">회전</string>
+    <string name="game_check">✓</string>
+    <string name="game_quest_hint_next">다음 경기에서 회전 %1$d번 모두 득점하면 클리어</string>
+    <string name="game_quest_clear">CLEAR</string>
+    <string name="game_streak_unit">연승</string>
+    <string name="game_streak_days">%1$d연승</string>
+    <string name="game_streak_next_reward">%1$d일 더 이어가면 %2$d연승 · 연속 보상 +%3$dP</string>
+    <string name="game_quest_streak_if_clear">클리어하면 %1$s</string>
+    <string name="game_quest_streak_today">오늘 클리어로 %1$s</string>
+    <string name="game_quest_streak_if_clear_reward">클리어하면 %1$s · 연속 보상 +%2$dP</string>
+    <string name="game_quest_streak_today_reward">오늘 클리어로 %1$s · 연속 보상 +%2$dP 받았어요</string>
+    <string name="game_recent_meta">%1$s · %2$.1fkm</string>
+    <string name="game_outcome_perfect">완승</string>
+    <string name="game_outcome_win">승리</string>
+    <string name="game_outcome_draw">무승부</string>
+    <string name="game_outcome_tough">아쉬운 경기</string>
 </resources>
