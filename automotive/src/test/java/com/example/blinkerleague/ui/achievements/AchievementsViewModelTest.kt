@@ -94,4 +94,13 @@ class AchievementsViewModelTest {
         // then
         assertEquals(3, filled)
     }
+
+    @Test
+    fun `연승이 주기의 배수면 진행 점을 모두 채운다`() {
+        // when
+        val filled = listOf(7, 14).map { streakDotsFilled(days = it, period = 7) }
+
+        // then
+        assertEquals(listOf(7, 7), filled)
+    }
 }
