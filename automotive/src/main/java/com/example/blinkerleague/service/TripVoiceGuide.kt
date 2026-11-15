@@ -2,6 +2,7 @@ package com.example.blinkerleague.service
 
 import com.example.blinkerleague.domain.config.TripConfig
 import com.example.blinkerleague.domain.config.TurnConfig
+import com.example.blinkerleague.domain.model.Streak
 import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.domain.model.TripResult
 import com.example.blinkerleague.voice.VoiceAnnouncer
@@ -24,6 +25,8 @@ class TripVoiceGuide(
     private val scope: CoroutineScope,
     /** 회전 기준값. 종료 안내의 "N초 전" 팁에 씀 (서버에서 바뀔 수 있음) */
     private val turnConfig: () -> TurnConfig = { TurnConfig() },
+    /** 연승 기록. 못 받으면 null (시동 안내에서 연승을 뺌) */
+    private val streak: suspend () -> Streak? = { null },
 ) {
     private val startAnnounced = mutableSetOf<String>()
     private val endAnnounced = mutableSetOf<String>()
