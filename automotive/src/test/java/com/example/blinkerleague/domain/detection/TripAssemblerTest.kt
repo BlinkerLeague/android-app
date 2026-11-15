@@ -4,7 +4,9 @@ import com.example.blinkerleague.data.scenario.Scenarios
 import com.example.blinkerleague.domain.config.Coordinate
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.model.BrakeSample
+import com.example.blinkerleague.domain.model.Gear
 import com.example.blinkerleague.domain.model.HeadlightSample
+import com.example.blinkerleague.domain.model.SeatBeltSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.SteeringSample
@@ -12,6 +14,7 @@ import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.TripEvent
 import com.example.blinkerleague.domain.model.TurnDirection
 import com.example.blinkerleague.domain.model.TurnSignalState
+import com.example.blinkerleague.domain.model.VehicleStateSample
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -189,6 +192,34 @@ class TripAssemblerTest {
         // then
         assertEquals(
             listOf(TripEvent.NightSegmentEvent(id = "event-1", occurredAtMs = kst(22, 0), durationSec = 600, headlightOffSec = 240)),
+            trip.events,
+        )
+    }
+
+    @Test
+    fun `운행당 SEAT_BELT 이벤트 하나를 출발 시각에 만든다`() {
+        // given
+        // 운행 0s ~ 60s. 0s 기어 P → 5s D로 출발, 출발부터 1초 간격으로 30km/h
+        // 벨트: 운행 전 -1s에 착용, 운행 내내 그대로
+        val vehicleStates = listOf(
+            VehicleStateSample(0, ignitionOn = null, gear = Gear.P),
+            VehicleStateSample(5_000, ignitionOn = null, gear = Gear.D),
+        )
+        val speeds = (5_000L..60_000L step 1_000).map { SpeedSample(it, 30f) }
+        val seatBelts = listOf(SeatBeltSample(-1_000, buckled = true))
+
+        // when
+        val trip = assembler.assemble(
+            tripId = "t",
+            startedAtMs = 0,
+            endedAtMs = 60_000,
+            recording = TripRecording(emptyList(), emptyList(), vehicleStates, emptyList(), speeds = speeds, seatBelts = seatBelts),
+            supported = setOf(SignalType.SEAT_BELT, SignalType.SPEED),
+        )
+
+        // then
+        assertEquals(
+            listOf(TripEvent.SeatBeltEvent(id = "event-1", occurredAtMs = 5_000, buckledAtDeparture = true, unbuckledMovingSec = 0)),
             trip.events,
         )
     }

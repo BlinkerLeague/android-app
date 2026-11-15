@@ -86,6 +86,7 @@ class TripMapper(
                 occurredAtMs = event.occurredAtMs,
                 payload = json.encodeToString(NightSegmentPayload(event.durationSec, event.headlightOffSec)),
             )
+            is TripEvent.SeatBeltEvent -> TODO()
         }
     }
 

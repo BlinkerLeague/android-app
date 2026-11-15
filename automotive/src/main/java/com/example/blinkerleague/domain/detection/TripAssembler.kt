@@ -5,6 +5,7 @@ import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.HeadlightSample
 import com.example.blinkerleague.domain.model.LocationSample
+import com.example.blinkerleague.domain.model.SeatBeltSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.SpeedSample
@@ -27,6 +28,8 @@ data class TripRecording(
     val brakes: List<BrakeSample> = emptyList(),
     /** 하향등 상태 변화. 야간 전조등 판정에 씀 */
     val headlights: List<HeadlightSample> = emptyList(),
+    /** 운전석 안전벨트 착용 상태를 읽은 값. 안전벨트 판정에 씀 */
+    val seatBelts: List<SeatBeltSample> = emptyList(),
 )
 
 /**

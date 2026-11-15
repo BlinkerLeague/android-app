@@ -54,4 +54,12 @@ sealed interface TripEvent {
         val durationSec: Int,
         val headlightOffSec: Int,
     ) : TripEvent
+
+    /** 안전벨트 (운행당 1건). [occurredAtMs]는 출발 시각, [unbuckledMovingSec]는 주행 중 벨트를 안 맨 시간 */
+    data class SeatBeltEvent(
+        override val id: String,
+        override val occurredAtMs: Long,
+        val buckledAtDeparture: Boolean,
+        val unbuckledMovingSec: Int,
+    ) : TripEvent
 }
