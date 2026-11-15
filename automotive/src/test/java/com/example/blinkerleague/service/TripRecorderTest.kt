@@ -14,8 +14,10 @@ import com.example.blinkerleague.data.scenario.scenario
 import com.example.blinkerleague.data.vehicle.FakeVehicleSignalSource
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.Gear
 import com.example.blinkerleague.domain.model.ScoreState
+import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.TurnDirection
 import com.example.blinkerleague.domain.model.TurnSignalState
 import com.example.blinkerleague.ui.result.toPlaysUiState
@@ -162,5 +164,34 @@ class TripRecorderTest {
         val finished = recorder.state.value as RecorderState.Finished
         val turn = repository.observeResult(finished.tripId).first()!!.turns.single()
         assertEquals(true, turn.signalOn)
+    }
+
+    @Test
+    fun `운행 중 브레이크 샘플을 모으고 운행 전 상태를 이어받아 급감속을 저장한다`() = runTest {
+        // given
+        // 0s에 브레이크를 밟은 채 2초 정차 → 2s 출발, 30km/h로 10초 → 15km/h로 10초(1초에 15km/h 감속) → 종료
+        // 브레이크는 운행 시작 전에 한 번 밟은 뒤 상태 변화가 없음
+        val s = scenario("브레이크 밟은 채 출발 후 급감속") {
+            stop(seconds = 2)
+            start()
+            straight(seconds = 10, speedKmh = 30f)
+            straight(seconds = 10, speedKmh = 15f)
+            end()
+        }.let {
+            it.copy(
+                supported = it.supported + SignalType.SPEED + SignalType.BRAKE,
+                brakes = listOf(BrakeSample(0, pressed = true)),
+            )
+        }
+        val recorder = recorder(s)
+        backgroundScope.launch { recorder.run() }
+
+        // when
+        advanceTimeBy(s.durationMs + 1_000)
+
+        // then
+        val finished = recorder.state.value as RecorderState.Finished
+        val types = db.tripDao().trip(finished.tripId)!!.events.map { it.type }
+        assertTrue("저장된 이벤트: $types", "HARSH_BRAKE" in types)
     }
 }

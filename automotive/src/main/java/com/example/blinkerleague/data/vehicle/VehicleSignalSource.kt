@@ -1,5 +1,6 @@
 package com.example.blinkerleague.data.vehicle
 
+import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.CapabilityReport
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
@@ -7,6 +8,7 @@ import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.VehicleStateSample
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 /**
  * 차량 신호 공급원. 실제 구현체([PleosVehicleSignalSource])와 Fake 구현체([FakeVehicleSignalSource])가 있음.
@@ -33,4 +35,8 @@ interface VehicleSignalSource {
 
     /** 차량 속도 (km/h). 정차 판단, 저속 회전 제외, 운행 거리(적분)에 씀 */
     val speeds: Flow<SpeedSample>
+
+    /** 브레이크 페달 눌림 상태 변화 (급감속 판정 입력). 기본은 보내지 않음(미지원) */
+    val brakes: Flow<BrakeSample>
+        get() = emptyFlow()
 }

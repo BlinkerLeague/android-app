@@ -1,5 +1,6 @@
 package com.example.blinkerleague.data.scenario
 
+import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.LocationSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
@@ -16,6 +17,8 @@ data class Scenario(
     val signals: List<SignalSample>,
     val vehicleStates: List<VehicleStateSample>,
     val supported: Set<SignalType> = setOf(SignalType.TURN_SIGNAL, SignalType.STEERING_ANGLE),
+    /** 브레이크 페달 상태 변화 */
+    val brakes: List<BrakeSample> = emptyList(),
 ) {
     val durationMs: Long
         get() = listOfNotNull(
