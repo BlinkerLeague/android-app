@@ -2,6 +2,7 @@ package com.example.blinkerleague.data.vehicle
 
 import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.CapabilityReport
+import com.example.blinkerleague.domain.model.HeadlightSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.SpeedSample
@@ -38,5 +39,9 @@ interface VehicleSignalSource {
 
     /** 브레이크 페달 눌림 상태 변화 (급감속 판정 입력). 기본은 보내지 않음(미지원) */
     val brakes: Flow<BrakeSample>
+        get() = emptyFlow()
+
+    /** 하향등 켜짐 상태 변화 (야간 전조등 판정 입력). 기본은 보내지 않음(미지원) */
+    val headlights: Flow<HeadlightSample>
         get() = emptyFlow()
 }

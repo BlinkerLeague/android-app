@@ -3,6 +3,7 @@ package com.example.blinkerleague.service
 import com.example.blinkerleague.data.location.LocationSource
 import com.example.blinkerleague.data.repository.TripRepository
 import com.example.blinkerleague.data.vehicle.VehicleSignalSource
+import com.example.blinkerleague.domain.config.Coordinate
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.detection.TripAssembler
 import com.example.blinkerleague.domain.detection.TripBoundary
@@ -22,6 +23,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import java.time.ZoneId
+import java.time.ZoneOffset
 
 sealed interface RecorderState {
     /** 운행 전 (시동 대기) */
@@ -42,6 +45,8 @@ sealed interface RecorderState {
  * 백그라운드 수집 방식(Foreground Service 등)은 스파이크 2번 결과에 따라 이 클래스를 감싸서 만듦.
  *
  * @param clock P단 3분 경과를 확인할 현재 시각. 공급원 타임스탬프와 같은 시간 기준이어야 함
+ * @param coordinate 등록 지역의 대표 좌표 (야간 판정용). 운행이 끝날 때 읽음. 모르면 null
+ * @param zone 일출 · 일몰 날짜를 정하는 시간대
  */
 class TripRecorder(
     private val vehicle: VehicleSignalSource,
@@ -51,6 +56,8 @@ class TripRecorder(
     private val clock: () -> Long,
     private val newId: () -> String,
     private val tickIntervalMs: Long = 1_000L,
+    private val coordinate: () -> Coordinate? = { null },
+    private val zone: ZoneId = ZoneOffset.UTC,
 ) {
     private val _state = MutableStateFlow<RecorderState>(RecorderState.Idle)
     val state: StateFlow<RecorderState> = _state.asStateFlow()

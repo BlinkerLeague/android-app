@@ -5,6 +5,7 @@ import com.example.blinkerleague.data.scenario.replay
 import com.example.blinkerleague.domain.model.Availability
 import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.CapabilityReport
+import com.example.blinkerleague.domain.model.HeadlightSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.SpeedSample
@@ -32,6 +33,7 @@ class FakeVehicleSignalSource(
             gear = Availability.SUPPORTED,
             speed = Availability.SUPPORTED,
             brake = of(SignalType.BRAKE),
+            headlight = of(SignalType.HEADLIGHT),
         )
     }
 
@@ -52,4 +54,7 @@ class FakeVehicleSignalSource(
 
     override val brakes: Flow<BrakeSample> =
         replay(scenario.brakes, { it.timestampMs }, speed) { it.copy(timestampMs = startMs + it.timestampMs) }
+
+    override val headlights: Flow<HeadlightSample> =
+        replay(scenario.headlights, { it.timestampMs }, speed) { it.copy(timestampMs = startMs + it.timestampMs) }
 }

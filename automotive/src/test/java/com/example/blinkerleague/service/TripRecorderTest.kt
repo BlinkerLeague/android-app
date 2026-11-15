@@ -12,10 +12,12 @@ import com.example.blinkerleague.data.scenario.Scenario
 import com.example.blinkerleague.data.scenario.Scenarios
 import com.example.blinkerleague.data.scenario.scenario
 import com.example.blinkerleague.data.vehicle.FakeVehicleSignalSource
+import com.example.blinkerleague.domain.config.Coordinate
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.config.GradeThreshold
 import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.Gear
+import com.example.blinkerleague.domain.model.HeadlightSample
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.TurnDirection
@@ -36,6 +38,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.concurrent.Executor
 
 @RunWith(RobolectricTestRunner::class)
@@ -193,5 +196,44 @@ class TripRecorderTest {
         val finished = recorder.state.value as RecorderState.Finished
         val types = db.tripDao().trip(finished.tripId)!!.events.map { it.type }
         assertTrue("저장된 이벤트: $types", "HARSH_BRAKE" in types)
+    }
+
+    @Test
+    fun `운행 중 하향등 샘플을 모아 야간 운행에서 NIGHT_SEGMENT를 저장한다`() = runTest {
+        // given
+        // 2026-11-15 22:00 KST(밤)에 시나리오 시작, 서울 대표 좌표 · Asia/Seoul
+        // 2초 정차 → 출발, 30km/h로 60초 → 종료. 하향등은 운행 시작 전에 꺼진 뒤 상태 변화가 없음
+        val zone = ZoneId.of("Asia/Seoul")
+        val nightStartMs = ZonedDateTime.of(2026, 11, 15, 22, 0, 0, 0, zone).toInstant().toEpochMilli()
+        val s = scenario("밤에 하향등 끈 채 운행") {
+            stop(seconds = 2)
+            start()
+            straight(seconds = 60, speedKmh = 30f)
+            end()
+        }.let {
+            it.copy(
+                supported = it.supported + SignalType.HEADLIGHT,
+                headlights = listOf(HeadlightSample(0, on = false)),
+            )
+        }
+        val recorder = TripRecorder(
+            vehicle = FakeVehicleSignalSource(s, startMs = nightStartMs),
+            location = FakeLocationSource(s, startMs = nightStartMs),
+            repository = repository,
+            config = DetectionConfig.DEFAULT,
+            clock = { nightStartMs + testScheduler.currentTime },
+            newId = { "id-${++seq}" },
+            coordinate = { Coordinate(37.57, 126.98) },
+            zone = zone,
+        )
+        backgroundScope.launch { recorder.run() }
+
+        // when
+        advanceTimeBy(s.durationMs + 1_000)
+
+        // then
+        val finished = recorder.state.value as RecorderState.Finished
+        val types = db.tripDao().trip(finished.tripId)!!.events.map { it.type }
+        assertTrue("저장된 이벤트: $types", "NIGHT_SEGMENT" in types)
     }
 }
