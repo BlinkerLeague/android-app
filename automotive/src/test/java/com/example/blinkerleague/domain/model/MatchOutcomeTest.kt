@@ -22,4 +22,13 @@ class MatchOutcomeTest {
         // then
         assertEquals(MatchOutcome.DRAW, outcome)
     }
+
+    @Test
+    fun `득점이 실점보다 적으면 아쉬운 경기`() {
+        // when
+        val outcome = MatchOutcome.of(goals = 1, conceded = 3)
+
+        // then
+        assertEquals(MatchOutcome.TOUGH, outcome)
+    }
 }
