@@ -47,7 +47,6 @@ class VoiceScriptTest {
     @Test
     fun `종료 안내 - 결과별 문구`() {
         assertEquals("운행이 끝났어요. 회전 네 번 중 세 번 깜빡이를 제때 켰어요.", VoiceScript.tripEnd(result(5.0, true, true, false, true), 1.0))
-        assertEquals("운행이 끝났어요. 회전 두 번 모두 깜빡이를 제때 켰어요. 멋져요.", VoiceScript.tripEnd(result(5.0, true, true), 1.0))
         assertEquals("운행이 끝났어요. 다음 회전에는 깜빡이를 미리 켜 봐요.", VoiceScript.tripEnd(result(5.0, false), 1.0))
     }
 
@@ -75,6 +74,19 @@ class VoiceScriptTest {
 
         // then
         assertEquals("경기 종료. 오늘은 회전 없는 경기였어요.", script)
+    }
+
+    @Test
+    fun `종료 - 모두 득점하면 퍼펙트 승리라고 말한다`() {
+        // given
+        // 회전 두 번 모두 깜빡이 켬 → 2 대 0
+        val perfect = result(5.0, true, true)
+
+        // when
+        val script = VoiceScript.tripEnd(perfect, 1.0)
+
+        // then
+        assertEquals("경기 종료! 2 대 0 퍼펙트 승리입니다!", script)
     }
 
     @Test
