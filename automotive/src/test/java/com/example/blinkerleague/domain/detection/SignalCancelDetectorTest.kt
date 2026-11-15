@@ -78,4 +78,24 @@ class SignalCancelDetectorTest {
         // then
         assertEquals(emptyList<SignalLeftOn>(), result)
     }
+
+    @Test
+    fun `운행 시작 전부터 켜져 있던 깜빡이는 운행 시작부터 재고 이벤트 시각도 운행 안에 둔다`() {
+        // given
+        // 운행 30s ~ 150s. 운행 전 10s에 왼쪽 깜빡이를 켜고 80s에 끔, 회전 없이 50km/h
+        val signals = listOf(SignalSample(10_000, LEFT), SignalSample(80_000, OFF))
+        val speeds = constantSpeed(0, 150_000, 50f)
+
+        // when
+        val result = detector.detect(
+            signals = signals,
+            turns = emptyList(),
+            speeds = speeds,
+            tripStartMs = 30_000,
+            tripEndMs = 150_000,
+        )
+
+        // then
+        assertEquals(listOf(SignalLeftOn(occurredAtMs = 30_000, durationSec = 50)), result)
+    }
 }
