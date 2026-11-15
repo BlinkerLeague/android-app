@@ -24,6 +24,8 @@ data class TripRecording(
  * 끝난 운행의 시계열을 모아 [Trip]으로 만듦: 핸들 각도로 회전 감지 → 깜빡이 판정 → 이벤트, 거리 계산(속도 적분 우선).
  *
  * - 방향지시등(TURN_SIGNAL)과 핸들 각도(STEERING_ANGLE)가 모두 지원돼야 회전 이벤트를 만듦 (아니면 서버에서 항목 제외)
+ * - 거기에 속도(SPEED)까지 지원되면 깜빡이를 켠 채 잊은 이벤트도 만듦
+ * - 이벤트는 발생 시각 순으로 정렬함
  * - 핸들 각도·위치는 운행 구간 안의 것만 씀
  * - id 생성은 밖에서 주입 ([newId]) — 테스트에서 고정값을 쓸 수 있게
  */
@@ -33,6 +35,7 @@ class TripAssembler(
 ) {
     private val detector = SteeringTurnDetector(config.turn)
     private val judge = SignalJudge(config.turn)
+    private val signalCancelDetector = SignalCancelDetector(config.signalCancel)
 
     fun assemble(
         tripId: String,
@@ -45,14 +48,18 @@ class TripAssembler(
         val locations = recording.locations.filter { it.timestampMs in window }
 
         val canMeasureTurns = SignalType.TURN_SIGNAL in supported && SignalType.STEERING_ANGLE in supported
-        val turnEvents = if (canMeasureTurns) {
-            val turns = detector.detect(
+        val turns = if (canMeasureTurns) {
+            detector.detect(
                 steering = recording.steering.filter { it.timestampMs in window },
                 vehicleStates = recording.vehicleStates,
                 signals = recording.signals,
                 locations = locations,
                 speeds = recording.speeds,
             )
+        } else {
+            emptyList()
+        }
+        val turnEvents = if (canMeasureTurns) {
             judge.judge(turns, recording.signals).map {
                 TripEvent.TurnEvent(
                     id = newId(),
@@ -61,6 +68,13 @@ class TripAssembler(
                     signalOn = it.signalOn,
                     uTurn = it.turn.uTurn,
                 )
+            }
+        } else {
+            emptyList()
+        }
+        val signalLeftOnEvents = if (canMeasureTurns && SignalType.SPEED in supported) {
+            signalCancelDetector.detect(recording.signals, turns, recording.speeds, startedAtMs, endedAtMs).map {
+                TripEvent.SignalLeftOnEvent(id = newId(), occurredAtMs = it.occurredAtMs, durationSec = it.durationSec)
             }
         } else {
             emptyList()
@@ -76,7 +90,7 @@ class TripAssembler(
                 TripDistance.km(locations)
             },
             supported = supported,
-            events = turnEvents,
+            events = (turnEvents + signalLeftOnEvents).sortedBy { it.occurredAtMs },
         )
     }
 }
