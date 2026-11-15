@@ -46,4 +46,12 @@ sealed interface TripEvent {
         override val id: String,
         override val occurredAtMs: Long,
     ) : TripEvent
+
+    /** 야간 주행 구간. [durationSec]는 운행 중 일몰 ~ 일출에 걸친 시간, [headlightOffSec]는 그 동안 하향등이 꺼져 있던 시간 */
+    data class NightSegmentEvent(
+        override val id: String,
+        override val occurredAtMs: Long,
+        val durationSec: Int,
+        val headlightOffSec: Int,
+    ) : TripEvent
 }

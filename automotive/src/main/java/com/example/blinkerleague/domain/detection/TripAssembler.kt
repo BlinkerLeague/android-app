@@ -1,7 +1,9 @@
 package com.example.blinkerleague.domain.detection
 
+import com.example.blinkerleague.domain.config.Coordinate
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.model.BrakeSample
+import com.example.blinkerleague.domain.model.HeadlightSample
 import com.example.blinkerleague.domain.model.LocationSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
@@ -10,6 +12,8 @@ import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.Trip
 import com.example.blinkerleague.domain.model.TripEvent
 import com.example.blinkerleague.domain.model.VehicleStateSample
+import java.time.ZoneId
+import java.time.ZoneOffset
 
 /** 운행 한 번 동안 모은 시계열. 신호·기어는 회전 전 구간 판정 때문에 운행 시작 전 것이 섞여 있어도 됨 */
 data class TripRecording(
@@ -21,6 +25,8 @@ data class TripRecording(
     val speeds: List<SpeedSample> = emptyList(),
     /** 브레이크 페달 상태 변화. 급감속 판정에 씀 */
     val brakes: List<BrakeSample> = emptyList(),
+    /** 하향등 상태 변화. 야간 전조등 판정에 씀 */
+    val headlights: List<HeadlightSample> = emptyList(),
 )
 
 /**
@@ -48,6 +54,10 @@ class TripAssembler(
         endedAtMs: Long,
         recording: TripRecording,
         supported: Set<SignalType>,
+        /** 등록 지역의 대표 좌표 (야간 판정용 일출 · 일몰 계산). 없으면 야간 구간을 만들지 않음 */
+        coordinate: Coordinate? = null,
+        /** 일출 · 일몰 날짜를 정하는 시간대 */
+        zone: ZoneId = ZoneOffset.UTC,
     ): Trip {
         val window = startedAtMs..endedAtMs
         val locations = recording.locations.filter { it.timestampMs in window }

@@ -78,6 +78,7 @@ class TripMapper(
                 occurredAtMs = event.occurredAtMs,
                 payload = EMPTY_PAYLOAD,
             )
+            is TripEvent.NightSegmentEvent -> TODO()
         }
     }
 

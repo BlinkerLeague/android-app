@@ -1,8 +1,10 @@
 package com.example.blinkerleague.domain.detection
 
 import com.example.blinkerleague.data.scenario.Scenarios
+import com.example.blinkerleague.domain.config.Coordinate
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.model.BrakeSample
+import com.example.blinkerleague.domain.model.HeadlightSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.SteeringSample
@@ -13,6 +15,8 @@ import com.example.blinkerleague.domain.model.TurnSignalState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 class TripAssemblerTest {
 
@@ -152,6 +156,39 @@ class TripAssemblerTest {
                 TripEvent.HarshAccelEvent(id = "event-1", occurredAtMs = 11_000),
                 TripEvent.HarshBrakeEvent(id = "event-2", occurredAtMs = 31_000),
             ),
+            trip.events,
+        )
+    }
+
+    @Test
+    fun `하향등이 지원되고 대표 좌표가 있으면 NIGHT_SEGMENT를 만든다`() {
+        // given
+        // 서울 대표 좌표, Asia/Seoul, 2026-11-15 22:00 ~ 22:10 KST 운행 (운행 전체가 밤)
+        // 하향등: 21:59 꺼짐 → 22:02 켜짐 → 22:08 꺼짐. 꺼진 시간 240초
+        val zone = ZoneId.of("Asia/Seoul")
+        fun kst(hour: Int, minute: Int) =
+            ZonedDateTime.of(2026, 11, 15, hour, minute, 0, 0, zone).toInstant().toEpochMilli()
+        val seoul = Coordinate(37.57, 126.98)
+        val headlights = listOf(
+            HeadlightSample(kst(21, 59), on = false),
+            HeadlightSample(kst(22, 2), on = true),
+            HeadlightSample(kst(22, 8), on = false),
+        )
+
+        // when
+        val trip = assembler.assemble(
+            tripId = "t",
+            startedAtMs = kst(22, 0),
+            endedAtMs = kst(22, 10),
+            recording = TripRecording(emptyList(), emptyList(), emptyList(), emptyList(), headlights = headlights),
+            supported = setOf(SignalType.HEADLIGHT),
+            coordinate = seoul,
+            zone = zone,
+        )
+
+        // then
+        assertEquals(
+            listOf(TripEvent.NightSegmentEvent(id = "event-1", occurredAtMs = kst(22, 0), durationSec = 600, headlightOffSec = 240)),
             trip.events,
         )
     }
