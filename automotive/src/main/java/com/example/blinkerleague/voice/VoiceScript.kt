@@ -1,5 +1,6 @@
 package com.example.blinkerleague.voice
 
+import com.example.blinkerleague.domain.config.TurnConfig
 import com.example.blinkerleague.domain.model.MatchOutcome
 import com.example.blinkerleague.domain.model.MissionStatus
 import com.example.blinkerleague.domain.model.TodayMission
@@ -28,7 +29,7 @@ object VoiceScript {
         result: TripResult,
         minDistanceKm: Double,
         /** 회전 몇 초 전에 깜빡이를 켜야 하는지 (기준값 turn.signalLeadSec) */
-        signalLeadSec: Int = 5,
+        signalLeadSec: Int = TurnConfig().signalLeadSec,
     ): String {
         val goals = result.turns.count { it.signalOn }
         val conceded = result.turns.size - goals
