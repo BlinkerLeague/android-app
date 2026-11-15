@@ -1,5 +1,6 @@
 package com.example.blinkerleague.ui.quest
 
+import com.example.blinkerleague.domain.model.MissionStatus
 import com.example.blinkerleague.domain.model.TodayMission
 
 /**
@@ -13,6 +14,7 @@ sealed interface QuestHint {
     data class NextTrip(val requiredTurns: Int) : QuestHint
 
     companion object {
-        fun of(mission: TodayMission): QuestHint = NextTrip(0)
+        fun of(mission: TodayMission): QuestHint =
+            if (mission.status == MissionStatus.ACHIEVED) Cleared else NextTrip(0)
     }
 }
