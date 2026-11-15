@@ -98,4 +98,24 @@ class SignalCancelDetectorTest {
         // then
         assertEquals(listOf(SignalLeftOn(occurredAtMs = 30_000, durationSec = 50)), result)
     }
+
+    @Test
+    fun `운행이 끝날 때까지 끄지 않은 깜빡이도 운행 끝에서 구간을 닫아 잡는다`() {
+        // given
+        // 운행 0s ~ 60s. 10s에 왼쪽 깜빡이를 켜고 운행이 끝날 때까지 끄지 않음, 회전 없이 50km/h
+        val signals = listOf(SignalSample(10_000, LEFT))
+        val speeds = constantSpeed(0, 60_000, 50f)
+
+        // when
+        val result = detector.detect(
+            signals = signals,
+            turns = emptyList(),
+            speeds = speeds,
+            tripStartMs = 0,
+            tripEndMs = 60_000,
+        )
+
+        // then
+        assertEquals(listOf(SignalLeftOn(occurredAtMs = 10_000, durationSec = 50)), result)
+    }
 }
