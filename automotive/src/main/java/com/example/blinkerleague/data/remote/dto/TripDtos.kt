@@ -59,6 +59,15 @@ data class SeatBeltPayload(
     val unbuckledMovingSec: Int,
 )
 
+/** `RAIN_SEGMENT` 이벤트 payload (openapi `TripEventRequest.payload`). 제한속도를 모르면 knownLimitSec · overRainLimitSec는 0 */
+@Serializable
+data class RainSegmentPayload(
+    val durationSec: Int,
+    val headlightOffSec: Int,
+    val knownLimitSec: Int,
+    val overRainLimitSec: Int,
+)
+
 /**
  * `POST /api/trips` 응답과 `GET /api/trips/{id}/score` 응답 (서버 plan.md 3.5 `TripResult`).
  * 서버가 아직 안 주는 필드도 있으므로 [score] 이후는 모두 선택값
@@ -166,6 +175,9 @@ object TripEventType {
 
     /** 주행 중 켜진 안전 경고등. payload는 빈 객체 `{}` (중복 제거는 서버 mergeWindowSec) */
     const val SAFETY_WARNING = "SAFETY_WARNING"
+
+    /** 우천 주행 구간. payload는 [RainSegmentPayload] */
+    const val RAIN_SEGMENT = "RAIN_SEGMENT"
 }
 
 object ScoreStatus {
