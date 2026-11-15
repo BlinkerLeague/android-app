@@ -17,6 +17,7 @@ data class ThresholdsResponse(
     val point: PointThresholdsDto? = null,
     val signalCancel: SignalCancelDto? = null,
     val harsh: HarshDto? = null,
+    val rain: RainDto? = null,
 )
 
 @Serializable
@@ -68,4 +69,10 @@ data class SignalCancelDto(
 @Serializable
 data class HarshDto(
     val deltaKmhPerSec: Int? = null,
+)
+
+/** 우천 운행 기준 (openapi `Rain`). speedRatio는 서버 계산용이라 앱은 읽지 않음 */
+@Serializable
+data class RainDto(
+    val minWiperSec: Int? = null,
 )

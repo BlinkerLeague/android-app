@@ -20,6 +20,7 @@ data class DetectionConfig(
     val night: NightConfig = NightConfig(),
     val seatBelt: SeatBeltConfig = SeatBeltConfig(),
     val safetyWarning: SafetyWarningConfig = SafetyWarningConfig(),
+    val rain: RainConfig = RainConfig(),
 ) {
     companion object {
         /** 서버 기본 기준값의 팁 문구. 깜빡이는 앱 판정 기준(회전 5초 전)에 맞춘 문구 */
@@ -120,6 +121,12 @@ data class SafetyWarningConfig(
     val telltaleTypes: Set<String> = emptySet(),
     /** 이 속도 이상이면 주행 중으로 봄 */
     val movingMinSpeedKmh: Int = 10,
+)
+
+/** 서버 기준값 `rain`. 우천 운행 구간 기준 */
+data class RainConfig(
+    /** 와이퍼가 이 초를 넘게 켜져 있으면 우천 구간으로 봄 */
+    val minWiperSec: Int = 30,
 )
 
 /** 주행 안전 가드 기준 (docs/screen-plan.md 3장) */

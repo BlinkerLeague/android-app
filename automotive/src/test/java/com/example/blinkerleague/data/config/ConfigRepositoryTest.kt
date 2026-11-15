@@ -8,6 +8,7 @@ import com.example.blinkerleague.domain.config.GradeThreshold
 import com.example.blinkerleague.domain.config.HarshConfig
 import com.example.blinkerleague.domain.config.LeagueConfig
 import com.example.blinkerleague.domain.config.PointConfig
+import com.example.blinkerleague.domain.config.RainConfig
 import com.example.blinkerleague.domain.config.SignalCancelConfig
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -179,6 +180,21 @@ class ConfigRepositoryTest {
 
         // then
         assertEquals(HarshConfig(deltaKmhPerSec = 8, maxGapSec = HarshConfig().maxGapSec), merged.harsh)
+    }
+
+    @Test
+    fun `서버 기준값 rain의 minWiperSec로 우천 구간 기준을 덮어쓴다`() {
+        // given
+        // 서버가 와이퍼를 45초 넘게 켜야 우천 구간으로 보도록 바꿈
+        val changed = json.decodeFromString<ThresholdsResponse>(
+            """{"version":2,"rain":{"minWiperSec":45,"speedRatio":0.8}}""",
+        )
+
+        // when
+        val merged = DetectionConfig.DEFAULT.mergedWith(changed)
+
+        // then
+        assertEquals(RainConfig(minWiperSec = 45), merged.rain)
     }
 
     @Test
