@@ -62,23 +62,7 @@ class SignalCancelDetector(private val config: SignalCancelConfig) {
             .filter { it.startMs < countUntilMs && it.endMs > onMs }
             .maxOfOrNull { it.endMs }
         val countFromMs = maxOf(onMs, tripStartMs, lastTurnEndMs ?: onMs).coerceAtMost(countUntilMs)
-        val durationSec = (fastMillis(speeds, countFromMs, countUntilMs) / 1_000).toInt()
+        val durationSec = (SpeedDuration.millisAtOrAbove(speeds, config.minSpeedKmh.toFloat(), countFromMs, countUntilMs) / 1_000).toInt()
         return if (durationSec > config.forgetSec) SignalLeftOn(countFromMs, durationSec) else null
-    }
-
-    /**
-     * [startMs, endMs] 중 minSpeedKmh 이상으로 달린 시간(ms).
-     * 샘플 사이는 앞 샘플 값이 유지된다고 봄 (TripDistance.kmFromSpeeds와 같은 방식)
-     */
-    private fun fastMillis(speeds: List<SpeedSample>, startMs: Long, endMs: Long): Long {
-        val sorted = speeds.sortedBy { it.timestampMs }
-        var millis = 0L
-        for ((i, s) in sorted.withIndex()) {
-            if (s.speedKmh < config.minSpeedKmh) continue
-            val from = maxOf(s.timestampMs, startMs)
-            val to = minOf(sorted.getOrNull(i + 1)?.timestampMs ?: endMs, endMs)
-            if (to > from) millis += to - from
-        }
-        return millis
     }
 }

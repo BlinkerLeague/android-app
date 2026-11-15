@@ -29,7 +29,7 @@ class SeatBeltJudge(private val config: SeatBeltConfig) {
         val departureMs = departureMs(vehicleStates, tripStartMs, tripEndMs)
         val buckled = seatBelts.filter { it.timestampMs <= departureMs }.maxByOrNull { it.timestampMs }?.buckled ?: false
         val unbuckledMovingMs = unbuckledIntervals(seatBelts, tripStartMs, tripEndMs).sumOf { (from, to) ->
-            movingMillis(speeds, from, to)
+            SpeedDuration.millisAtOrAbove(speeds, config.movingMinSpeedKmh.toFloat(), from, to)
         }
         return SeatBeltResult(
             occurredAtMs = departureMs,
@@ -49,19 +49,6 @@ class SeatBeltJudge(private val config: SeatBeltConfig) {
             if (to > from) intervals += from to to
         }
         return intervals
-    }
-
-    /** [startMs, endMs) 중 movingMinSpeedKmh 이상으로 달린 시간(ms). 샘플 사이는 앞 샘플 값이 유지된다고 봄 */
-    private fun movingMillis(speeds: List<SpeedSample>, startMs: Long, endMs: Long): Long {
-        val sorted = speeds.sortedBy { it.timestampMs }
-        var millis = 0L
-        for ((i, s) in sorted.withIndex()) {
-            if (s.speedKmh < config.movingMinSpeedKmh) continue
-            val from = maxOf(s.timestampMs, startMs)
-            val to = minOf(sorted.getOrNull(i + 1)?.timestampMs ?: endMs, endMs)
-            if (to > from) millis += to - from
-        }
-        return millis
     }
 
     /** 운행 구간 안의 첫 P → D/R 전환 시각. 없으면 운행 시작 */
