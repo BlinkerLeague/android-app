@@ -21,16 +21,23 @@ class VoiceScriptTest {
 
     @Test
     fun `시동 안내는 오늘의 퀘스트로 상태별 문구를 말한다`() {
+        // when
+        val noQuestScript = VoiceScript.tripStart(null)
+
+        // then
+        assertEquals("회전할 때 깜빡이를 미리 켜 주세요.", noQuestScript)
+    }
+
+    @Test
+    fun `시동 - 이미 클리어했으면 클리어 사실을 말한다`() {
         // given
         val achieved = mission(MissionStatus.ACHIEVED, 3)
 
         // when
-        val achievedScript = VoiceScript.tripStart(achieved)
-        val noQuestScript = VoiceScript.tripStart(null)
+        val script = VoiceScript.tripStart(achieved)
 
         // then
-        assertEquals("오늘의 퀘스트는 이미 달성했어요. 오늘도 깜빡이 잊지 마세요.", achievedScript)
-        assertEquals("회전할 때 깜빡이를 미리 켜 주세요.", noQuestScript)
+        assertEquals("경기 시작합니다! 오늘의 퀘스트는 이미 클리어했어요, 이번 경기도 깜빡이 잊지 마세요.", script)
     }
 
     @Test
