@@ -36,7 +36,7 @@ class TripVoiceGuide(
             is RecorderState.Finished -> if (endAnnounced.add(state.tripId)) {
                 scope.launch {
                     val result = tripResult(state.tripId) ?: return@launch
-                    announcer.speak(VoiceScript.tripEnd(result, tripConfig().minDistanceKm))
+                    announcer.speak(VoiceScript.tripEnd(result, tripConfig().minDistanceKm, turnConfig().signalLeadSec))
                 }
             }
             RecorderState.Idle -> Unit

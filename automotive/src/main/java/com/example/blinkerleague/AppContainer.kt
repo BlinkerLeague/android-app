@@ -145,6 +145,7 @@ class AppContainer(context: Context) {
         tripResult = { tripId -> tripRepository.observeResult(tripId).first() },
         tripConfig = { config.trip },
         scope = applicationScope,
+        turnConfig = { config.turn },
     )
 
     private val _recordingStatus = MutableStateFlow(RecordingStatus.OFF)
