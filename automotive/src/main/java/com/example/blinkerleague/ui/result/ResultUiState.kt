@@ -105,10 +105,11 @@ internal fun TripResult.toResultUiState(
         scoreState == ScoreState.SCORED && score != null -> MetricValue.Score(score)
         else -> MetricValue.Pending
     }
+    val grade = if (scoreState == ScoreState.SCORED) GradeThreshold.gradeOf(score, grades) else null
     return ResultUiState.Loaded(
         scoreState = scoreState,
         score = score,
-        grade = if (scoreState == ScoreState.SCORED) GradeThreshold.gradeOf(score, grades) else null,
+        grade = grade,
         distanceKm = distanceKm,
         goals = goals,
         conceded = turns.size - goals,
@@ -121,6 +122,7 @@ internal fun TripResult.toResultUiState(
         mission = mission,
         earnedPoints = earnedPoints?.takeIf { scoreState == ScoreState.SCORED && it > 0 },
         outcome = if (scoreState == ScoreState.EXCLUDED_SHORT) null else MatchOutcome.of(goals, turns.size - goals),
+        celebrate = grade != null && grade == grades.maxByOrNull { it.minScore }?.grade,
     )
 }
 
