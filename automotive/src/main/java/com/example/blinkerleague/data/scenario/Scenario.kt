@@ -3,6 +3,7 @@ package com.example.blinkerleague.data.scenario
 import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.HeadlightSample
 import com.example.blinkerleague.domain.model.LocationSample
+import com.example.blinkerleague.domain.model.SeatBeltSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.SteeringSample
@@ -22,6 +23,8 @@ data class Scenario(
     val brakes: List<BrakeSample> = emptyList(),
     /** 하향등 상태 변화 */
     val headlights: List<HeadlightSample> = emptyList(),
+    /** 운전석 안전벨트 착용 상태를 읽은 값 */
+    val seatBelts: List<SeatBeltSample> = emptyList(),
 ) {
     val durationMs: Long
         get() = listOfNotNull(

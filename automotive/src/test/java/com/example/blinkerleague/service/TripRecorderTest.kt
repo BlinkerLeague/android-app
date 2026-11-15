@@ -19,6 +19,7 @@ import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.Gear
 import com.example.blinkerleague.domain.model.HeadlightSample
 import com.example.blinkerleague.domain.model.ScoreState
+import com.example.blinkerleague.domain.model.SeatBeltSample
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.TurnDirection
 import com.example.blinkerleague.domain.model.TurnSignalState
@@ -235,5 +236,33 @@ class TripRecorderTest {
         val finished = recorder.state.value as RecorderState.Finished
         val types = db.tripDao().trip(finished.tripId)!!.events.map { it.type }
         assertTrue("저장된 이벤트: $types", "NIGHT_SEGMENT" in types)
+    }
+
+    @Test
+    fun `운행 중 벨트 샘플을 모으고 운행 전 상태를 이어받아 SEAT_BELT를 저장한다`() = runTest {
+        // given
+        // 2초 정차 → 출발, 30km/h로 60초 → 종료
+        // 벨트는 운행 시작 전(0s)에 착용으로 한 번 읽은 뒤 더 들어오지 않음
+        val s = scenario("벨트 맨 채 출발") {
+            stop(seconds = 2)
+            start()
+            straight(seconds = 60, speedKmh = 30f)
+            end()
+        }.let {
+            it.copy(
+                supported = it.supported + SignalType.SPEED + SignalType.SEAT_BELT,
+                seatBelts = listOf(SeatBeltSample(0, buckled = true)),
+            )
+        }
+        val recorder = recorder(s)
+        backgroundScope.launch { recorder.run() }
+
+        // when
+        advanceTimeBy(s.durationMs + 1_000)
+
+        // then
+        val finished = recorder.state.value as RecorderState.Finished
+        val types = db.tripDao().trip(finished.tripId)!!.events.map { it.type }
+        assertTrue("저장된 이벤트: $types", "SEAT_BELT" in types)
     }
 }
