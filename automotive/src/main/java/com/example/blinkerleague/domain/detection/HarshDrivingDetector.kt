@@ -25,17 +25,21 @@ class HarshDrivingDetector(private val config: HarshConfig) {
 
     fun detect(speeds: List<SpeedSample>, brakes: List<BrakeSample>): List<HarshEvent> {
         val sorted = speeds.sortedBy { it.timestampMs }
-        val sortedBrakes = brakes.sortedBy { it.timestampMs }
+        val brakeWindow = BrakeWindow(brakes.sortedBy { it.timestampMs })
         val events = mutableListOf<HarshEvent>()
         var accelerating = false
         var braking = false
+        // 1초 전 시점의 샘플(windowStartMs 이전 마지막 샘플) 위치. 샘플 시각 순으로 돌므로 앞으로만 움직임
+        var beforeIndex = -1
         for (sample in sorted) {
             val windowStartMs = sample.timestampMs - ONE_SECOND_MS
-            val before = sorted.lastOrNull { it.timestampMs <= windowStartMs } ?: continue
+            while (beforeIndex + 1 < sorted.size && sorted[beforeIndex + 1].timestampMs <= windowStartMs) beforeIndex++
+            brakeWindow.moveTo(windowStartMs, sample.timestampMs)
+            val before = sorted.getOrNull(beforeIndex) ?: continue
             if (windowStartMs - before.timestampMs > config.maxGapSec * 1_000L) continue
             val delta = sample.speedKmh - before.speedKmh
             val accelOver = delta >= config.deltaKmhPerSec
-            val brakeOver = delta <= -config.deltaKmhPerSec && brakePressedDuring(sortedBrakes, windowStartMs, sample.timestampMs)
+            val brakeOver = delta <= -config.deltaKmhPerSec && brakeWindow.pressedDuring()
             if (accelOver && !accelerating) events += HarshEvent(sample.timestampMs, HarshKind.ACCEL)
             if (brakeOver && !braking) events += HarshEvent(sample.timestampMs, HarshKind.BRAKE)
             accelerating = accelOver
@@ -45,12 +49,30 @@ class HarshDrivingDetector(private val config: HarshConfig) {
     }
 
     /**
-     * [fromMs, toMs] 동안 브레이크가 눌린 적이 있는지. 브레이크 상태는 바뀔 때만 오므로
+     * [fromMs, toMs] 동안 브레이크가 눌린 적이 있는지 봄. 브레이크 상태는 바뀔 때만 오므로
      * 구간 시작 때 유지 중인 상태([fromMs] 이전 마지막 샘플)도 봄.
+     * 구간은 앞으로만 움직이므로 포인터와 눌림 누적 개수로 샘플 수에 비례하는 시간에 끝냄.
      */
-    private fun brakePressedDuring(brakes: List<BrakeSample>, fromMs: Long, toMs: Long): Boolean {
-        val heldAtStart = brakes.lastOrNull { it.timestampMs <= fromMs }?.pressed == true
-        return heldAtStart || brakes.any { it.pressed && it.timestampMs in fromMs..toMs }
+    private class BrakeWindow(private val brakes: List<BrakeSample>) {
+        /** pressedBefore[k] = 앞에서 k개 샘플 중 눌림 샘플 수 */
+        private val pressedBefore = IntArray(brakes.size + 1).also { counts ->
+            brakes.forEachIndexed { i, b -> counts[i + 1] = counts[i] + if (b.pressed) 1 else 0 }
+        }
+        private var fromIndex = 0 // 시각이 fromMs 이상인 첫 샘플
+        private var toIndex = 0 // 시각이 toMs 넘는 첫 샘플
+        private var heldIndex = -1 // 시각이 fromMs 이하인 마지막 샘플
+
+        fun moveTo(fromMs: Long, toMs: Long) {
+            while (fromIndex < brakes.size && brakes[fromIndex].timestampMs < fromMs) fromIndex++
+            while (heldIndex + 1 < brakes.size && brakes[heldIndex + 1].timestampMs <= fromMs) heldIndex++
+            if (toIndex < fromIndex) toIndex = fromIndex
+            while (toIndex < brakes.size && brakes[toIndex].timestampMs <= toMs) toIndex++
+        }
+
+        fun pressedDuring(): Boolean {
+            val heldAtStart = brakes.getOrNull(heldIndex)?.pressed == true
+            return heldAtStart || pressedBefore[toIndex] - pressedBefore[fromIndex] > 0
+        }
     }
 
     private companion object {

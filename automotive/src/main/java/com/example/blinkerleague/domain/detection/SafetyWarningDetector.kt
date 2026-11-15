@@ -35,10 +35,15 @@ class SafetyWarningDetector(private val config: SafetyWarningConfig) {
         val hits = mutableListOf<SafetyWarningHit>()
         // 이번 켜짐 주기에서 이미 센 종류. 경고등이 꺼지면 지움
         val counted = mutableSetOf<String>()
+        // 시각 t 이하인 마지막 경고등 · 속도 샘플 위치. times가 오름차순이므로 앞으로만 움직임
+        var telltaleIndex = -1
+        var speedIndex = -1
         for (t in times) {
-            val active = sortedTelltales.lastOrNull { it.timestampMs <= t }?.active.orEmpty() intersect config.telltaleTypes
+            while (telltaleIndex + 1 < sortedTelltales.size && sortedTelltales[telltaleIndex + 1].timestampMs <= t) telltaleIndex++
+            while (speedIndex + 1 < sortedSpeeds.size && sortedSpeeds[speedIndex + 1].timestampMs <= t) speedIndex++
+            val active = sortedTelltales.getOrNull(telltaleIndex)?.active.orEmpty() intersect config.telltaleTypes
             counted.retainAll(active)
-            val moving = (sortedSpeeds.lastOrNull { it.timestampMs <= t }?.speedKmh ?: 0f) >= config.movingMinSpeedKmh
+            val moving = (sortedSpeeds.getOrNull(speedIndex)?.speedKmh ?: 0f) >= config.movingMinSpeedKmh
             if (!moving) continue
             (active - counted).sorted().forEach {
                 hits += SafetyWarningHit(occurredAtMs = t, type = it)
