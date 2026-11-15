@@ -25,6 +25,8 @@ data class CapabilityReport(
     val headlight: Availability = Availability.UNSUPPORTED,
     /** 운전석 안전벨트 착용 상태 (안전벨트 판정) */
     val seatBelt: Availability = Availability.UNSUPPORTED,
+    /** 안전 경고등 (경고등 판정) */
+    val safetyWarning: Availability = Availability.UNSUPPORTED,
 ) {
     /** 업로드 `supported` 목록에 넣을 신호 */
     val supportedSignals: Set<SignalType>
@@ -44,7 +46,7 @@ data class CapabilityReport(
     companion object {
         val ALL_SUPPORTED = CapabilityReport(
             Availability.SUPPORTED, Availability.SUPPORTED, Availability.SUPPORTED, Availability.SUPPORTED, Availability.SUPPORTED,
-            Availability.SUPPORTED, Availability.SUPPORTED,
+            Availability.SUPPORTED, Availability.SUPPORTED, Availability.SUPPORTED,
         )
     }
 }
