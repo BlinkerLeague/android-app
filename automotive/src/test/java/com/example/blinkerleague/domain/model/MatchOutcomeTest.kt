@@ -31,4 +31,13 @@ class MatchOutcomeTest {
         // then
         assertEquals(MatchOutcome.TOUGH, outcome)
     }
+
+    @Test
+    fun `실점 없이 득점만 있으면 완승`() {
+        // when
+        val outcome = MatchOutcome.of(goals = 3, conceded = 0)
+
+        // then
+        assertEquals(MatchOutcome.PERFECT, outcome)
+    }
 }
