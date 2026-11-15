@@ -31,6 +31,7 @@ enum class ScoreItem {
          * - 부드러운 주행(급가속 · 급감속)은 속도와 브레이크(급감속 판정)가 모두 있어야 함
          * - 안전 경고등은 경고등 상태와 속도(주행 중 켜짐 판정)가 모두 있어야 함
          * - 안전벨트는 벨트 상태와 속도(주행 중 미착용 시간)가 모두 있어야 함
+         * - 우천 운행은 와이퍼(우천 구간)와 하향등(꺼진 시간)이 모두 있어야 함
          */
         fun measurable(signals: Set<SignalType>): Set<ScoreItem> = buildSet {
             if (SignalType.TURN_SIGNAL in signals && SignalType.STEERING_ANGLE in signals) add(TURN_SIGNAL)
@@ -42,6 +43,7 @@ enum class ScoreItem {
             if (SignalType.SAFETY_WARNING in signals && SignalType.SPEED in signals) add(SAFETY_WARNING)
             if (SignalType.HEADLIGHT in signals) add(NIGHT_HEADLIGHT)
             if (SignalType.SEAT_BELT in signals && SignalType.SPEED in signals) add(SEAT_BELT)
+            if (SignalType.WIPER in signals && SignalType.HEADLIGHT in signals) add(RAIN_DRIVING)
         }
     }
 }
