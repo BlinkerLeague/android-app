@@ -4,6 +4,7 @@ import com.example.blinkerleague.data.scenario.Scenarios
 import com.example.blinkerleague.domain.config.Coordinate
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.config.SafetyWarningConfig
+import com.example.blinkerleague.domain.config.TripConfig
 import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.Gear
 import com.example.blinkerleague.domain.model.HeadlightSample
@@ -310,6 +311,53 @@ class TripAssemblerTest {
                     overRainLimitSec = 0,
                 ),
             ),
+            trip.events,
+        )
+    }
+
+    @Test
+    fun `이벤트가 maxEvents를 넘으면 TURN은 남기고 횟수형 이벤트를 늦은 것부터 자른다`() {
+        // given
+        // 이벤트 상한 3개, 대상 경고등 ABS
+        val limited = DetectionConfig.DEFAULT.copy(
+            trip = DetectionConfig.DEFAULT.trip.copy(maxEvents = 3),
+            safetyWarning = SafetyWarningConfig(telltaleTypes = setOf("ABS")),
+        )
+        val limitedAssembler = TripAssembler(limited) { "event-${++seq}" }
+        // 운행 0s ~ 150s, 1초 간격으로 20km/h 일정 (급가감속 · 깜빡이 끄기 판정 없음)
+        val speeds = (0L..150_000L step 1_000).map { SpeedSample(it, 20f) }
+        // 핸들: 40s ~ 45s, 100s ~ 105s 두 번 왼쪽으로 100도 꺾음 → 회전 2개
+        val steering = listOf(
+            SteeringSample(0, 0f),
+            SteeringSample(40_000, 30f),
+            SteeringSample(42_000, 100f),
+            SteeringSample(45_000, 0f),
+            SteeringSample(100_000, 30f),
+            SteeringSample(102_000, 100f),
+            SteeringSample(105_000, 0f),
+        )
+        // 경고등 1초 폴링: ABS가 10s · 60s · 80s · 120s부터 5초씩 켜짐 → 안전 경고 4건
+        val abs = listOf(10_000L, 60_000L, 80_000L, 120_000L)
+        val telltales = (0L..150_000L step 1_000).map { t ->
+            TelltaleSample(t, if (abs.any { t in it until it + 5_000 }) setOf("ABS") else emptySet())
+        }
+        val supported = setOf(SignalType.TURN_SIGNAL, SignalType.STEERING_ANGLE, SignalType.SPEED, SignalType.SAFETY_WARNING)
+
+        // when
+        val trip = limitedAssembler.assemble(
+            tripId = "t",
+            startedAtMs = 0,
+            endedAtMs = 150_000,
+            recording = TripRecording(steering, emptyList(), emptyList(), emptyList(), speeds = speeds, telltales = telltales),
+            supported = supported,
+        )
+
+        // then
+        // 회전 2개는 남기고 안전 경고는 가장 이른 10s 1건만 (시각 순)
+        val turns = trip.events.filterIsInstance<TripEvent.TurnEvent>()
+        assertEquals(2, turns.size)
+        assertEquals(
+            listOf(TripEvent.SafetyWarningEvent(id = "event-3", occurredAtMs = 10_000)) + turns,
             trip.events,
         )
     }
