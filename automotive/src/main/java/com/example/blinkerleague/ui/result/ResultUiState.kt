@@ -127,6 +127,7 @@ internal fun TripResult.toResultUiState(
         earnedPoints = earnedPoints?.takeIf { scoreState == ScoreState.SCORED && it > 0 },
         outcome = if (scoreState == ScoreState.EXCLUDED_SHORT) null else MatchOutcome.of(goals, turns.size - goals),
         celebrate = grade != null && grade == grades.maxByOrNull { it.minScore }?.grade,
+        tip = tips[MetricItem.TURN_SIGNAL.name],
     )
 }
 
