@@ -177,4 +177,25 @@ class TripMapperTest {
         assertEquals("2026-11-03T08:01:00+09:00", event.occurredAt)
         assertEquals(Json.parseToJsonElement("""{"buckledAtDeparture":true,"unbuckledMovingSec":40}"""), event.payload)
     }
+
+    @Test
+    fun `SAFETY_WARNING 이벤트는 빈 payload {}로 저장 · 업로드한다`() {
+        // given
+        // 경고등 · 속도를 지원하는 운행에서 3분에 경고등이 켜짐
+        val warning = trip.copy(
+            supported = setOf(SignalType.SAFETY_WARNING, SignalType.SPEED),
+            events = listOf(TripEvent.SafetyWarningEvent("e1", start + 180_000)),
+        )
+
+        // when
+        val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(warning), mapper.toEventEntities(warning)))
+
+        // then
+        assertTrue("supported: ${request.supported}", "SAFETY_WARNING" in request.supported)
+        val event = request.events.single()
+        assertEquals("e1", event.eventId)
+        assertEquals("SAFETY_WARNING", event.type)
+        assertEquals("2026-11-03T08:03:00+09:00", event.occurredAt)
+        assertEquals(JsonObject(emptyMap()), event.payload)
+    }
 }
