@@ -1,6 +1,7 @@
 package com.example.blinkerleague.service
 
 import com.example.blinkerleague.domain.config.TripConfig
+import com.example.blinkerleague.domain.config.TurnConfig
 import com.example.blinkerleague.domain.model.MissionStatus
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.TodayMission
@@ -53,6 +54,28 @@ class TripVoiceGuideTest {
             ),
             announcer.spoken,
         )
+    }
+
+    @Test
+    fun `종료 안내는 기준값 turn signalLeadSec을 쓴다`() = runTest {
+        // given
+        // 깜빡이를 켜지 않은 회전 하나(0 대 1), 기준값은 회전 7초 전
+        val conceded = result.copy(turns = listOf(TurnRecord(0, TurnDirection.LEFT, false)))
+        val guide = TripVoiceGuide(
+            announcer = announcer,
+            todayMission = { mission },
+            tripResult = { conceded },
+            tripConfig = { TripConfig() },
+            scope = this,
+            turnConfig = { TurnConfig(signalLeadSec = 7) },
+        )
+
+        // when
+        guide.onRecorderState(RecorderState.Finished("t1"))
+        advanceUntilIdle()
+
+        // then
+        assertEquals(listOf("경기 종료. 이번엔 아쉬웠어요. 다음 경기에선 회전 7초 전에 깜빡이!"), announcer.spoken)
     }
 
     @Test
