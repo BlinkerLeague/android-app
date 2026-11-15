@@ -156,4 +156,25 @@ class TripMapperTest {
         assertEquals("2026-11-03T08:02:00+09:00", event.occurredAt)
         assertEquals(Json.parseToJsonElement("""{"durationSec":600,"headlightOffSec":240}"""), event.payload)
     }
+
+    @Test
+    fun `SEAT_BELT 이벤트는 payload {buckledAtDeparture, unbuckledMovingSec}로 저장 · 업로드한다`() {
+        // given
+        // 벨트 · 속도를 지원하는 운행. 출발(1분) 때는 벨트를 맸고, 주행 중 40초 동안 풀려 있었음
+        val seatBelt = trip.copy(
+            supported = setOf(SignalType.SEAT_BELT, SignalType.SPEED),
+            events = listOf(TripEvent.SeatBeltEvent("e1", start + 60_000, buckledAtDeparture = true, unbuckledMovingSec = 40)),
+        )
+
+        // when
+        val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(seatBelt), mapper.toEventEntities(seatBelt)))
+
+        // then
+        assertTrue("supported: ${request.supported}", "SEAT_BELT" in request.supported)
+        val event = request.events.single()
+        assertEquals("e1", event.eventId)
+        assertEquals("SEAT_BELT", event.type)
+        assertEquals("2026-11-03T08:01:00+09:00", event.occurredAt)
+        assertEquals(Json.parseToJsonElement("""{"buckledAtDeparture":true,"unbuckledMovingSec":40}"""), event.payload)
+    }
 }
