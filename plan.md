@@ -264,10 +264,11 @@
 | 〃 | `harsh.deltaKmhPerSec` | 씀 | 급가속 · 급감속 판정 (2차 앱 작업 11, 11.15) |
 | 〃 | `signalCancel`(forgetSec · minSpeedKmh) | 씀 | 깜빡이 끄기 판정 (2차 앱 작업 20, 11.15) |
 | 〃 | `rain.minWiperSec` | 씀 | 우천 구간 판정 (2차 앱 작업 20, 11.15) |
-| 〃 | `safetyWarning.mergeWindowSec` | 안 씀 | 같은 경고 묶기는 서버가 함. 앱은 켜진 채 달리기 시작한 시각마다 `SAFETY_WARNING` 1건 |
+| 〃 | `safetyWarning.mergeWindowSec` | 안 씀 | 같은 경고 묶기는 서버가 함. 앱은 경고등이 한 번 켜진 주기(켜짐 → 꺼짐)마다 주행 중이 된 첫 시각에 `SAFETY_WARNING` 1건 |
 | 〃 | `turn.signalLeadDistanceM` · `lateSignalScore` | 결정 대기 | 깜빡이 4단계(`signalTiming`) 결정 뒤 |
 | 〃 | `turn.turnSpeedKmh`, `seatBelt`, `rain`의 나머지(speedRatio 등), `signalCancel`의 penalty | 안 씀 | 서버 계산용. 앱은 회전 최고 속도 `maxSpeedKmh` · 벨트 시간 · 우천 구간만 보냄 |
-| 〃 | `trip.maxEvents` · `maxFutureMinutes` · `maxPastDays` | 안 씀 | 서버 검증용. 실차 시계 확인 뒤 업로드 전 안내에 쓸지 검토 |
+| 〃 | `trip.maxEvents` | 씀 | 운행 한 건의 이벤트 상한(기본 2000, 0 이하 무시). 넘치면 조립 단계에서 자름 (11.15) |
+| 〃 | `trip.maxFutureMinutes` · `maxPastDays` | 안 씀 | 서버 검증용. 실차 시계 확인 뒤 업로드 전 안내에 쓸지 검토 |
 | 〃 | `turn.windowSec` · `minAngleDeg` · `uTurnAngleDeg` | 읽기만 함 | 진행 방향 감지(`HeadingTurnDetector`, 미사용)용 |
 | `GET /api/leagues/current` | `league.safetyIndex` · `league.rank`, `rankings[].averageScore` · `points`, `season.startsAt` | 안 씀 | 내 권역 지수는 `regions` 목록에 같은 값. 상위 순위는 리그 점수 `score`만 표시 |
 | `GET /api/reports/weekly` | `metrics[].lastWeek`, `lastMission` · `nextMission`의 `week` · `metric` | 안 씀 | 화면은 이번 주 값과 증감 `change`만 표시 |
@@ -314,6 +315,7 @@
 - 리그 순위 공개 후속 (리뷰 낮음, 11.10): 공개를 끈 상태를 리그 화면에 안내 · 오프라인으로 설정을 열면 토글이 숨겨지고 다시 불러오지 않음 · 화면을 떠나면 진행 중 저장이 취소될 수 있음(다시 들어오면 서버 값으로 맞춰짐)
 - 9b에서 미룬 것 (11.10): 라이브러리 버전 올리기(GradleDependency 12) · Compose BOM 올려 Compose lint 다시 켜기 · dataExtractionRules xml(기기 간 전송에서 토큰 · 설정 제외) (완료 11.10, `feature/data-extraction-rules`) · TripCollectionService API 34 미만 SPECIAL_USE 분기 · 2차 화면 5개(업적 · 리그 · 주간 리포트 · 설정 · 지갑) 좁은 폭 Preview
 - 점수 항목 확장 후속 (11.15): 온보딩 측정 가능 항목에 새 신호 5개(브레이크 · 하향등 · 안전벨트 · 경고등 · 와이퍼) 표시 · 가상 콘솔의 계단식 속도 변화로 급가속이 과다 판정됨(실차 확인 필요) · 30m 4단계 `signalTiming`(결정 필요 "깜빡이 4단계 판정") · 실차 확인(벨트 변경 반영 · 경고등 종류 · 와이퍼 영역 · 운전석 `ROW_1_LEFT`) · 릴리스 빌드에서 새 권한이 허용되는지 확인
+- 점수 항목 확장 리뷰 후속 (11.15, 리뷰 낮음): 급가감속 쿨다운(연속 판정 간격) · 신호 capability 확인을 병렬로 · 경고등 · 벨트 폴링 실패 재시도와 같은 값 중복 제거(`distinctUntilChanged`) · 대표 좌표가 없을 때 그 운행의 `supported`에서 `NIGHT_HEADLIGHT` 제외
 - 좁은 폭(720dp) 레이아웃 (리뷰 낮음, 11.10, 실제 앱 영역 1682dp에서는 문제없음): 온보딩 측정 가능 항목 행에서 상태 문구가 항목 이름을 눌러 버림(OnboardingScreen CapabilityLine) · 결과 화면 항목 행 이름 칸 고정 width(200.dp)로 상태 문구가 여러 줄로 접힘(ResultScreen) · NO_TURN · EXCLUDED_SHORT 좁은 폭 Preview
 
 ## 서버와 맞춰야 할 항목
@@ -411,3 +413,7 @@
 | 2026-11-15 | 우천 `RAIN_SEGMENT`의 `knownLimitSec` · `overRainLimitSec`는 0 | 제한속도를 알 수 없음(에뮬레이터에서 항상 0, 실차 확인 전) |
 | 2026-11-15 | 하향등 상태를 모르는 시간은 꺼짐으로 세지 않음 | 미지원 · 신호 끊김을 위반으로 채점하지 않음 |
 | 2026-11-15 | 결과 화면 · 항목 상세의 행 값은 서버 `metrics`로 채움(점수 · 미지원 · 해당 없음). 8행 확장(H4~H7)은 UI 수정 후로 보류 | 점수는 서버가 계산. 사용자가 UI를 따로 고치는 중 |
+| 2026-11-15 | 안전 경고는 경고등 종류마다 한 번 켜진 주기(켜짐 → 꺼짐)에 1건. 속도가 기준을 넘나들어도 다시 세지 않음 | 리뷰 C1. 정체 구간에서 10km/h를 넘나들 때마다 세면 수천 건이 되어 운행 전체가 거부됨 |
+| 2026-11-15 | 운행 이벤트 상한은 서버 `trip.maxEvents`(기본 2000, 0 이하 무시). 넘치면 횟수형(급가속 · 급감속 · 안전 경고)을 늦은 것부터 빼고, 그래도 넘치면 이른 순으로 maxEvents개만 남김. 조립 단계에서 잘라 Room 저장 = 업로드 | 리뷰 C1. 2000건 초과는 서버 400 → `REJECTED`로 깜빡이까지 채점되지 않음 |
+| 2026-11-15 | 지원한다고 했어도 기록 샘플이 0개인 신호(브레이크 · 하향등 · 경고등 · 와이퍼 · 속도)는 그 운행의 `supported`에서 빼고 판정에도 쓰지 않음 | 리뷰 C2. 수집 실패를 이벤트 0건 = 만점으로 채점하지 않음 |
+| 2026-11-15 | 이미 `REJECTED`인 운행은 이번 변경 뒤에도 재전송하지 않음 | 400 · 413은 같은 요청을 다시 보내도 거부됨. 기존 운행을 다시 조립하지 않음 |
