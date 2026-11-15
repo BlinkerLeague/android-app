@@ -8,6 +8,7 @@ import com.example.blinkerleague.domain.detection.TripAssembler
 import com.example.blinkerleague.domain.detection.TripBoundary
 import com.example.blinkerleague.domain.detection.TripRecording
 import com.example.blinkerleague.domain.detection.TripSegmenter
+import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.LocationSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SpeedSample
@@ -60,6 +61,7 @@ class TripRecorder(
         data class Signal(val sample: SignalSample) : Input
         data class Location(val sample: LocationSample) : Input
         data class Speed(val sample: SpeedSample) : Input
+        data class Brake(val sample: BrakeSample) : Input
         data class Tick(val nowMs: Long) : Input
     }
 
@@ -73,8 +75,10 @@ class TripRecorder(
     private val vehicleStates = mutableListOf<VehicleStateSample>()
     private val locations = mutableListOf<LocationSample>()
     private val speeds = mutableListOf<SpeedSample>()
+    private val brakes = mutableListOf<BrakeSample>()
     private var lastSpeed: SpeedSample? = null
     private var lastSignal: SignalSample? = null
+    private var lastBrake: BrakeSample? = null
     private var lastVehicleState: VehicleStateSample? = null
 
     /** 취소될 때까지 수집함. 입력은 한 줄로 합쳐 순서대로 처리하므로 상태를 잠글 필요가 없음 */
@@ -85,6 +89,7 @@ class TripRecorder(
             vehicle.turnSignals.map { Input.Signal(it) },
             location.locations.map { Input.Location(it) },
             vehicle.speeds.map { Input.Speed(it) },
+            vehicle.brakes.map { Input.Brake(it) },
             ticks(),
         ).collect { handle(it) }
     }
@@ -113,6 +118,10 @@ class TripRecorder(
                 lastSpeed = input.sample
                 if (tripId != null) speeds += input.sample
             }
+            is Input.Brake -> {
+                lastBrake = input.sample
+                if (tripId != null) brakes += input.sample
+            }
             is Input.Tick -> segmenter.onTick(input.nowMs)?.let { onBoundary(it) }
         }
     }
@@ -128,9 +137,10 @@ class TripRecorder(
         val id = newId()
         tripId = id
         startedAtMs = atMs
-        listOf(steering, signals, vehicleStates, locations, speeds).forEach { it.clear() }
-        // 운행 시작 전부터 이어지던 상태(켜져 있던 깜빡이, 기어)를 이어받음
+        listOf(steering, signals, vehicleStates, locations, speeds, brakes).forEach { it.clear() }
+        // 운행 시작 전부터 이어지던 상태(켜져 있던 깜빡이, 기어, 밟고 있던 브레이크)를 이어받음
         lastSignal?.let { signals += it }
+        lastBrake?.let { brakes += it }
         lastVehicleState?.let { vehicleStates += it }
         lastSpeed?.let { speeds += it.copy(timestampMs = maxOf(it.timestampMs, atMs)) }
         _state.value = RecorderState.Recording(id, atMs)
@@ -144,7 +154,7 @@ class TripRecorder(
             startedAtMs = startedAtMs,
             endedAtMs = maxOf(atMs, startedAtMs),
             recording = TripRecording(
-                steering.toList(), signals.toList(), vehicleStates.toList(), locations.toList(), speeds.toList(),
+                steering.toList(), signals.toList(), vehicleStates.toList(), locations.toList(), speeds.toList(), brakes.toList(),
             ),
             supported = vehicle.supportedSignals(),
         )
