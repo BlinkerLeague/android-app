@@ -2,6 +2,7 @@ package com.example.blinkerleague.ui.quest
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.blinkerleague.data.celebration.CelebrationStore
 import com.example.blinkerleague.domain.config.PointConfig
 import com.example.blinkerleague.domain.model.Streak
 import com.example.blinkerleague.domain.model.TodayMission
@@ -14,6 +15,8 @@ import kotlinx.coroutines.launch
 class QuestViewModel(
     private val loadMission: suspend () -> TodayMission?,
     private val loadStreak: suspend () -> Streak? = { null },
+    /** 퀘스트 클리어 축하를 이미 본 회차 */
+    private val celebrations: CelebrationStore? = null,
     private val rule: () -> PointConfig = { PointConfig() },
 ) : ViewModel() {
 
@@ -27,6 +30,9 @@ class QuestViewModel(
             _uiState.value = mission?.let { QuestUiState.Loaded(it, streak.await()?.let(::impactOf)) } ?: QuestUiState.Unavailable
         }
     }
+
+    /** 화면이 클리어 축하(꽃가루)를 보여 줬을 때 */
+    fun onCelebrated() = Unit
 
     /**
      * 오늘 클리어 전이면 클리어할 때 이어질 일수(+1), 이미 클리어면 지금 일수.

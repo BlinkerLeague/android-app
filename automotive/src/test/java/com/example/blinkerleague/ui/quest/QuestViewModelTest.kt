@@ -1,5 +1,6 @@
 package com.example.blinkerleague.ui.quest
 
+import com.example.blinkerleague.data.celebration.FakeCelebrationStore
 import com.example.blinkerleague.domain.model.MissionStatus
 import com.example.blinkerleague.domain.model.Streak
 import com.example.blinkerleague.domain.model.TodayMission
@@ -12,6 +13,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -67,5 +70,40 @@ class QuestViewModelTest {
         // then
         assertEquals(50, loaded(reward).streakImpact?.rewardPoint)
         assertEquals(null, loaded(noReward).streakImpact?.rewardPoint)
+    }
+
+    @Test
+    fun `클리어한 퀘스트는 처음 볼 때만 축하하고 같은 회차를 다시 열면 축하하지 않는다`() = runTest(dispatcher) {
+        // given
+        // 같은 저장소를 쓰는 두 번째 ViewModel = 퀘스트 화면을 다시 열거나 앱을 다시 켠 뒤
+        val store = FakeCelebrationStore()
+        val cleared = mission.copy(status = MissionStatus.ACHIEVED, periodId = "1:2026-11-15")
+        val first = QuestViewModel(loadMission = { cleared }, celebrations = store)
+        runCurrent()
+        val firstCelebrate = loaded(first).celebrate
+
+        // when
+        first.onCelebrated()
+        val again = QuestViewModel(loadMission = { cleared }, celebrations = store)
+        runCurrent()
+
+        // then
+        assertTrue(firstCelebrate)
+        assertFalse(loaded(again).celebrate)
+    }
+
+    @Test
+    fun `새 회차에 클리어하면 다시 축하한다`() = runTest(dispatcher) {
+        // given
+        // 어제 회차는 이미 축하함
+        val store = FakeCelebrationStore("1:2026-11-14")
+        val today = mission.copy(status = MissionStatus.ACHIEVED, periodId = "1:2026-11-15")
+
+        // when
+        val vm = QuestViewModel(loadMission = { today }, celebrations = store)
+        runCurrent()
+
+        // then
+        assertTrue(loaded(vm).celebrate)
     }
 }
