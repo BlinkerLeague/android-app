@@ -12,12 +12,20 @@ import com.example.blinkerleague.data.scenario.Scenario
 import com.example.blinkerleague.data.scenario.Scenarios
 import com.example.blinkerleague.data.scenario.scenario
 import com.example.blinkerleague.data.vehicle.FakeVehicleSignalSource
+import com.example.blinkerleague.domain.config.Coordinate
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.config.SafetyWarningConfig
+import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.Gear
+import com.example.blinkerleague.domain.model.HeadlightSample
 import com.example.blinkerleague.domain.model.ScoreState
+import com.example.blinkerleague.domain.model.SeatBeltSample
+import com.example.blinkerleague.domain.model.SignalType
+import com.example.blinkerleague.domain.model.TelltaleSample
 import com.example.blinkerleague.domain.model.TurnDirection
 import com.example.blinkerleague.domain.model.TurnSignalState
+import com.example.blinkerleague.domain.model.WiperSample
 import com.example.blinkerleague.ui.result.toPlaysUiState
 import com.example.blinkerleague.ui.result.toResultUiState
 import kotlinx.coroutines.flow.first
@@ -34,6 +42,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.concurrent.Executor
 
 @RunWith(RobolectricTestRunner::class)
@@ -58,11 +67,11 @@ class TripRecorderTest {
     @After
     fun tearDown() = db.close()
 
-    private fun TestScope.recorder(s: Scenario) = TripRecorder(
+    private fun TestScope.recorder(s: Scenario, config: DetectionConfig = DetectionConfig.DEFAULT) = TripRecorder(
         vehicle = FakeVehicleSignalSource(s),
         location = FakeLocationSource(s),
         repository = repository,
-        config = DetectionConfig.DEFAULT,
+        config = config,
         clock = { testScheduler.currentTime },
         newId = { "id-${++seq}" },
     )
@@ -162,5 +171,160 @@ class TripRecorderTest {
         val finished = recorder.state.value as RecorderState.Finished
         val turn = repository.observeResult(finished.tripId).first()!!.turns.single()
         assertEquals(true, turn.signalOn)
+    }
+
+    @Test
+    fun `운행 중 브레이크 샘플을 모으고 운행 전 상태를 이어받아 급감속을 저장한다`() = runTest {
+        // given
+        // 0s에 브레이크를 밟은 채 2초 정차 → 2s 출발, 30km/h로 10초 → 15km/h로 10초(1초에 15km/h 감속) → 종료
+        // 브레이크는 운행 시작 전에 한 번 밟은 뒤 상태 변화가 없음
+        val s = scenario("브레이크 밟은 채 출발 후 급감속") {
+            stop(seconds = 2)
+            start()
+            straight(seconds = 10, speedKmh = 30f)
+            straight(seconds = 10, speedKmh = 15f)
+            end()
+        }.let {
+            it.copy(
+                supported = it.supported + SignalType.SPEED + SignalType.BRAKE,
+                brakes = listOf(BrakeSample(0, pressed = true)),
+            )
+        }
+        val recorder = recorder(s)
+        backgroundScope.launch { recorder.run() }
+
+        // when
+        advanceTimeBy(s.durationMs + 1_000)
+
+        // then
+        val finished = recorder.state.value as RecorderState.Finished
+        val types = db.tripDao().trip(finished.tripId)!!.events.map { it.type }
+        assertTrue("저장된 이벤트: $types", "HARSH_BRAKE" in types)
+    }
+
+    @Test
+    fun `운행 중 하향등 샘플을 모아 야간 운행에서 NIGHT_SEGMENT를 저장한다`() = runTest {
+        // given
+        // 2026-11-15 22:00 KST(밤)에 시나리오 시작, 서울 대표 좌표 · Asia/Seoul
+        // 2초 정차 → 출발, 30km/h로 60초 → 종료. 하향등은 운행 시작 전에 꺼진 뒤 상태 변화가 없음
+        val zone = ZoneId.of("Asia/Seoul")
+        val nightStartMs = ZonedDateTime.of(2026, 11, 15, 22, 0, 0, 0, zone).toInstant().toEpochMilli()
+        val s = scenario("밤에 하향등 끈 채 운행") {
+            stop(seconds = 2)
+            start()
+            straight(seconds = 60, speedKmh = 30f)
+            end()
+        }.let {
+            it.copy(
+                supported = it.supported + SignalType.HEADLIGHT,
+                headlights = listOf(HeadlightSample(0, on = false)),
+            )
+        }
+        val recorder = TripRecorder(
+            vehicle = FakeVehicleSignalSource(s, startMs = nightStartMs),
+            location = FakeLocationSource(s, startMs = nightStartMs),
+            repository = repository,
+            config = DetectionConfig.DEFAULT,
+            clock = { nightStartMs + testScheduler.currentTime },
+            newId = { "id-${++seq}" },
+            coordinate = { Coordinate(37.57, 126.98) },
+            zone = zone,
+        )
+        backgroundScope.launch { recorder.run() }
+
+        // when
+        advanceTimeBy(s.durationMs + 1_000)
+
+        // then
+        val finished = recorder.state.value as RecorderState.Finished
+        val types = db.tripDao().trip(finished.tripId)!!.events.map { it.type }
+        assertTrue("저장된 이벤트: $types", "NIGHT_SEGMENT" in types)
+    }
+
+    @Test
+    fun `운행 중 벨트 샘플을 모으고 운행 전 상태를 이어받아 SEAT_BELT를 저장한다`() = runTest {
+        // given
+        // 2초 정차 → 출발, 30km/h로 60초 → 종료
+        // 벨트는 운행 시작 전(0s)에 착용으로 한 번 읽은 뒤 더 들어오지 않음
+        val s = scenario("벨트 맨 채 출발") {
+            stop(seconds = 2)
+            start()
+            straight(seconds = 60, speedKmh = 30f)
+            end()
+        }.let {
+            it.copy(
+                supported = it.supported + SignalType.SPEED + SignalType.SEAT_BELT,
+                seatBelts = listOf(SeatBeltSample(0, buckled = true)),
+            )
+        }
+        val recorder = recorder(s)
+        backgroundScope.launch { recorder.run() }
+
+        // when
+        advanceTimeBy(s.durationMs + 1_000)
+
+        // then
+        val finished = recorder.state.value as RecorderState.Finished
+        val types = db.tripDao().trip(finished.tripId)!!.events.map { it.type }
+        assertTrue("저장된 이벤트: $types", "SEAT_BELT" in types)
+    }
+
+    @Test
+    fun `운행 중 경고등 목록을 모아 SAFETY_WARNING을 저장한다`() = runTest {
+        // given
+        // 2초 정차 → 출발, 30km/h로 60초 → 종료
+        // 경고등은 운행 시작 전(0s)에 ABS가 켜진 것으로 한 번 읽은 뒤 더 들어오지 않음
+        val s = scenario("ABS 경고등 켜진 채 출발") {
+            stop(seconds = 2)
+            start()
+            straight(seconds = 60, speedKmh = 30f)
+            end()
+        }.let {
+            it.copy(
+                supported = it.supported + SignalType.SPEED + SignalType.SAFETY_WARNING,
+                telltales = listOf(TelltaleSample(0, active = setOf("ABS"))),
+            )
+        }
+        // 대상 경고등은 ABS (기본 설정의 목록은 비어 있어서 테스트에서 주입)
+        val config = DetectionConfig.DEFAULT.copy(safetyWarning = SafetyWarningConfig(telltaleTypes = setOf("ABS")))
+        val recorder = recorder(s, config)
+        backgroundScope.launch { recorder.run() }
+
+        // when
+        advanceTimeBy(s.durationMs + 1_000)
+
+        // then
+        val finished = recorder.state.value as RecorderState.Finished
+        val types = db.tripDao().trip(finished.tripId)!!.events.map { it.type }
+        assertTrue("저장된 이벤트: $types", "SAFETY_WARNING" in types)
+    }
+
+    @Test
+    fun `운행 중 와이퍼 샘플을 모아 RAIN_SEGMENT를 저장한다`() = runTest {
+        // given
+        // 2초 정차 → 출발, 30km/h로 60초 → 종료 (와이퍼 기준 30초 초과)
+        // 와이퍼는 운행 시작 전(0s)에 켜진 뒤, 하향등은 운행 시작 전(0s)에 꺼진 뒤 상태 변화가 없음
+        val s = scenario("비 오는 날 와이퍼 켠 채 운행") {
+            stop(seconds = 2)
+            start()
+            straight(seconds = 60, speedKmh = 30f)
+            end()
+        }.let {
+            it.copy(
+                supported = it.supported + SignalType.WIPER + SignalType.HEADLIGHT,
+                wipers = listOf(WiperSample(0, on = true)),
+                headlights = listOf(HeadlightSample(0, on = false)),
+            )
+        }
+        val recorder = recorder(s)
+        backgroundScope.launch { recorder.run() }
+
+        // when
+        advanceTimeBy(s.durationMs + 1_000)
+
+        // then
+        val finished = recorder.state.value as RecorderState.Finished
+        val types = db.tripDao().trip(finished.tripId)!!.events.map { it.type }
+        assertTrue("저장된 이벤트: $types", "RAIN_SEGMENT" in types)
     }
 }

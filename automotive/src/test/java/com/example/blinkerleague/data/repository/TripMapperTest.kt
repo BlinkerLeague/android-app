@@ -5,10 +5,14 @@ import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.Trip
 import com.example.blinkerleague.domain.model.TripEvent
 import com.example.blinkerleague.domain.model.TurnDirection
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.double
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.ZoneId
 
@@ -72,5 +76,159 @@ class TripMapperTest {
         val noSignal = trip.copy(supported = emptySet(), events = emptyList())
         val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(noSignal), emptyList()))
         assertEquals(emptyList<String>(), request.supported)
+    }
+
+    @Test
+    fun `SIGNAL_LEFT_ON 이벤트는 type SIGNAL_LEFT_ON, payload {durationSec}로 저장 · 업로드한다`() {
+        // given
+        // 방향지시등 · 핸들 각도 · 속도를 지원하는 운행에서 깜빡이를 40초 켜 둔 채 잊음
+        val leftOn = trip.copy(
+            supported = setOf(SignalType.TURN_SIGNAL, SignalType.STEERING_ANGLE, SignalType.SPEED),
+            events = listOf(TripEvent.SignalLeftOnEvent("e1", start + 120_000, durationSec = 40)),
+        )
+
+        // when
+        val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(leftOn), mapper.toEventEntities(leftOn)))
+
+        // then
+        assertTrue("supported: ${request.supported}", "SIGNAL_CANCEL" in request.supported)
+        val event = request.events.single()
+        assertEquals("e1", event.eventId)
+        assertEquals("SIGNAL_LEFT_ON", event.type)
+        assertEquals("2026-11-03T08:02:00+09:00", event.occurredAt)
+        assertEquals(Json.parseToJsonElement("""{"durationSec":40}"""), event.payload)
+    }
+
+    @Test
+    fun `TURN payload에 maxSpeedKmh를 소수 1자리로 넣는다`() {
+        // given
+        val withSpeed = trip.copy(
+            events = listOf(TripEvent.TurnEvent("e1", start + 1_000, TurnDirection.LEFT, signalOn = true, uTurn = null, maxSpeedKmh = 32.46)),
+        )
+
+        // when
+        val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(withSpeed), mapper.toEventEntities(withSpeed)))
+
+        // then
+        val payload = request.events.single().payload.jsonObject
+        assertEquals(setOf("direction", "signalOn", "maxSpeedKmh"), payload.keys)
+        assertEquals(32.5, payload["maxSpeedKmh"]!!.jsonPrimitive.double, 0.0)
+    }
+
+    @Test
+    fun `HARSH_ACCEL · HARSH_BRAKE는 빈 payload {}로 저장 · 업로드한다`() {
+        // given
+        // 속도 · 브레이크를 지원하는 운행에서 2분에 급가속, 5분에 급감속
+        val harsh = trip.copy(
+            supported = setOf(SignalType.SPEED, SignalType.BRAKE),
+            events = listOf(
+                TripEvent.HarshAccelEvent("e1", start + 120_000),
+                TripEvent.HarshBrakeEvent("e2", start + 300_000),
+            ),
+        )
+
+        // when
+        val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(harsh), mapper.toEventEntities(harsh)))
+
+        // then
+        assertTrue("supported: ${request.supported}", "SMOOTH_DRIVING" in request.supported)
+        assertEquals(listOf("e1" to "HARSH_ACCEL", "e2" to "HARSH_BRAKE"), request.events.map { it.eventId to it.type })
+        assertEquals(listOf(JsonObject(emptyMap()), JsonObject(emptyMap())), request.events.map { it.payload })
+    }
+
+    @Test
+    fun `NIGHT_SEGMENT는 payload {durationSec, headlightOffSec}로 저장 · 업로드한다`() {
+        // given
+        // 하향등을 지원하는 운행에서 2분부터 10분 동안 야간 주행, 그중 4분은 하향등이 꺼져 있었음
+        val night = trip.copy(
+            supported = setOf(SignalType.HEADLIGHT),
+            events = listOf(TripEvent.NightSegmentEvent("e1", start + 120_000, durationSec = 600, headlightOffSec = 240)),
+        )
+
+        // when
+        val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(night), mapper.toEventEntities(night)))
+
+        // then
+        assertTrue("supported: ${request.supported}", "NIGHT_HEADLIGHT" in request.supported)
+        val event = request.events.single()
+        assertEquals("e1", event.eventId)
+        assertEquals("NIGHT_SEGMENT", event.type)
+        assertEquals("2026-11-03T08:02:00+09:00", event.occurredAt)
+        assertEquals(Json.parseToJsonElement("""{"durationSec":600,"headlightOffSec":240}"""), event.payload)
+    }
+
+    @Test
+    fun `SEAT_BELT 이벤트는 payload {buckledAtDeparture, unbuckledMovingSec}로 저장 · 업로드한다`() {
+        // given
+        // 벨트 · 속도를 지원하는 운행. 출발(1분) 때는 벨트를 맸고, 주행 중 40초 동안 풀려 있었음
+        val seatBelt = trip.copy(
+            supported = setOf(SignalType.SEAT_BELT, SignalType.SPEED),
+            events = listOf(TripEvent.SeatBeltEvent("e1", start + 60_000, buckledAtDeparture = true, unbuckledMovingSec = 40)),
+        )
+
+        // when
+        val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(seatBelt), mapper.toEventEntities(seatBelt)))
+
+        // then
+        assertTrue("supported: ${request.supported}", "SEAT_BELT" in request.supported)
+        val event = request.events.single()
+        assertEquals("e1", event.eventId)
+        assertEquals("SEAT_BELT", event.type)
+        assertEquals("2026-11-03T08:01:00+09:00", event.occurredAt)
+        assertEquals(Json.parseToJsonElement("""{"buckledAtDeparture":true,"unbuckledMovingSec":40}"""), event.payload)
+    }
+
+    @Test
+    fun `SAFETY_WARNING 이벤트는 빈 payload {}로 저장 · 업로드한다`() {
+        // given
+        // 경고등 · 속도를 지원하는 운행에서 3분에 경고등이 켜짐
+        val warning = trip.copy(
+            supported = setOf(SignalType.SAFETY_WARNING, SignalType.SPEED),
+            events = listOf(TripEvent.SafetyWarningEvent("e1", start + 180_000)),
+        )
+
+        // when
+        val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(warning), mapper.toEventEntities(warning)))
+
+        // then
+        assertTrue("supported: ${request.supported}", "SAFETY_WARNING" in request.supported)
+        val event = request.events.single()
+        assertEquals("e1", event.eventId)
+        assertEquals("SAFETY_WARNING", event.type)
+        assertEquals("2026-11-03T08:03:00+09:00", event.occurredAt)
+        assertEquals(JsonObject(emptyMap()), event.payload)
+    }
+
+    @Test
+    fun `RAIN_SEGMENT는 payload {durationSec, headlightOffSec, knownLimitSec, overRainLimitSec}로 저장 · 업로드한다`() {
+        // given
+        // 와이퍼 · 하향등을 지원하는 운행에서 2분부터 5분 동안 우천 주행, 그중 1분은 하향등이 꺼져 있었음 (제한속도는 몰라서 0)
+        val rain = trip.copy(
+            supported = setOf(SignalType.WIPER, SignalType.HEADLIGHT),
+            events = listOf(
+                TripEvent.RainSegmentEvent(
+                    "e1",
+                    start + 120_000,
+                    durationSec = 300,
+                    headlightOffSec = 60,
+                    knownLimitSec = 0,
+                    overRainLimitSec = 0,
+                ),
+            ),
+        )
+
+        // when
+        val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(rain), mapper.toEventEntities(rain)))
+
+        // then
+        assertTrue("supported: ${request.supported}", "RAIN_DRIVING" in request.supported)
+        val event = request.events.single()
+        assertEquals("e1", event.eventId)
+        assertEquals("RAIN_SEGMENT", event.type)
+        assertEquals("2026-11-03T08:02:00+09:00", event.occurredAt)
+        assertEquals(
+            Json.parseToJsonElement("""{"durationSec":300,"headlightOffSec":60,"knownLimitSec":0,"overRainLimitSec":0}"""),
+            event.payload,
+        )
     }
 }

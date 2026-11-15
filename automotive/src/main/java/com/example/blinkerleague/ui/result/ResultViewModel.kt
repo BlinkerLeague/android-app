@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.model.MetricDetail
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.domain.model.TripResult
@@ -32,15 +33,18 @@ class ResultViewModel(
     private val loadDayOrdinal: suspend () -> Int? = { null },
     /** 항목별 팁 문구 (기준값 `tips`). 다음 경기 팁에 씀 */
     private val tips: Map<String, String> = emptyMap(),
+    /** 서버 항목 결과(metrics). 업로드 전이거나 실패면 null */
+    private val loadMetrics: suspend () -> List<MetricDetail>? = { null },
 ) : ViewModel() {
 
     private val mission = MutableStateFlow<TodayMission?>(null)
     private val earnedPoints = MutableStateFlow<Int?>(null)
     private val dayOrdinal = MutableStateFlow<Int?>(null)
+    private val metrics = MutableStateFlow<List<MetricDetail>>(emptyList())
 
-    val uiState: StateFlow<ResultUiState> = combine(result, mission, earnedPoints, dayOrdinal) { result, mission, points, ordinal ->
+    val uiState: StateFlow<ResultUiState> = combine(result, mission, earnedPoints, dayOrdinal, metrics) { result, mission, points, ordinal, metrics ->
         // 짧은 이동은 경기가 아니므로 몇 번째인지 보여주지 않음
-        result?.toResultUiState(mission, grades, points, tips)
+        result?.toResultUiState(mission, grades, points, tips, serverMetrics = metrics)
             ?.copy(dayOrdinal = ordinal.takeIf { result.scoreState != ScoreState.EXCLUDED_SHORT })
             ?: ResultUiState.NotFound
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ResultUiState.Loading)
@@ -53,6 +57,8 @@ class ResultViewModel(
             // 퀘스트 진행률은 이번 운행이 서버에 반영된 뒤에 받아야 맞음
             mission.value = loadMission()
             earnedPoints.value = loadEarnedPoints()
+            // 서버 항목 결과도 업로드가 끝난 뒤에만 있음
+            metrics.value = loadMetrics() ?: emptyList()
         }
     }
 

@@ -1,6 +1,7 @@
 package com.example.blinkerleague.ui.result
 
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.model.MetricDetail
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.TripResult
@@ -106,5 +107,30 @@ class ResultViewModelTest {
 
         // then
         assertEquals("회전 전에 깜빡이를 미리 켜 보세요", (vm.uiState.value as ResultUiState.Loaded).tip)
+    }
+
+    @Test
+    fun `동기화가 끝나면 서버 항목 결과를 불러와 결과 행에 반영한다`() = runTest(dispatcher) {
+        // given
+        // 서버 항목 결과는 업로드가 끝난 뒤에만 있음. 부드러운 가감속은 SCORED 0점
+        var synced = false
+        val serverMetrics = listOf(
+            MetricDetail(metric = "SMOOTH_DRIVING", status = "SCORED", reason = null, score = 0, counts = emptyMap(), weight = 0.5),
+        )
+        val vm = ResultViewModel(
+            result = flowOf(scored),
+            sync = { synced = true },
+            loadMission = { null },
+            grades = GradeThreshold.DEFAULT,
+            loadMetrics = { serverMetrics.takeIf { synced } },
+        )
+
+        // when
+        backgroundScope.launch { vm.uiState.collect {} }
+        advanceUntilIdle()
+
+        // then
+        val state = vm.uiState.value as ResultUiState.Loaded
+        assertEquals(MetricValue.Score(0), state.metrics.first { it.item == MetricItem.SMOOTH_DRIVING }.value)
     }
 }

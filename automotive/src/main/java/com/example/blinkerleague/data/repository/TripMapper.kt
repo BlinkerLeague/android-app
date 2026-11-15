@@ -6,7 +6,11 @@ import com.example.blinkerleague.data.local.TripEntity
 import com.example.blinkerleague.data.local.TripEventEntity
 import com.example.blinkerleague.data.local.TripWithEvents
 import com.example.blinkerleague.data.local.UploadState
+import com.example.blinkerleague.data.remote.dto.NightSegmentPayload
+import com.example.blinkerleague.data.remote.dto.RainSegmentPayload
 import com.example.blinkerleague.data.remote.dto.ScoreStatus
+import com.example.blinkerleague.data.remote.dto.SeatBeltPayload
+import com.example.blinkerleague.data.remote.dto.SignalLeftOnPayload
 import com.example.blinkerleague.data.remote.dto.TripEventDto
 import com.example.blinkerleague.data.remote.dto.TripEventType
 import com.example.blinkerleague.data.remote.dto.TripUploadRequest
@@ -46,7 +50,66 @@ class TripMapper(
                 tripId = trip.id,
                 type = TripEventType.TURN,
                 occurredAtMs = event.occurredAtMs,
-                payload = json.encodeToString(TurnPayload(event.direction.name, event.signalOn, event.uTurn)),
+                payload = json.encodeToString(
+                    TurnPayload(
+                        direction = event.direction.name,
+                        signalOn = event.signalOn,
+                        uTurn = event.uTurn,
+                        // 소수 1자리로 반올림
+                        maxSpeedKmh = event.maxSpeedKmh?.let { Math.round(it * 10) / 10.0 },
+                    ),
+                ),
+            )
+            is TripEvent.SignalLeftOnEvent -> TripEventEntity(
+                eventId = event.id,
+                tripId = trip.id,
+                type = TripEventType.SIGNAL_LEFT_ON,
+                occurredAtMs = event.occurredAtMs,
+                payload = json.encodeToString(SignalLeftOnPayload(event.durationSec)),
+            )
+            is TripEvent.HarshAccelEvent -> TripEventEntity(
+                eventId = event.id,
+                tripId = trip.id,
+                type = TripEventType.HARSH_ACCEL,
+                occurredAtMs = event.occurredAtMs,
+                payload = EMPTY_PAYLOAD,
+            )
+            is TripEvent.HarshBrakeEvent -> TripEventEntity(
+                eventId = event.id,
+                tripId = trip.id,
+                type = TripEventType.HARSH_BRAKE,
+                occurredAtMs = event.occurredAtMs,
+                payload = EMPTY_PAYLOAD,
+            )
+            is TripEvent.NightSegmentEvent -> TripEventEntity(
+                eventId = event.id,
+                tripId = trip.id,
+                type = TripEventType.NIGHT_SEGMENT,
+                occurredAtMs = event.occurredAtMs,
+                payload = json.encodeToString(NightSegmentPayload(event.durationSec, event.headlightOffSec)),
+            )
+            is TripEvent.SeatBeltEvent -> TripEventEntity(
+                eventId = event.id,
+                tripId = trip.id,
+                type = TripEventType.SEAT_BELT,
+                occurredAtMs = event.occurredAtMs,
+                payload = json.encodeToString(SeatBeltPayload(event.buckledAtDeparture, event.unbuckledMovingSec)),
+            )
+            is TripEvent.SafetyWarningEvent -> TripEventEntity(
+                eventId = event.id,
+                tripId = trip.id,
+                type = TripEventType.SAFETY_WARNING,
+                occurredAtMs = event.occurredAtMs,
+                payload = EMPTY_PAYLOAD,
+            )
+            is TripEvent.RainSegmentEvent -> TripEventEntity(
+                eventId = event.id,
+                tripId = trip.id,
+                type = TripEventType.RAIN_SEGMENT,
+                occurredAtMs = event.occurredAtMs,
+                payload = json.encodeToString(
+                    RainSegmentPayload(event.durationSec, event.headlightOffSec, event.knownLimitSec, event.overRainLimitSec),
+                ),
             )
         }
     }
@@ -100,6 +163,11 @@ class TripMapper(
     }
 
     private val lenientJson = Json { ignoreUnknownKeys = true }
+
+    private companion object {
+        /** 급가속 · 급감속 · 안전 경고등처럼 추가 정보가 없는 이벤트의 payload */
+        const val EMPTY_PAYLOAD = "{}"
+    }
 
     /** 초 단위까지, 오프셋 포함 (예: 2026-11-03T08:00:00+09:00) */
     private fun isoTime(epochMs: Long): String =

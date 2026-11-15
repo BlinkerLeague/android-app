@@ -144,6 +144,7 @@ internal fun metricValueText(value: MetricValue): Int = when (value) {
     MetricValue.Excluded -> R.string.result_metric_excluded
     MetricValue.NotScored -> R.string.result_metric_not_scored
     MetricValue.ComingSoon -> R.string.result_metric_coming_soon
+    MetricValue.NotApplicable -> R.string.result_metric_not_applicable
     is MetricValue.Score -> R.string.result_metric_pending
 }
 

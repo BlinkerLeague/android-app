@@ -2,6 +2,7 @@ package com.example.blinkerleague.ui.result
 
 import com.example.blinkerleague.domain.config.GradeThreshold
 import com.example.blinkerleague.domain.model.MatchOutcome
+import com.example.blinkerleague.domain.model.MetricDetail
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.TripResult
@@ -218,6 +219,56 @@ class ResultUiStateTest {
 
         // then
         assertEquals(listOf(0f, 1f), plays.plays.map { it.position })
+    }
+
+    @Test
+    fun `서버 metrics에 TURN_SIGNAL 점수가 있으면 깜빡이 행은 총점 대신 항목 점수를 보인다`() {
+        // given
+        // 서버 총점은 72점, 그중 깜빡이 항목 점수는 90점
+        val trip = result(ScoreState.SCORED, 72)
+        val serverMetrics = listOf(
+            MetricDetail(metric = "TURN_SIGNAL", status = "SCORED", reason = null, score = 90, counts = emptyMap(), weight = 0.5),
+            MetricDetail(metric = "SMOOTH_DRIVING", status = "SCORED", reason = null, score = 54, counts = emptyMap(), weight = 0.5),
+        )
+
+        // when
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, serverMetrics = serverMetrics)
+
+        // then
+        assertEquals(72, state.score)
+        assertEquals(MetricValue.Score(90), metric(state))
+    }
+
+    @Test
+    fun `서버가 SMOOTH_DRIVING을 SCORED로 주면 부드러운 가감속 행에 점수를 보인다`() {
+        // given
+        val trip = result(ScoreState.SCORED, 72)
+        val serverMetrics = listOf(
+            MetricDetail(metric = "SMOOTH_DRIVING", status = "SCORED", reason = null, score = 80, counts = emptyMap(), weight = 0.5),
+        )
+
+        // when
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, serverMetrics = serverMetrics)
+
+        // then
+        assertEquals(MetricValue.Score(80), state.metrics.first { it.item == MetricItem.SMOOTH_DRIVING }.value)
+    }
+
+    @Test
+    fun `서버가 UNSUPPORTED면 이 차량 미지원, NOT_APPLICABLE이면 해당 없음을 보인다`() {
+        // given
+        val trip = result(ScoreState.SCORED, 72)
+        val serverMetrics = listOf(
+            MetricDetail(metric = "SAFETY_WARNING", status = "UNSUPPORTED", reason = null, score = null, counts = emptyMap(), weight = null),
+            MetricDetail(metric = "NIGHT_HEADLIGHT", status = "NOT_APPLICABLE", reason = null, score = null, counts = emptyMap(), weight = null),
+        )
+
+        // when
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, serverMetrics = serverMetrics)
+
+        // then
+        assertEquals(MetricValue.Unsupported, state.metrics.first { it.item == MetricItem.SAFETY_WARNING }.value)
+        assertEquals(MetricValue.NotApplicable, state.metrics.first { it.item == MetricItem.NIGHT_HEADLIGHT }.value)
     }
 
     @Test

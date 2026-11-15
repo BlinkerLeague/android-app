@@ -5,6 +5,7 @@
 - 기획서 (원본): https://claude.ai/artifact/8xWTvcr2nsR3zC57iVAYgZ
 - UI 목업 (참고용, 11.08 개정): https://claude.ai/artifact/EjjhjWCfMLr6d3aFThibn9
 - **화면 기준 문서: [`docs/screen-plan.md`](docs/screen-plan.md)** (목업과 다르면 이 문서를 따름)
+- **정차 화면 게임 UI (2차, 진행 중): [`plan-ui.md`](plan-ui.md)** — 끝난 것 · 남은 것 · 결정, 목업 [`docs/mockups/game-ui.html`](docs/mockups/game-ui.html)
 - 구현 가이드 (10/27, 기획서 문서의 탭): SDK 사용 흐름, 핸들 각도 판정, 확인 목록
 - Pleos 앱 보안 가이드 대응표: [`docs/security-checklist.md`](docs/security-checklist.md)
 - Pleos 문의 사항(실차·SDK·심사): [`docs/pleos-inquiries.md`](docs/pleos-inquiries.md)
@@ -229,7 +230,7 @@
 | 9 | VOC-02 종료 음성: "퀘스트 달성! 연승 N일째"를 먼저 말하기, 퍼펙트(모든 회전 득점) 문구 | 10장 | `VoiceScript.tripEnd` | 2차 | 중 |
 | 10 | SCR-01 퀘스트 진행 링 (지금 막대, 낮음) | 6장 | `ui/quest/MissionCard.kt:65` | 2차 | 소 |
 | 11 | SCR-04 육각 타일 지역 지도 (지금은 지역 안전지수 목록) | 8장 | `ui/league` `RegionsPanel` | 2차 | 대 |
-| 12 | 2차 측정 판정 엔진: 급가속 · 급감속(`HARSH_*`), 야간 전조등(`NIGHT_SEGMENT`), 안전 경고(`SAFETY_WARNING`). 지금은 신호 `SignalType`(`BRAKE` · `HEADLIGHT` · `SAFETY_WARNING`)에 정의만 있고 이벤트(`TripEvent`)는 `TurnEvent`뿐이며 결과 행은 항상 "준비 중"(`ResultUiState.kt:110-112`). 서버는 이벤트 종류를 이미 받음 | 2 · 4장 | `domain/detection`, `data/vehicle`, `ScoreItem`, `ui/result` | 2차 | 대 (항목별, "2차 앱 작업" 11~13) |
+| 12 | 2차 측정 판정 엔진: 급가속 · 급감속(`HARSH_*`), 야간 전조등(`NIGHT_SEGMENT`), 안전 경고(`SAFETY_WARNING`). 지금은 신호 `SignalType`(`BRAKE` · `HEADLIGHT` · `SAFETY_WARNING`)에 정의만 있고 이벤트(`TripEvent`)는 `TurnEvent`뿐이며 결과 행은 항상 "준비 중"(`ResultUiState.kt:110-112`). 서버는 이벤트 종류를 이미 받음 | 2 · 4장 | `domain/detection`, `data/vehicle`, `ScoreItem`, `ui/result` | 2차 | 완료(11.15, "2차 앱 작업" 20): 판정 · 업로드, 결과 행 값은 서버 `metrics`. 8행 확장은 21 |
 
 ### 미구현 — 막힘
 
@@ -261,20 +262,22 @@
 | `GET /api/missions/today` | `missionId` · `periodKey` | 안 씀 | 화면에 필요 없음 (`rewardPoint`는 SCR-03에서 씀) |
 | `GET /api/config/thresholds` | `point.streakRewardDays` · `streakRewardPoint` | 씀 | SCR-05 연속 보상 주기 · 보상 포인트 (미구현 4, 11.13) |
 | 〃 | `point.dailyCap` · `tripMaxKm`, `weights`, `minSamples`, `league.commonItems` · `topN`, `harsh.penaltyPer10Km`, `safetyWarning.penaltyPer100Km` | 안 씀 | 서버 계산용. 하루 상한은 `GET /api/points`의 `dailyCap`, 가중치는 `metrics[].weight`로 받음 |
-| 〃 | `harsh.deltaKmhPerSec` | 쓸 계획 | 2차 앱 작업 11 (급가속 · 급감속) |
-| 〃 | `safetyWarning.mergeWindowSec` | 쓸 계획 | 2차 앱 작업 13 (안전 경고) |
+| 〃 | `harsh.deltaKmhPerSec` | 씀 | 급가속 · 급감속 판정 (2차 앱 작업 11, 11.15) |
+| 〃 | `signalCancel`(forgetSec · minSpeedKmh) | 씀 | 깜빡이 끄기 판정 (2차 앱 작업 20, 11.15) |
+| 〃 | `rain.minWiperSec` | 씀 | 우천 구간 판정 (2차 앱 작업 20, 11.15) |
+| 〃 | `safetyWarning.mergeWindowSec` | 안 씀 | 같은 경고 묶기는 서버가 함. 앱은 경고등이 한 번 켜진 주기(켜짐 → 꺼짐)마다 주행 중이 된 첫 시각에 `SAFETY_WARNING` 1건 |
 | 〃 | `turn.signalLeadDistanceM` · `lateSignalScore` | 결정 대기 | 깜빡이 4단계(`signalTiming`) 결정 뒤 |
-| 〃 | `turn.turnSpeedKmh`, `signalCancel`, `seatBelt`, `rain` | 안 씀 | 점수 확장안(`docs/scoring-criteria.md`) 팀 확정 전 |
-| 〃 | `trip.maxEvents` · `maxFutureMinutes` · `maxPastDays` | 안 씀 | 서버 검증용. 실차 시계 확인 뒤 업로드 전 안내에 쓸지 검토 |
+| 〃 | `turn.turnSpeedKmh`, `seatBelt`, `rain`의 나머지(speedRatio 등), `signalCancel`의 penalty | 안 씀 | 서버 계산용. 앱은 회전 최고 속도 `maxSpeedKmh` · 벨트 시간 · 우천 구간만 보냄 |
+| 〃 | `trip.maxEvents` | 씀 | 운행 한 건의 이벤트 상한(기본 2000, 0 이하 무시). 넘치면 조립 단계에서 자름 (11.15) |
+| 〃 | `trip.maxFutureMinutes` · `maxPastDays` | 안 씀 | 서버 검증용. 실차 시계 확인 뒤 업로드 전 안내에 쓸지 검토 |
 | 〃 | `turn.windowSec` · `minAngleDeg` · `uTurnAngleDeg` | 읽기만 함 | 진행 방향 감지(`HeadingTurnDetector`, 미사용)용 |
 | `GET /api/leagues/current` | `league.safetyIndex` · `league.rank`, `rankings[].averageScore` · `points`, `season.startsAt` | 안 씀 | 내 권역 지수는 `regions` 목록에 같은 값. 상위 순위는 리그 점수 `score`만 표시 |
 | `GET /api/reports/weekly` | `metrics[].lastWeek`, `lastMission` · `nextMission`의 `week` · `metric` | 안 씀 | 화면은 이번 주 값과 증감 `change`만 표시 |
-| `POST /api/trips` 요청 | 이벤트 `HARSH_ACCEL` · `HARSH_BRAKE` · `NIGHT_SEGMENT` · `SAFETY_WARNING` | 쓸 계획 | 2차 앱 작업 11~13. 서버 enum에는 있음. payload 형식은 보내기 전에 서버와 확인 (D21) |
-| 〃 | 이벤트 `SIGNAL_LEFT_ON` · `SEAT_BELT` · `RAIN_SEGMENT`, `supported`의 `SIGNAL_CANCEL` · `TURN_SPEED` · `SEAT_BELT` · `RAIN_DRIVING` | 안 씀 | 점수 확장안 팀 확정 전 |
+| `POST /api/trips` 요청 | 이벤트 `HARSH_ACCEL` · `HARSH_BRAKE` · `NIGHT_SEGMENT` · `SAFETY_WARNING` · `SIGNAL_LEFT_ON` · `SEAT_BELT` · `RAIN_SEGMENT`, `supported`의 8개 항목 | 씀 | payload는 openapi `TripEventRequest.payload` 형식 (11.15). `supported`는 `ScoreItem.measurable`(항목마다 필요한 신호가 모두 있을 때) |
 | 〃 | 이벤트 `LANE_CHANGE` | 안 씀 | 차로 변경 측정은 "이후"(ADAS SDK) |
-| 〃 | `TURN` payload `signalTiming` · `leadDistanceM` · `maxSpeedKmh` | 결정 대기 | 깜빡이 4단계 결정 뒤. `uTurn`은 알 수 없어 보내지 않음 (서버 요청 3번) |
+| 〃 | `TURN` payload `signalTiming` · `leadDistanceM` | 결정 대기 | 깜빡이 4단계 결정 뒤. `maxSpeedKmh`는 보냄(11.15). `uTurn`은 알 수 없어 보내지 않음 (서버 요청 3번) |
 
-주의: 업로드 `supported`는 지금 `TURN_SIGNAL`만 보냅니다(`CapabilityReport.supportedSignals`). 2차에서 전조등 · 안전 경고를 지원 신호에 넣을 때는 판정 이벤트도 같은 PR에서 함께 보내야 합니다(지원만 보내면 서버가 이벤트 0건을 위반 없음으로 채점할 수 있음).
+주의: 업로드 `supported`는 `ScoreItem.measurable(CapabilityReport.supportedSignals)`로 정합니다(11.15). 항목을 `supported`에 넣을 때는 그 판정 이벤트도 함께 보내야 합니다(지원만 보내면 서버가 이벤트 0건을 위반 없음으로 채점할 수 있음). 출발 시 벨트 상태를 모르는 운행은 `SEAT_BELT`를 뺍니다.
 
 ### 의도적으로 다름
 
@@ -298,18 +301,22 @@
 | 8 | SCR-04 리그(하단 탭 두 번째): 시즌·D-day, 내 리그(권역)·리그 점수·순위(10명 미만 비공개)·순위 자격 진행, 상위 순위, 지역 안전지수. 서버 4.4 미구현 → 응답 형식을 서버 요청 14번으로 제안, Fake는 나 혼자(순위 비공개) | 완료(앱). 서버 형식 연결은 9번 |
 | 9 | 리그 응답을 서버 형식으로 맞춤(서버 #48 · #49, `CurrentLeagueResponse`): `league` · `me` · `regions`, 리그 점수 = 평균 + 시즌 포인트(D34) 표시, 지난 시즌 우승 칭호, 순위 목록의 내 행은 닉네임으로 찾음 | 완료(11.10, `feature/league-server-format`) |
 | 10 | 리그 순위 자격(시즌 50km 또는 10회)·순위 공개 인원(10명)을 하드코딩 대신 기준값 `league`(`minSeasonDistanceKm`·`minSeasonTrips`·`minParticipants`)에서 읽음. 화면 문구와 Fake 판정 모두 | 완료(11.10, `feature/league-qualify-config`) |
-| 11 | 급가속 · 급감속 판정(`HARSH_ACCEL` · `HARSH_BRAKE`): 차량 속도 시계열에서 기준값 `harsh.deltaKmhPerSec`로 판정(순수 함수 + 테스트), 이벤트 업로드, `supported`에 `SMOOTH_DRIVING`, 결과 · 항목 상세 행 연결. 속도 권한(`CAR_SPEED`)이 없으면 측정에서 제외 | 예정 |
-| 12 | 야간 전조등 판정(`NIGHT_SEGMENT`): 하향등 `LightState`로 야간 구간의 전조등 꺼짐 시간 판정, `supported`에 `NIGHT_HEADLIGHT`, 결과 행 연결. 야간 판단 기준(시각 · 일몰)은 기준값으로. 오토라이트 API 없음 | 예정 |
-| 13 | 안전 경고 판정(`SAFETY_WARNING`): Safety 경고등(`registerTelltales`) 켜짐을 `safetyWarning.mergeWindowSec`로 묶어 이벤트로, `supported`에 `SAFETY_WARNING`, 결과 행 연결. 실차 경고등 종류는 스파이크 7 확인 필요 | 예정 |
-| 14 | 11~13의 이벤트 payload 형식을 서버와 확인(`docs/server-requests.md` 새 항목, 서버 D21: 서버 반영 확인 뒤에만 보냄) | 예정 |
+| 11 | 급가속 · 급감속 판정(`HARSH_ACCEL` · `HARSH_BRAKE`): 차량 속도 시계열에서 기준값 `harsh.deltaKmhPerSec`로 판정(순수 함수 + 테스트), 이벤트 업로드, `supported`에 `SMOOTH_DRIVING`, 결과 · 항목 상세 행 연결. 속도 권한(`CAR_SPEED`)이 없으면 측정에서 제외 | 완료(판정 · 업로드 11.15, `feature/score-metrics-expansion`). 결과 행은 서버 `metrics`로 채움 |
+| 12 | 야간 전조등 판정(`NIGHT_SEGMENT`): 하향등 `LightState`로 야간 구간의 전조등 꺼짐 시간 판정, `supported`에 `NIGHT_HEADLIGHT`, 결과 행 연결. 야간 판단 기준(시각 · 일몰)은 기준값으로. 오토라이트 API 없음 | 완료(11.15): 시·도 대표 좌표의 일몰 ~ 일출 |
+| 13 | 안전 경고 판정(`SAFETY_WARNING`): Safety 경고등(`registerTelltales`) 켜짐을 `safetyWarning.mergeWindowSec`로 묶어 이벤트로, `supported`에 `SAFETY_WARNING`, 결과 행 연결. 실차 경고등 종류는 스파이크 7 확인 필요 | 완료(11.15): `getTelltalesInfo` 1초 폴링(등록 API는 PRIVATE 권한이라 안 씀). 실차 경고등 종류 확인 필요 |
+| 14 | 11~13의 이벤트 payload 형식을 서버와 확인(`docs/server-requests.md` 새 항목, 서버 D21: 서버 반영 확인 뒤에만 보냄) | 완료: openapi `TripEventRequest.payload`에 형식이 들어와 그대로 맞춤(11.15) |
 | 15 | SCR-08 음성 안내 끄기 토글 · 내 차량 측정 항목 목록 ("현황 점검" 미구현 5 · 6) | 예정 |
 | 16 | 연승 표시 보강: SCR-05 7일 진행 점, SCR-03 연승 영향 문구, SCR-01 퀘스트 진행 링 (미구현 7 · 8 · 10) | 예정 |
 | 17 | VOC-02 종료 음성: 퀘스트 달성 · 연승을 먼저 말하고, 퍼펙트 문구 추가 (미구현 9). 음성은 종료 시 1회 원칙 유지 | 예정 |
 | 18 | SCR-04 육각 타일 지역 지도 (미구현 11) | 예정 |
 | 19 | 포인트를 리워드처럼 보이게 하는 화면 문구 · 구성 재검토(지갑 탭 "내 포인트 · 오늘 적립 · 적립 한도 · 적립 내역", 퀘스트 보상 +20P, 업적 +50P). 포인트는 리그 순위 가산점으로만 쓰는 방향(11.14 결정) | 검토 |
+| 20 | 점수 항목 확장(`docs/scoring-criteria.md`): `SIGNAL_CANCEL`(`SIGNAL_LEFT_ON`) · `TURN_SPEED`(TURN `maxSpeedKmh`) · `SMOOTH_DRIVING`(11) · `NIGHT_HEADLIGHT`(12) · `SEAT_BELT` · `SAFETY_WARNING`(13) · `RAIN_DRIVING`(`RAIN_SEGMENT`) 판정 · 업로드, Pleos SDK 브레이크 · 하향등 · 안전벨트 · 경고등 · 와이퍼 연결 | 완료(11.15, `feature/score-metrics-expansion`) |
+| 21 | 결과 화면(SCR-02) 8행 확장: 서버 8개 항목을 행으로 모두 표시(사용자 결정). 지금은 4행, 행 값은 서버 `metrics`로 채움 | 보류: UI 수정 후 (H4~H7) |
 
 - 리그 순위 공개 후속 (리뷰 낮음, 11.10): 공개를 끈 상태를 리그 화면에 안내 · 오프라인으로 설정을 열면 토글이 숨겨지고 다시 불러오지 않음 · 화면을 떠나면 진행 중 저장이 취소될 수 있음(다시 들어오면 서버 값으로 맞춰짐)
 - 9b에서 미룬 것 (11.10): 라이브러리 버전 올리기(GradleDependency 12) · Compose BOM 올려 Compose lint 다시 켜기 · dataExtractionRules xml(기기 간 전송에서 토큰 · 설정 제외) (완료 11.10, `feature/data-extraction-rules`) · TripCollectionService API 34 미만 SPECIAL_USE 분기 · 2차 화면 5개(업적 · 리그 · 주간 리포트 · 설정 · 지갑) 좁은 폭 Preview
+- 점수 항목 확장 후속 (11.15): 온보딩 측정 가능 항목에 새 신호 5개(브레이크 · 하향등 · 안전벨트 · 경고등 · 와이퍼) 표시 · 가상 콘솔의 계단식 속도 변화로 급가속이 과다 판정됨(실차 확인 필요) · 30m 4단계 `signalTiming`(결정 필요 "깜빡이 4단계 판정") · 실차 확인(벨트 변경 반영 · 경고등 종류 · 와이퍼 영역 · 운전석 `ROW_1_LEFT`) · 릴리스 빌드에서 새 권한이 허용되는지 확인
+- 점수 항목 확장 리뷰 후속 (11.15, 리뷰 낮음): 급가감속 쿨다운(연속 판정 간격) · 신호 capability 확인을 병렬로 · 경고등 · 벨트 폴링 실패 재시도와 같은 값 중복 제거(`distinctUntilChanged`) · 대표 좌표가 없을 때 그 운행의 `supported`에서 `NIGHT_HEADLIGHT` 제외
 - 좁은 폭(720dp) 레이아웃 (리뷰 낮음, 11.10, 실제 앱 영역 1682dp에서는 문제없음): 온보딩 측정 가능 항목 행에서 상태 문구가 항목 이름을 눌러 버림(OnboardingScreen CapabilityLine) · 결과 화면 항목 행 이름 칸 고정 width(200.dp)로 상태 문구가 여러 줄로 접힘(ResultScreen) · NO_TURN · EXCLUDED_SHORT 좁은 폭 Preview
 
 ## 서버와 맞춰야 할 항목
@@ -397,3 +404,17 @@
 | 2026-11-02 | Windows 개발 환경은 프로젝트와 Gradle 캐시(`GRADLE_USER_HOME`)를 모두 영문 경로에 둠. Gradle JDK는 17 | 사용자 이름이 한글이면 AGP 경로 검사와 단위 테스트 실행기가 실패함. `overridePathCheck`로는 테스트가 해결되지 않음 |
 | 2026-11-14 | 결과 화면은 적립 포인트가 0이면 포인트 줄을 숨김("적립 한도" 문구 삭제). 서버 요청 12번 본문도 맞춤 | 0 하나로는 버림(짧은 거리 · 낮은 평점)과 하루 한도를 구분할 수 없어 첫 경기에도 틀린 안내가 나옴. 포인트 비중이 낮음 |
 | 2026-11-14 | 포인트는 제휴와 관계된 것으로 리그 순위 가산점으로만 쓰는 방식을 지향함. 리워드(교환 · 사용)는 없음. 리워드처럼 보이는 문구 · 구성은 2차 19번에서 재검토 | 사용자 결정 |
+| 2026-11-15 | 점수 항목 7개(`SIGNAL_CANCEL` · `TURN_SPEED` · `SMOOTH_DRIVING` · `NIGHT_HEADLIGHT` · `SEAT_BELT` · `SAFETY_WARNING` · `RAIN_DRIVING`)를 앱에서 판정해 서버로 보냄 | 서버가 8개 항목 점수를 이미 계산함. 이벤트 payload는 openapi 형식 |
+| 2026-11-15 | `supported` 항목은 필요한 신호가 모두 있을 때만 넣음(`ScoreItem.measurable`): 깜빡이 = 방향지시등 + 핸들 각도, 깜빡이 끄기 · 회전 속도 = 그에 더해 속도, 부드러운 주행 = 속도 + 브레이크, 안전 경고 = 경고등 + 속도, 야간 = 하향등, 안전벨트 = 벨트 + 속도, 우천 = 와이퍼 + 하향등 | 판정에 필요한 신호가 없는데 넣으면 이벤트 0건이 만점으로 채점됨 |
+| 2026-11-15 | 깜빡이 끄기(`SIGNAL_LEFT_ON`)는 마지막 회전이 끝난 뒤 `signalCancel.minSpeedKmh` 이상으로 달린 시간만 셈. `forgetSec`를 넘으면 1건 | 회전 전에 미리 켜 둔 깜빡이나 정차 중 켜 둔 깜빡이를 잊은 것으로 보지 않음 |
+| 2026-11-15 | 급감속은 브레이크를 밟고 있을 때만 셈. 속도 샘플 간격이 `harsh.maxGapSec`(앱 내부 2초)보다 길면 판정하지 않음 | 타력 감속 · 신호 끊김을 급감속으로 오판하지 않게 함 |
+| 2026-11-15 | 야간은 등록 지역 시·도 대표 좌표의 일몰 ~ 다음 일출로 판정(NOAA 근사식). 실제 위치는 쓰지 않음 | 원시 위치를 쓰지 않는 원칙. 시·도 안의 일몰 차이는 몇 분 |
+| 2026-11-15 | 안전벨트는 `getCurrentSeatBeltBuckledState`(운전석)를 1초마다 읽음. 출발 시 상태를 모르면 그 운행의 `supported`에서 `SEAT_BELT`를 뺌 | 변경 콜백은 실차 확인 전. 모르는 상태를 미착용으로 채점하지 않음 |
+| 2026-11-15 | 경고등은 `getTelltalesInfo`를 1초마다 읽음(`registerTelltales`는 PRIVATE 권한이라 안 씀). 기본 대상은 ABS · ESC · TPMS · PARKING_BRAKE · ELECTRONIC_PARKING_BRAKE | 승인되지 않은 권한은 심사 탈락. 정보성 표시등은 빼고 안전 관련만 |
+| 2026-11-15 | 우천 `RAIN_SEGMENT`의 `knownLimitSec` · `overRainLimitSec`는 0 | 제한속도를 알 수 없음(에뮬레이터에서 항상 0, 실차 확인 전) |
+| 2026-11-15 | 하향등 상태를 모르는 시간은 꺼짐으로 세지 않음 | 미지원 · 신호 끊김을 위반으로 채점하지 않음 |
+| 2026-11-15 | 결과 화면 · 항목 상세의 행 값은 서버 `metrics`로 채움(점수 · 미지원 · 해당 없음). 8행 확장(H4~H7)은 UI 수정 후로 보류 | 점수는 서버가 계산. 사용자가 UI를 따로 고치는 중 |
+| 2026-11-15 | 안전 경고는 경고등 종류마다 한 번 켜진 주기(켜짐 → 꺼짐)에 1건. 속도가 기준을 넘나들어도 다시 세지 않음 | 리뷰 C1. 정체 구간에서 10km/h를 넘나들 때마다 세면 수천 건이 되어 운행 전체가 거부됨 |
+| 2026-11-15 | 운행 이벤트 상한은 서버 `trip.maxEvents`(기본 2000, 0 이하 무시). 넘치면 횟수형(급가속 · 급감속 · 안전 경고)을 늦은 것부터 빼고, 그래도 넘치면 이른 순으로 maxEvents개만 남김. 조립 단계에서 잘라 Room 저장 = 업로드 | 리뷰 C1. 2000건 초과는 서버 400 → `REJECTED`로 깜빡이까지 채점되지 않음 |
+| 2026-11-15 | 지원한다고 했어도 기록 샘플이 0개인 신호(브레이크 · 하향등 · 경고등 · 와이퍼 · 속도)는 그 운행의 `supported`에서 빼고 판정에도 쓰지 않음 | 리뷰 C2. 수집 실패를 이벤트 0건 = 만점으로 채점하지 않음 |
+| 2026-11-15 | 이미 `REJECTED`인 운행은 이번 변경 뒤에도 재전송하지 않음 | 400 · 413은 같은 요청을 다시 보내도 거부됨. 기존 운행을 다시 조립하지 않음 |

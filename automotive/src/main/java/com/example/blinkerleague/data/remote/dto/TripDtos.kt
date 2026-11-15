@@ -35,6 +35,37 @@ data class TurnPayload(
     val direction: String,
     val signalOn: Boolean,
     val uTurn: Boolean? = null,
+    /** 회전 구간 최고 속도(km/h, 소수 1자리). 모르면 null이라 직렬화에서 빠짐 */
+    val maxSpeedKmh: Double? = null,
+)
+
+/** `SIGNAL_LEFT_ON` 이벤트 payload (openapi `TripEventRequest.payload`) */
+@Serializable
+data class SignalLeftOnPayload(
+    val durationSec: Int,
+)
+
+/** `NIGHT_SEGMENT` 이벤트 payload (openapi `TripEventRequest.payload`) */
+@Serializable
+data class NightSegmentPayload(
+    val durationSec: Int,
+    val headlightOffSec: Int,
+)
+
+/** `SEAT_BELT` 이벤트 payload (openapi `TripEventRequest.payload`). 운행당 1건 */
+@Serializable
+data class SeatBeltPayload(
+    val buckledAtDeparture: Boolean,
+    val unbuckledMovingSec: Int,
+)
+
+/** `RAIN_SEGMENT` 이벤트 payload (openapi `TripEventRequest.payload`). 제한속도를 모르면 knownLimitSec · overRainLimitSec는 0 */
+@Serializable
+data class RainSegmentPayload(
+    val durationSec: Int,
+    val headlightOffSec: Int,
+    val knownLimitSec: Int,
+    val overRainLimitSec: Int,
 )
 
 /**
@@ -126,6 +157,27 @@ data class TurnCountDto(
 
 object TripEventType {
     const val TURN = "TURN"
+
+    /** 깜빡이를 켠 채 잊음. payload는 [SignalLeftOnPayload] */
+    const val SIGNAL_LEFT_ON = "SIGNAL_LEFT_ON"
+
+    /** 급가속. payload는 빈 객체 `{}` */
+    const val HARSH_ACCEL = "HARSH_ACCEL"
+
+    /** 급감속. payload는 빈 객체 `{}` */
+    const val HARSH_BRAKE = "HARSH_BRAKE"
+
+    /** 야간 주행 구간. payload는 [NightSegmentPayload] */
+    const val NIGHT_SEGMENT = "NIGHT_SEGMENT"
+
+    /** 안전벨트 (운행당 1건, 출발 시각). payload는 [SeatBeltPayload] */
+    const val SEAT_BELT = "SEAT_BELT"
+
+    /** 주행 중 켜진 안전 경고등. payload는 빈 객체 `{}` (중복 제거는 서버 mergeWindowSec) */
+    const val SAFETY_WARNING = "SAFETY_WARNING"
+
+    /** 우천 주행 구간. payload는 [RainSegmentPayload] */
+    const val RAIN_SEGMENT = "RAIN_SEGMENT"
 }
 
 object ScoreStatus {

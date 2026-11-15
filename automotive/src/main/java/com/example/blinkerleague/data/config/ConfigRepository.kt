@@ -64,6 +64,7 @@ internal fun DetectionConfig.mergedWith(response: ThresholdsResponse): Detection
         trip = this.trip.copy(
             minDistanceKm = trip?.minDistanceKm ?: this.trip.minDistanceKm,
             parkEndMinutes = trip?.parkEndMinutes ?: this.trip.parkEndMinutes,
+            maxEvents = trip?.maxEvents?.takeIf { it > 0 } ?: this.trip.maxEvents,
         ),
         turn = this.turn.copy(
             steeringEnterDeg = turn?.steeringEnterDeg ?: this.turn.steeringEnterDeg,
@@ -88,6 +89,16 @@ internal fun DetectionConfig.mergedWith(response: ThresholdsResponse): Detection
         point = point.copy(
             streakRewardDays = response.point?.streakRewardDays?.takeIf { it > 0 } ?: point.streakRewardDays,
             streakRewardPoint = response.point?.streakRewardPoint?.takeIf { it >= 0 } ?: point.streakRewardPoint,
+        ),
+        signalCancel = signalCancel.copy(
+            forgetSec = response.signalCancel?.forgetSec ?: signalCancel.forgetSec,
+            minSpeedKmh = response.signalCancel?.minSpeedKmh ?: signalCancel.minSpeedKmh,
+        ),
+        harsh = harsh.copy(
+            deltaKmhPerSec = response.harsh?.deltaKmhPerSec ?: harsh.deltaKmhPerSec,
+        ),
+        rain = rain.copy(
+            minWiperSec = response.rain?.minWiperSec ?: rain.minWiperSec,
         ),
     )
 }

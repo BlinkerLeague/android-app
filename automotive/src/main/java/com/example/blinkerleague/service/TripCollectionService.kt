@@ -68,6 +68,8 @@ class TripCollectionService : Service() {
             config = container.config,
             clock = System::currentTimeMillis,
             newId = container::newId,
+            coordinate = container::regionCoordinate,
+            zone = container.zone,
         )
         AppLog.i(TAG, "수집 시작, 지원 신호: ${container.vehicleSignalSource.capabilities()}")
         scope.launch {
