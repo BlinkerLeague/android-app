@@ -28,7 +28,40 @@ class SeatBeltJudge(private val config: SeatBeltConfig) {
     ): SeatBeltResult? {
         val departureMs = departureMs(vehicleStates, tripStartMs, tripEndMs)
         val buckled = seatBelts.filter { it.timestampMs <= departureMs }.maxByOrNull { it.timestampMs }?.buckled ?: false
-        return SeatBeltResult(occurredAtMs = departureMs, buckledAtDeparture = buckled, unbuckledMovingSec = 0)
+        val unbuckledMovingMs = unbuckledIntervals(seatBelts, tripStartMs, tripEndMs).sumOf { (from, to) ->
+            movingMillis(speeds, from, to)
+        }
+        return SeatBeltResult(
+            occurredAtMs = departureMs,
+            buckledAtDeparture = buckled,
+            unbuckledMovingSec = (unbuckledMovingMs / 1_000).toInt(),
+        )
+    }
+
+    /** [startMs, endMs) 중 벨트가 풀려 있던 구간들. 샘플 사이는 앞 값이 유지되고, 상태를 모르는 시간은 넣지 않음 */
+    private fun unbuckledIntervals(seatBelts: List<SeatBeltSample>, startMs: Long, endMs: Long): List<Pair<Long, Long>> {
+        val sorted = seatBelts.sortedBy { it.timestampMs }
+        val intervals = mutableListOf<Pair<Long, Long>>()
+        for ((i, s) in sorted.withIndex()) {
+            if (s.buckled) continue
+            val from = maxOf(s.timestampMs, startMs)
+            val to = minOf(sorted.getOrNull(i + 1)?.timestampMs ?: endMs, endMs)
+            if (to > from) intervals += from to to
+        }
+        return intervals
+    }
+
+    /** [startMs, endMs) 중 movingMinSpeedKmh 이상으로 달린 시간(ms). 샘플 사이는 앞 샘플 값이 유지된다고 봄 */
+    private fun movingMillis(speeds: List<SpeedSample>, startMs: Long, endMs: Long): Long {
+        val sorted = speeds.sortedBy { it.timestampMs }
+        var millis = 0L
+        for ((i, s) in sorted.withIndex()) {
+            if (s.speedKmh < config.movingMinSpeedKmh) continue
+            val from = maxOf(s.timestampMs, startMs)
+            val to = minOf(sorted.getOrNull(i + 1)?.timestampMs ?: endMs, endMs)
+            if (to > from) millis += to - from
+        }
+        return millis
     }
 
     /** 운행 구간 안의 첫 P → D/R 전환 시각. 없으면 운행 시작 */
