@@ -25,15 +25,16 @@ class SignalCancelDetector(private val config: SignalCancelConfig) {
         tripEndMs: Long,
     ): List<SignalLeftOn> {
         val result = mutableListOf<SignalLeftOn>()
+        var onState = TurnSignalState.OFF
         var onSinceMs: Long? = null
         for (sample in signals) {
-            val start = onSinceMs
-            if (sample.state != TurnSignalState.OFF) {
-                if (start == null) onSinceMs = sample.timestampMs
-            } else if (start != null) {
+            if (sample.state == onState) continue
+            // 끄거나 방향을 바꾸면 이전 구간을 이 시각에 닫음
+            onSinceMs?.let { start ->
                 leftOnOrNull(start, sample.timestampMs, turns, speeds, tripStartMs, tripEndMs)?.let { result += it }
-                onSinceMs = null
             }
+            onState = sample.state
+            onSinceMs = if (sample.state != TurnSignalState.OFF) sample.timestampMs else null
         }
         // 운행이 끝날 때까지 끄지 않았으면 운행 끝에서 닫음
         onSinceMs?.let { start ->
