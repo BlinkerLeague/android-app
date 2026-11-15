@@ -31,18 +31,34 @@ class SignalCancelDetector(private val config: SignalCancelConfig) {
             if (sample.state != TurnSignalState.OFF) {
                 if (start == null) onSinceMs = sample.timestampMs
             } else if (start != null) {
-                val offMs = sample.timestampMs
-                // 운행 시작 전부터 켜져 있었으면 운행 시작부터, 구간 안에 회전이 있으면 마지막 회전이 끝난 뒤부터 셈
-                val lastTurnEndMs = turns
-                    .filter { it.startMs < offMs && it.endMs > start }
-                    .maxOfOrNull { it.endMs }
-                val countFromMs = maxOf(start, tripStartMs, lastTurnEndMs ?: start).coerceAtMost(offMs)
-                val durationSec = (fastMillis(speeds, countFromMs, offMs) / 1_000).toInt()
-                if (durationSec > config.forgetSec) result += SignalLeftOn(countFromMs, durationSec)
+                leftOnOrNull(start, sample.timestampMs, turns, speeds, tripStartMs, tripEndMs)?.let { result += it }
                 onSinceMs = null
             }
         }
+        // 운행이 끝날 때까지 끄지 않았으면 운행 끝에서 닫음
+        onSinceMs?.let { start ->
+            leftOnOrNull(start, tripEndMs, turns, speeds, tripStartMs, tripEndMs)?.let { result += it }
+        }
         return result
+    }
+
+    /** 켠 시각 [onMs]부터 끈 시각 [offMs]까지의 구간 하나를 판정. 운행 밖 시간은 세지 않음 */
+    private fun leftOnOrNull(
+        onMs: Long,
+        offMs: Long,
+        turns: List<Turn>,
+        speeds: List<SpeedSample>,
+        tripStartMs: Long,
+        tripEndMs: Long,
+    ): SignalLeftOn? {
+        val countUntilMs = minOf(offMs, tripEndMs)
+        // 운행 시작 전부터 켜져 있었으면 운행 시작부터, 구간 안에 회전이 있으면 마지막 회전이 끝난 뒤부터 셈
+        val lastTurnEndMs = turns
+            .filter { it.startMs < countUntilMs && it.endMs > onMs }
+            .maxOfOrNull { it.endMs }
+        val countFromMs = maxOf(onMs, tripStartMs, lastTurnEndMs ?: onMs).coerceAtMost(countUntilMs)
+        val durationSec = (fastMillis(speeds, countFromMs, countUntilMs) / 1_000).toInt()
+        return if (durationSec > config.forgetSec) SignalLeftOn(countFromMs, durationSec) else null
     }
 
     /**
