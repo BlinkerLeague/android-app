@@ -115,6 +115,25 @@ class ResultUiStateTest {
     }
 
     @Test
+    fun `다음 등급과 남은 점수를 기준값 순서로 구하고 맨 위 등급이거나 점수가 없으면 비운다`() {
+        // given
+        // 등급 이름은 기준값에서 옴 (순서도 섞어 둠)
+        val grades = listOf(GradeThreshold("실버", 60), GradeThreshold("골드", 90), GradeThreshold("브론즈", 30))
+
+        // when
+        val silver = result(ScoreState.SCORED, 72).toResultUiState(null, grades)
+        val belowAll = result(ScoreState.SCORED, 20).toResultUiState(null, grades)
+        val top = result(ScoreState.SCORED, 93).toResultUiState(null, grades)
+        val pending = result(ScoreState.PENDING, null).toResultUiState(null, grades)
+
+        // then
+        assertEquals(NextGrade("골드", 18), silver.nextGrade)
+        assertEquals(NextGrade("브론즈", 10), belowAll.nextGrade)
+        assertNull(top.nextGrade)
+        assertNull(pending.nextGrade)
+    }
+
+    @Test
     fun `실점이 있으면 다음 경기 팁으로 깜빡이 팁을 담는다`() {
         // given
         // 깜빡이 켬 · 안 켬 · 켬 → 실점 1

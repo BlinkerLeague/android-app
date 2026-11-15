@@ -41,8 +41,13 @@ sealed interface ResultUiState {
         val celebrate: Boolean = false,
         /** 다음 경기 팁. 없으면 null (카드 숨김) */
         val tip: String? = null,
+        /** "다음 등급까지 N점". 맨 위 등급이거나 점수가 없으면 null */
+        val nextGrade: NextGrade? = null,
     ) : ResultUiState
 }
+
+/** 지금 점수보다 한 단계 위 등급과 그 등급까지 남은 점수 */
+data class NextGrade(val grade: String, val points: Int)
 
 enum class MetricItem { TURN_SIGNAL, SMOOTH_DRIVING, SAFETY_WARNING, NIGHT_HEADLIGHT }
 
