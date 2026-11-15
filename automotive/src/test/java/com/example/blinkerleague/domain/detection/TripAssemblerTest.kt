@@ -17,6 +17,7 @@ import com.example.blinkerleague.domain.model.TripEvent
 import com.example.blinkerleague.domain.model.TurnDirection
 import com.example.blinkerleague.domain.model.TurnSignalState
 import com.example.blinkerleague.domain.model.VehicleStateSample
+import com.example.blinkerleague.domain.model.WiperSample
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -275,5 +276,41 @@ class TripAssemblerTest {
 
         // then
         assertEquals(listOf(TripEvent.SafetyWarningEvent(id = "event-1", occurredAtMs = 20_000)), trip.events)
+    }
+
+    @Test
+    fun `와이퍼와 하향등이 지원되면 RAIN_SEGMENT 이벤트를 만든다`() {
+        // given
+        // 운행 0s ~ 300s. 대표 좌표를 넘기지 않아 야간 구간은 만들지 않음
+        // 와이퍼 60s 켜짐 → 180s 꺼짐 (120초, 기준 30초 초과). 하향등은 계속 꺼짐
+        val wipers = listOf(
+            WiperSample(60_000, on = true),
+            WiperSample(180_000, on = false),
+        )
+        val headlights = listOf(HeadlightSample(0, on = false))
+
+        // when
+        val trip = assembler.assemble(
+            tripId = "t",
+            startedAtMs = 0,
+            endedAtMs = 300_000,
+            recording = TripRecording(emptyList(), emptyList(), emptyList(), emptyList(), headlights = headlights, wipers = wipers),
+            supported = setOf(SignalType.WIPER, SignalType.HEADLIGHT),
+        )
+
+        // then
+        assertEquals(
+            listOf(
+                TripEvent.RainSegmentEvent(
+                    id = "event-1",
+                    occurredAtMs = 60_000,
+                    durationSec = 120,
+                    headlightOffSec = 120,
+                    knownLimitSec = 0,
+                    overRainLimitSec = 0,
+                ),
+            ),
+            trip.events,
+        )
     }
 }

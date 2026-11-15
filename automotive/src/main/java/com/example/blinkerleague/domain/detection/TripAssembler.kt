@@ -14,6 +14,7 @@ import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.Trip
 import com.example.blinkerleague.domain.model.TripEvent
 import com.example.blinkerleague.domain.model.VehicleStateSample
+import com.example.blinkerleague.domain.model.WiperSample
 import java.time.ZoneId
 import java.time.ZoneOffset
 
@@ -33,6 +34,8 @@ data class TripRecording(
     val seatBelts: List<SeatBeltSample> = emptyList(),
     /** 그 시점에 켜진 경고등 이름 집합 (1초 폴링). 안전 경고등 판정에 씀 */
     val telltales: List<TelltaleSample> = emptyList(),
+    /** 와이퍼 상태 변화. 우천 구간 판정에 씀 */
+    val wipers: List<WiperSample> = emptyList(),
 )
 
 /**

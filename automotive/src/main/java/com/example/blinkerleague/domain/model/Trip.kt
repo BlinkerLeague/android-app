@@ -68,4 +68,17 @@ sealed interface TripEvent {
         override val id: String,
         override val occurredAtMs: Long,
     ) : TripEvent
+
+    /**
+     * 우천 주행 구간 (와이퍼가 minWiperSec 넘게 켜진 구간). [headlightOffSec]는 그 동안 하향등이 꺼져 있던 시간.
+     * 제한속도를 알 수 없어서 [knownLimitSec] · [overRainLimitSec]는 0
+     */
+    data class RainSegmentEvent(
+        override val id: String,
+        override val occurredAtMs: Long,
+        val durationSec: Int,
+        val headlightOffSec: Int,
+        val knownLimitSec: Int,
+        val overRainLimitSec: Int,
+    ) : TripEvent
 }
