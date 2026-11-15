@@ -49,7 +49,7 @@ class ResultUiStateTest {
         assertEquals(2, state.goals)
         assertEquals(1, state.conceded)
         assertEquals(MetricValue.Score(67), metric(state))
-        assertEquals(3, state.metrics.count { it.value == MetricValue.ComingSoon })
+        assertEquals(7, state.metrics.count { it.value == MetricValue.ComingSoon })
     }
 
     @Test
@@ -296,5 +296,24 @@ class ResultUiStateTest {
         assertEquals(listOf("08:15", "08:21", "08:27"), plays.plays.map { it.time })
         assertEquals(listOf(true, false, true), plays.plays.map { it.goal })
         assertEquals(TurnDirection.RIGHT, plays.plays[1].direction)
+    }
+
+    @Test
+    fun `결과 화면은 서버 8개 항목을 서버 순서대로 행으로 보인다`() {
+        // given
+        val server = listOf(MetricDetail(metric = "SEAT_BELT", status = "SCORED", score = 30, counts = emptyMap(), weight = 0.1))
+
+        // when
+        val state = result(ScoreState.SCORED, 72).toResultUiState(null, GradeThreshold.DEFAULT, serverMetrics = server)
+
+        // then
+        assertEquals(
+            listOf(
+                "TURN_SIGNAL", "SMOOTH_DRIVING", "SAFETY_WARNING", "NIGHT_HEADLIGHT",
+                "SIGNAL_CANCEL", "TURN_SPEED", "SEAT_BELT", "RAIN_DRIVING",
+            ),
+            state.metrics.map { it.item.name },
+        )
+        assertEquals(MetricValue.Score(30), state.metrics.first { it.item.name == "SEAT_BELT" }.value)
     }
 }
