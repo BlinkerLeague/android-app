@@ -19,6 +19,8 @@ data class CapabilityReport(
     val steering: Availability,
     val gear: Availability,
     val speed: Availability,
+    /** 브레이크 페달 (급감속 판정) */
+    val brake: Availability = Availability.UNSUPPORTED,
 ) {
     /** 업로드 `supported` 목록에 넣을 신호 */
     val supportedSignals: Set<SignalType>
@@ -34,7 +36,7 @@ data class CapabilityReport(
 
     companion object {
         val ALL_SUPPORTED = CapabilityReport(
-            Availability.SUPPORTED, Availability.SUPPORTED, Availability.SUPPORTED, Availability.SUPPORTED,
+            Availability.SUPPORTED, Availability.SUPPORTED, Availability.SUPPORTED, Availability.SUPPORTED, Availability.SUPPORTED,
         )
     }
 }
