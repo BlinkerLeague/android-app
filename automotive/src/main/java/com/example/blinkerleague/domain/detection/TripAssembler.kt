@@ -76,10 +76,19 @@ class TripAssembler(
         /** 일출 · 일몰 날짜를 정하는 시간대 */
         zone: ZoneId = ZoneOffset.UTC,
     ): Trip {
+        // 지원한다고 했지만 기록 샘플이 하나도 없는 신호는 측정하지 못한 것으로 보고 이후 판정과 supported에서 뺌
+        val recorded = mapOf(
+            SignalType.BRAKE to recording.brakes,
+            SignalType.HEADLIGHT to recording.headlights,
+            SignalType.SAFETY_WARNING to recording.telltales,
+            SignalType.WIPER to recording.wipers,
+            SignalType.SPEED to recording.speeds,
+        )
+        val measurable = supported - recorded.filterValues { it.isEmpty() }.keys
         val window = startedAtMs..endedAtMs
         val locations = recording.locations.filter { it.timestampMs in window }
 
-        val canMeasureTurns = SignalType.TURN_SIGNAL in supported && SignalType.STEERING_ANGLE in supported
+        val canMeasureTurns = SignalType.TURN_SIGNAL in measurable && SignalType.STEERING_ANGLE in measurable
         val turns = if (canMeasureTurns) {
             detector.detect(
                 steering = recording.steering.filter { it.timestampMs in window },
@@ -105,14 +114,14 @@ class TripAssembler(
         } else {
             emptyList()
         }
-        val signalLeftOnEvents = if (canMeasureTurns && SignalType.SPEED in supported) {
+        val signalLeftOnEvents = if (canMeasureTurns && SignalType.SPEED in measurable) {
             signalCancelDetector.detect(recording.signals, turns, recording.speeds, startedAtMs, endedAtMs).map {
                 TripEvent.SignalLeftOnEvent(id = newId(), occurredAtMs = it.occurredAtMs, durationSec = it.durationSec)
             }
         } else {
             emptyList()
         }
-        val harshEvents = if (SignalType.SPEED in supported && SignalType.BRAKE in supported) {
+        val harshEvents = if (SignalType.SPEED in measurable && SignalType.BRAKE in measurable) {
             harshDetector.detect(recording.speeds, recording.brakes).filter { it.occurredAtMs in window }.map {
                 when (it.kind) {
                     HarshKind.ACCEL -> TripEvent.HarshAccelEvent(id = newId(), occurredAtMs = it.occurredAtMs)
@@ -123,7 +132,7 @@ class TripAssembler(
             emptyList()
         }
 
-        val nightEvents = if (SignalType.HEADLIGHT in supported && coordinate != null) {
+        val nightEvents = if (SignalType.HEADLIGHT in measurable && coordinate != null) {
             NightSegmentDetector(zone).detect(recording.headlights, startedAtMs, endedAtMs, coordinate).map {
                 TripEvent.NightSegmentEvent(
                     id = newId(),
@@ -136,7 +145,7 @@ class TripAssembler(
             emptyList()
         }
 
-        val seatBeltEvents = if (SignalType.SEAT_BELT in supported && SignalType.SPEED in supported) {
+        val seatBeltEvents = if (SignalType.SEAT_BELT in measurable && SignalType.SPEED in measurable) {
             listOfNotNull(
                 seatBeltJudge.judge(recording.seatBelts, recording.speeds, recording.vehicleStates, startedAtMs, endedAtMs)?.let {
                     TripEvent.SeatBeltEvent(
@@ -151,7 +160,7 @@ class TripAssembler(
             emptyList()
         }
 
-        val safetyWarningEvents = if (SignalType.SAFETY_WARNING in supported && SignalType.SPEED in supported) {
+        val safetyWarningEvents = if (SignalType.SAFETY_WARNING in measurable && SignalType.SPEED in measurable) {
             safetyWarningDetector.detect(recording.telltales, recording.speeds, startedAtMs, endedAtMs).map {
                 TripEvent.SafetyWarningEvent(id = newId(), occurredAtMs = it.occurredAtMs)
             }
@@ -159,7 +168,7 @@ class TripAssembler(
             emptyList()
         }
 
-        val rainEvents = if (SignalType.WIPER in supported && SignalType.HEADLIGHT in supported) {
+        val rainEvents = if (SignalType.WIPER in measurable && SignalType.HEADLIGHT in measurable) {
             rainDetector.detect(recording.wipers, recording.headlights, startedAtMs, endedAtMs).map {
                 TripEvent.RainSegmentEvent(
                     id = newId(),
@@ -175,10 +184,10 @@ class TripAssembler(
         }
 
         // 출발 시점 벨트 상태를 몰라 판정하지 못한 운행은 서버가 항목을 빼도록 supported에서 제외함
-        val measuredSupported = if (SignalType.SEAT_BELT in supported && SignalType.SPEED in supported && seatBeltEvents.isEmpty()) {
-            supported - SignalType.SEAT_BELT
+        val measuredSupported = if (SignalType.SEAT_BELT in measurable && SignalType.SPEED in measurable && seatBeltEvents.isEmpty()) {
+            measurable - SignalType.SEAT_BELT
         } else {
-            supported
+            measurable
         }
 
         return Trip(
