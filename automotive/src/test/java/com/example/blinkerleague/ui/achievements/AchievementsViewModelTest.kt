@@ -75,7 +75,72 @@ class AchievementsViewModelTest {
 
         // then
         val state = vm.uiState.value as AchievementsUiState.Loaded
-        assertEquals(StreakCard(3, false, daysToReward = 2, rewardPoint = 30), state.streak)
+        assertEquals(StreakCard(3, false, daysToReward = 2, rewardPoint = 30, period = 5), state.streak)
+    }
+
+    @Test
+    fun `업적 연승 카드에 기준값 주기와 채운 칸 수`() = runTest(dispatcher) {
+        // given
+        // 서버 기준값: 5일마다 보상, 지금 3일 연속
+        val vm = AchievementsViewModel(
+            { Streak(3, true) },
+            { emptyList() },
+            zone,
+            rule = { PointConfig(streakRewardDays = 5, streakRewardPoint = 30) },
+        )
+
+        // when
+        vm.refresh()
+        runCurrent()
+
+        // then
+        val streak = (vm.uiState.value as AchievementsUiState.Loaded).streak!!
+        assertEquals(5, streak.period)
+        assertEquals(3, streakDotsFilled(streak.days, streak.period))
+    }
+
+    @Test
+    fun `업적 화면에 획득한 배지 수`() = runTest(dispatcher) {
+        // given
+        // 배지 3개 중 2개 획득
+        val vm = AchievementsViewModel(
+            { null },
+            {
+                listOf(
+                    Badge("FIRST_TRIP", "첫 경기", "점수가 난 첫 운행", true, at),
+                    Badge("STREAK_7", "7일 연속", "퀘스트 7일 연속 클리어", false, null),
+                    Badge("SIGNAL_100", "깜빡이 100회", "회전 깜빡이 100회", true, at),
+                )
+            },
+            zone,
+        )
+
+        // when
+        vm.refresh()
+        runCurrent()
+
+        // then
+        val state = vm.uiState.value as AchievementsUiState.Loaded
+        assertEquals(2, state.earnedCount)
+        assertEquals(3, state.badges.size)
+    }
+
+    @Test
+    fun `배지 카드에 서버 배지 코드를 담는다`() = runTest(dispatcher) {
+        // given
+        val vm = AchievementsViewModel(
+            { null },
+            { listOf(Badge("SIGNAL_100", "깜빡이 100회", "회전 깜빡이 100회", false, null)) },
+            zone,
+        )
+
+        // when
+        vm.refresh()
+        runCurrent()
+
+        // then
+        val state = vm.uiState.value as AchievementsUiState.Loaded
+        assertEquals("SIGNAL_100", state.badges[0].code)
     }
 
     @Test
@@ -84,5 +149,32 @@ class AchievementsViewModelTest {
         assertEquals(4, daysToReward(3))
         assertEquals(7, daysToReward(7))
         assertEquals(1, daysToReward(13))
+    }
+
+    @Test
+    fun `연승 진행 점 - 연승 3일이면 주기 7칸 중 3칸`() {
+        // when
+        val filled = streakDotsFilled(days = 3, period = 7)
+
+        // then
+        assertEquals(3, filled)
+    }
+
+    @Test
+    fun `연승이 주기의 배수면 진행 점을 모두 채운다`() {
+        // when
+        val filled = listOf(7, 14).map { streakDotsFilled(days = it, period = 7) }
+
+        // then
+        assertEquals(listOf(7, 7), filled)
+    }
+
+    @Test
+    fun `연승 0일이면 진행 점을 채우지 않는다`() {
+        // when
+        val filled = streakDotsFilled(days = 0, period = 7)
+
+        // then
+        assertEquals(0, filled)
     }
 }

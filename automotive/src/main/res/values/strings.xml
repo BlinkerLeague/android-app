@@ -15,6 +15,7 @@
     <string name="result_header">경기 종료 · %1$.1f km</string>
     <string name="result_header_today">오늘의 %1$d번째 경기 종료 · %2$.1f km</string>
     <string name="result_score">평점 %1$d</string>
+    <string name="result_next_grade">다음 등급 %1$s까지 %2$d점</string>
     <string name="result_goals">득점 %1$d · 실점 %2$d</string>
     <string name="result_pending">결과 집계 중</string>
     <string name="result_pending_body">연결되면 자동으로 전송돼요</string>
@@ -45,8 +46,9 @@
     <string name="result_outcome_win">승리!</string>
     <string name="result_outcome_draw">무승부</string>
     <string name="result_outcome_tough">아쉬운 경기</string>
-    <string name="result_no_turn_match">오늘은 회전 없는 경기</string>
+    <string name="result_no_turn_match">회전 없는 경기</string>
     <string name="result_tip_title">다음 경기 팁</string>
+    <string name="result_tip_turn_signal">회전 %1$d초 전에 깜빡이를 켜 보세요.</string>
 
     <!-- 항목 상세 (SCR-02b) -->
     <string name="detail_score">%1$d점</string>
@@ -79,13 +81,10 @@
 
     <!-- 오늘의 퀘스트 -->
     <string name="mission_label">오늘의 퀘스트</string>
-    <string name="mission_progress">회전 %1$d / %2$d · 모두 제때 켜기</string>
     <string name="mission_status_in_progress">진행 중</string>
     <string name="mission_status_achieved">달성</string>
     <string name="mission_status_failed">지난 퀘스트 미달성</string>
-    <string name="mission_hint_in_progress">한 번의 운행에서 회전 세 번 모두 깜빡이를 켜면 달성이에요</string>
     <string name="mission_hint_achieved">오늘 퀘스트를 달성했어요</string>
-    <string name="mission_hint_failed">지난 퀘스트는 달성하지 못했어요. 오늘 운행에서 다시 도전해요</string>
     <string name="mission_unavailable">퀘스트를 불러오지 못했어요</string>
     <string name="mission_open">오늘의 퀘스트</string>
     <string name="mission_back">돌아가기</string>
@@ -121,7 +120,6 @@
     <string name="home_quest_label">오늘의 퀘스트</string>
     <string name="home_quest_loading">퀘스트를 불러오고 있어요</string>
     <string name="home_recent_title">최근 경기</string>
-    <string name="home_streak_label">연속 달성</string>
     <string name="home_streak_today_done">오늘도 달성</string>
     <string name="home_streak_today_todo">오늘 달성하면 이어져요</string>
     <string name="home_recent_empty">아직 경기가 없어요\n운행을 마치면 여기에 보여요</string>
@@ -129,14 +127,13 @@
     <string name="home_day_yesterday">어제 %1$s</string>
     <string name="home_day_other">%1$s %2$s</string>
     <string name="home_score">평점 %1$d</string>
-    <string name="home_score_grade">평점 %1$d · %2$s</string>
     <string name="home_state_pending">결과 집계 중</string>
-    <string name="home_state_no_turn">측정할 회전이 없었어요</string>
+    <string name="home_state_no_turn">회전 없는 경기</string>
     <string name="home_state_excluded_short">짧은 이동은 경기에서 제외돼요</string>
     <string name="home_state_rejected">결과를 올리지 못했어요</string>
     <string name="home_notice_no_speed">속도 권한이 없어 판정 정확도가 제한돼요</string>
     <string name="home_notice_recording_off">기록이 꺼져 있어요 · 앱을 열면 다시 시작돼요</string>
-    <string name="home_status_waiting">운행을 기다리고 있어요</string>
+    <string name="home_status_waiting">출전 대기 중 · 출발하면 경기가 시작돼요</string>
     <string name="home_status_recording">운행을 기록하고 있어요</string>
     <string name="home_status_off">기록이 꺼져 있어요</string>
     <string name="home_demo">시나리오 재생</string>
@@ -148,9 +145,14 @@
 
     <!-- 리그 (SCR-04) -->
     <string name="tab_league">리그</string>
-    <string name="league_season">%1$d월 시즌 · D-%2$d</string>
+    <string name="league_season_month">%1$d월 시즌</string>
+    <string name="league_season_end">시즌 종료</string>
+    <string name="league_dday">D-%1$d</string>
+    <string name="league_my_rank">내 순위</string>
+    <string name="league_rank_unit">위</string>
+    <string name="league_rank_of">참여자 %1$d명 중</string>
+    <string name="league_me">%1$s (나)</string>
     <string name="league_my_score">내 리그 점수</string>
-    <string name="league_rank">%1$d위 / %2$d명</string>
     <string name="league_not_ranked">아직 순위가 없어요 · 참여자 %1$d명</string>
     <string name="league_rank_hidden">참여자가 %1$d명이 되면 순위가 공개돼요 (지금 %2$d명)</string>
     <string name="league_qualified">이번 시즌 순위 자격을 채웠어요</string>
@@ -167,11 +169,13 @@
 
     <!-- 업적 (SCR-05) -->
     <string name="achievements_streak">퀘스트 연속 달성</string>
-    <string name="achievements_streak_days">%1$d일</string>
     <string name="achievements_today_done">오늘 퀘스트를 달성했어요</string>
     <string name="achievements_today_todo">오늘 퀘스트를 달성하면 이어져요</string>
     <string name="achievements_reward_in">%1$d일 더 달성하면 +%2$dP</string>
-    <string name="achievements_badges">배지</string>
+    <string name="achievements_shelf">트로피 진열장</string>
+    <string name="achievements_earned_count">획득 %1$d</string>
+    <string name="achievements_count">획득 %1$d / 전체 %2$d</string>
+    <string name="achievements_badges_empty">아직 받을 수 있는 배지가 없어요</string>
     <string name="achievements_locked">잠김</string>
     <string name="achievements_earned">획득</string>
     <string name="achievements_earned_on">%1$s 획득</string>
@@ -268,4 +272,21 @@
     <string name="settings_league_visible">리그 순위에 내 닉네임 공개</string>
     <string name="settings_league_visible_note">끄면 순위 · 지역 안전지수 · 시즌 우승에서 빠져요. 내 점수는 계속 볼 수 있어요</string>
     <string name="settings_league_failed">저장하지 못했어요. 연결을 확인한 뒤 다시 눌러 주세요</string>
+    <!-- 게임 UI PR-B: 홈 로비 · 퀘스트 (plan-ui 8장) -->
+    <string name="game_quest_ring_unit">회전</string>
+    <string name="game_check">✓</string>
+    <string name="game_quest_hint_next">다음 경기에서 회전 %1$d번 모두 득점하면 클리어</string>
+    <string name="game_quest_clear">CLEAR</string>
+    <string name="game_streak_unit">연승</string>
+    <string name="game_streak_days">%1$d연승</string>
+    <string name="game_streak_next_reward">%1$d일 더 이어가면 %2$d연승 · 연속 보상 +%3$dP</string>
+    <string name="game_quest_streak_if_clear">클리어하면 %1$s</string>
+    <string name="game_quest_streak_today">오늘 클리어로 %1$s</string>
+    <string name="game_quest_streak_if_clear_reward">클리어하면 %1$s · 연속 보상 +%2$dP</string>
+    <string name="game_quest_streak_today_reward">오늘 클리어로 %1$s · 연속 보상 +%2$dP 받았어요</string>
+    <string name="game_recent_meta">%1$s · %2$.1fkm</string>
+    <string name="game_outcome_perfect">완승</string>
+    <string name="game_outcome_win">승리</string>
+    <string name="game_outcome_draw">무승부</string>
+    <string name="game_outcome_tough">아쉬운 경기</string>
 </resources>

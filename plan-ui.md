@@ -3,7 +3,8 @@
 정차(P) 화면을 "경기"처럼 보이게 바꾸는 2차 작업의 계획과 진행 기록입니다. 세션이 끊겨도 다른 사람이 이 문서만 보고 이어서 할 수 있도록 끝난 것과 남은 것을 모두 적습니다.
 
 - 마지막 갱신: 2026-11-15
-- 작업 브랜치: `feature/game-ui` (develop 기준, 원격에 push됨, PR 아직 없음)
+- 작업 브랜치: `feature/game-ui` (PR-A, develop 기준, PR #82) → `feature/game-ui-lobby` (PR-B, PR-A 위, PR #83) → `feature/game-ui-shelf` (PR-C, PR-B 위, PR #84)
+- **상태(11.15): PR-A · B · C 구현 · 문서 완료, 최종 리뷰(`review/2026-11-15-feature-game-ui.md`) 지적 수정 완료(11장).** 남은 것은 아래 10장 "남은 일"
 - 디자인 목업: [`docs/mockups/game-ui.html`](docs/mockups/game-ui.html) (브라우저로 열기, 화면 제목 옆 "모션 다시 보기")
   - **목업에는 데이터가 없거나 팀 결정과 다른 요소가 있습니다. 목업과 이 문서가 다르면 이 문서를 따릅니다** (아래 "목업과 다르게 하기로 한 것")
 - 화면 기준 문서는 여전히 [`docs/screen-plan.md`](docs/screen-plan.md). 이 작업이 끝나면 그 문서에 반영합니다(PR-A · C 문서 단계)
@@ -50,6 +51,11 @@ CLAUDE.md "작업 방식" 그대로입니다.
 | 8 | 목업 파일 | `docs/mockups/game-ui.html`에 둠 | 동료가 이어서 작업할 수 있게 |
 | 9 | 효과음 | 넣지 않음 | 음성 끄기 토글(2차 #15)이 없고 음성 2회 원칙과 별도 결정 |
 | 10 | PR 분할 | A · B · C 3개(아래 6장) | 사이클 40개 이상이라 한 PR은 리뷰가 어려움 |
+| 11 | 퀘스트 클리어 꽃가루 횟수 (리뷰 9) | **클리어당 1회**(사용자 결정 11.15). 같은 회차(`missionId:periodKey`)는 퀘스트 화면을 다시 열거나 앱을 다시 켜도 다시 터지지 않음. 본 회차는 `CelebrationStore`(SharedPreferences `celebration`, 마지막 키 하나)에 기억 | 클리어한 날 홈 → 퀘스트를 열 때마다 축하가 반복됐음 |
+| 12 | 클리어한 날 연속 보상 문구 | 클리어 전 "클리어하면 7연승 · 연속 보상 +50P", 클리어한 날 "오늘 클리어로 7연승 · 연속 보상 +50P 받았어요"(사용자 결정 11.15) | 10장의 PR-B 질문(클리어 뒤에도 보상 포인트를 보여 줄지)에 대한 답. 이미 받은 것으로 읽히게 |
+| 13 | 결과 화면 "다음 등급까지 N점" | 넣음(사용자 결정 11.15). 기준값 `grades`를 minScore 순으로 보고 지금 점수보다 높은 첫 등급까지 남은 점수, 맨 위 등급이거나 점수가 없으면 숨김. 등급 이름은 하드코딩하지 않음. 문구 "다음 등급 S까지 9점" | 등급 도장 아래 빈 곳(리뷰 2)을 의미 있는 정보로 채움. 데이터는 이미 있음 |
+| 14 | 회전 없는 경기 문구 | 화면 "회전 없는 경기"(홈 최근 경기 행 · 결과), 음성 "경기 종료. 이번 경기는 회전이 없었어요." "오늘은"은 쓰지 않음 | 리뷰 5. 운행 하나에 대한 말이라 날짜를 붙이면 틀릴 수 있음 |
+| 15 | 결과 화면 "다음 경기 팁" | 서버 `tips` 문구 대신 앱 문구 "회전 N초 전에 깜빡이를 켜 보세요."에 기준값 `turn.signalLeadSec`을 넣음(음성과 같은 값). 항목 상세(SCR-02b)의 팁은 서버 `tips` 그대로 | 리뷰 6. 서버가 `signalLeadSec`만 바꾸면 화면 팁과 음성의 초가 달라졌음 |
 
 ## 4. 목업과 다르게 하기로 한 것
 
@@ -75,8 +81,8 @@ CLAUDE.md "작업 방식" 그대로입니다.
 | PR | 브랜치 | 범위 | 상태 |
 | --- | --- | --- | --- |
 | A | `feature/game-ui` | 공통 모션 부품, SCR-02 결과, C안 음성(시동 · 종료 중계 톤), SCR-02a 하이라이트 | **구현 · 문서 완료**: TDD 28개, T1~T5 · T10 · T11, 검증(단위 테스트 312 · 빌드 · lint 15). 에뮬레이터 확인 · PR 남음, 리뷰는 마지막 한 번으로 미룸 |
-| B | `feature/game-ui-lobby` (A 머지 뒤 develop에서) | SCR-01 홈 로비, SCR-03 퀘스트 | 대기 |
-| C | `feature/game-ui-shelf` (B 머지 뒤) | SCR-05 업적 진열장, SCR-04 리그, 문서 마무리 | 대기 |
+| B | `feature/game-ui-lobby` (A 머지 전이라 `feature/game-ui` 위에서 시작) | SCR-01 홈 로비, SCR-03 퀘스트 | **구현 · 문서 완료**(11.15): TDD 11개(29~39), T6 · T7, 검증(단위 테스트 323 · 빌드 · lint 15). 에뮬레이터 확인 · PR 남음, 리뷰는 마지막 한 번 |
+| C | `feature/game-ui-shelf` (B 머지 전이라 `feature/game-ui-lobby` 위에서 시작) | SCR-05 업적 진열장, SCR-04 리그, 문서 마무리 | **구현 · 문서 완료**(11.15): TDD 3개(40~42), T8 · T9, 문서 마무리, 검증(단위 테스트 326 · 빌드 · lint 15). 에뮬레이터 확인 · PR 남음 |
 
 ## 7. PR-A 상세
 
@@ -153,9 +159,9 @@ CLAUDE.md "작업 방식" 그대로입니다.
 - 기존 테스트 갱신이 맞는지: `VoiceScriptTest`, `TripVoiceGuideTest`
 - lint 경고 기준선 15건 이하
 
-## 8. PR-B 계획 (홈 로비 · 퀘스트)
+## 8. PR-B 계획 (홈 로비 · 퀘스트) — 완료 (2026-11-15)
 
-A 머지 뒤 develop에서 `feature/game-ui-lobby`. lead에게 이 장과 목업 2 · 4번 화면을 주고 계획을 다시 확인받은 뒤 시작.
+`feature/game-ui-lobby`(PR-A가 아직 머지 전이라 `feature/game-ui` 위에서 시작). 진행 방식 변경(2장)에 따라 lead 확인 없이 에이전트 하나가 이 장대로 진행함.
 
 설계:
 - `ui/home`: `RecentTripRow`에 `goals` · `conceded` · `outcome` · `distanceKm`. `HomeUiState`의 `streakDays` · `streakTodayAchieved`를 `streak: StreakCard?`로. `player: PlayerCard?(nickname, regionLabel)`. `HomeViewModel`에 `profile: () -> DriverProfile?`, `rule: () -> PointConfig`
@@ -163,35 +169,56 @@ A 머지 뒤 develop에서 `feature/game-ui-lobby`. lead에게 이 장과 목업
 - `ui/achievements`: `streakDotsFilled(days, period)` 순수 함수(`AchievementsUiState.kt`의 `daysToReward` 옆), `StreakCard`에 `period`
 
 TDD 사이클:
-| # | 테스트 (위치) | 예상 red |
-| --- | --- | --- |
-| 29 | 최근 경기 행에 득점 · 실점 · 승패 · 거리를 담는다 (`HomeViewModelTest`, `trip()` 헬퍼에 회전 추가) | 새 필드 기본값 0 / null |
-| 30 | 연승 진행 점 - 연승 3일이면 주기 7칸 중 3칸 (`AchievementsViewModelTest`) | 골격이 0 |
-| 31 | 연승이 주기의 배수(7, 14)면 모든 칸 | `days % period`가 0 |
-| 32 | 연승 0일이면 칸을 채우지 않음 | 31 구현이 7 |
-| 33 | 홈 연승 카드는 기준값 주기로 남은 날과 보상 포인트 (PointConfig(5, 30), Streak(3, true) → StreakCard(3, true, 2, 30, period=5)). 기존 `streakDays` 단언을 `streak?.days`로 | 기본값 7 · 50 |
-| 34 | 홈에 등록한 닉네임과 지역 이름 (`Regions.label`) | `player` null |
-| 35 | 퀘스트를 클리어했으면 클리어 안내 (`QuestHintTest` 새) | 골격 기본값 NextTrip |
-| 36 | 클리어 전이면 "다음 경기에서 회전 N번 모두" (IN_PROGRESS 2/3, FAILED → NextTrip(3), 남은 횟수가 아니라 requiredTurns 전체) | requiredTurns 대신 0 |
-| 37 | 오늘 클리어 전이면 클리어 시 이어질 연승 일수 (`QuestViewModelTest` 새, Streak(5, false) → 6) | `streakImpact` null |
-| 38 | 오늘 이미 클리어면 오늘 클리어로 이어진 일수 (Streak(6, true) → 6) | 37 구현이 7 |
-| 39 | 다음 클리어가 연속 보상 주기면 보상 포인트 (Streak(6, false), period 7 → 50, 아니면 null) | 기본값 null |
+| # | 테스트 (위치) | 예상 red | 상태 |
+| --- | --- | --- | --- |
+| 29 | 최근 경기 행에 득점 · 실점 · 승패 · 거리를 담는다 (`HomeViewModelTest`, `trip()` 헬퍼에 회전 추가) | 새 필드 기본값 0 / null | ✅ |
+| 30 | 연승 진행 점 - 연승 3일이면 주기 7칸 중 3칸 (`AchievementsViewModelTest`) | 골격이 0 | ✅ |
+| 31 | 연승이 주기의 배수(7, 14)면 모든 칸 | `days % period`가 0 | ✅ |
+| 32 | 연승 0일이면 칸을 채우지 않음 | 31 구현이 7 | ✅ (+ refactor 한 식으로) |
+| 33 | 홈 연승 카드는 기준값 주기로 남은 날과 보상 포인트 (PointConfig(5, 30), Streak(3, true) → StreakCard(3, true, 2, 30, period=5)). 기존 `streakDays` 단언을 `streak?.days`로 | 기본값 7 · 50 | ✅ |
+| 34 | 홈에 등록한 닉네임과 지역 이름 (`Regions.label`) | `player` null | ✅ |
+| 35 | 퀘스트를 클리어했으면 클리어 안내 (`QuestHintTest` 새) | 골격 기본값 NextTrip | ✅ |
+| 36 | 클리어 전이면 "다음 경기에서 회전 N번 모두" (IN_PROGRESS 2/3, FAILED → NextTrip(3), 남은 횟수가 아니라 requiredTurns 전체) | requiredTurns 대신 0 | ✅ |
+| 37 | 오늘 클리어 전이면 클리어 시 이어질 연승 일수 (`QuestViewModelTest` 새, Streak(5, false) → 6) | `streakImpact` null | ✅ |
+| 38 | 오늘 이미 클리어면 오늘 클리어로 이어진 일수 (Streak(6, true) → 6) | 37 구현이 7 | ✅ |
+| 39 | 다음 클리어가 연속 보상 주기면 보상 포인트 (Streak(6, false), period 7 → 50, 아니면 null) | 기본값 null | ✅ |
 
-테스트 없이 고칠 것:
-- **T6 `HomeScreen.kt`**: 선수 카드(닉네임 · 지역만. 경험치 · 리그 단계 · 포인트 없음), `QuestPanel`에 `ProgressRing` + 조건 체크 + `QuestHint` 문구, `StreakPanel`에 불꽃 + `period`칸 점 + "N일 더 하면 …", `RecentTripItem`에 등급 도장 + "3 : 1 승리 · 3.9km", 상태줄 `home_status_waiting`을 "출전 대기 중 · 출발하면 경기가 시작돼요"(녹화 스크립트 확인)
-- **T7 `QuestScreen.kt` · `MissionCard.kt`**: 조건을 체크포인트로(회전 수는 칸, 사용률은 막대, 달성은 성공색 체크), `streakImpact` 줄, ACHIEVED면 "CLEAR" 도장 + 꽃가루(진입 시 1회), `MissionCard`의 `LinearProgressIndicator`를 링으로. 보물상자 · 보상 받기 · 일일 상한 줄 없음
+전체 단위 테스트 323개 통과(PR-A 312 + 11). 실제로 확인한 red는 모두 어서션 실패(골격 기본값 0 · null · 7 · NextTrip(0)).
+
+구현 메모:
+- `QuestViewModel(loadMission, loadStreak, rule)`: 퀘스트와 연승을 동시에 받음. 연승을 못 받으면 `streakImpact` null(그 줄만 숨김). 보상 포인트는 이어질 일수가 `point.streakRewardDays`의 배수일 때(오늘 이미 클리어한 날 포함)
+- `HomeViewModel`에 `rule`(기준값 `point`) · `profile`(`AppContainer.profile()` = 토큰 저장소의 등록 정보). `grades`는 화면의 등급 도장 색 때문에 공개
+- `StreakCard.period` 추가(업적 화면 ViewModel은 아직 안 채움 → PR-C 사이클 40)
+
+테스트 없이 고칠 것 — 완료 (커밋 `feat: 홈을 경기장 로비로, 퀘스트를 체크포인트 보드로 개편`):
+- [x] **T6 `HomeScreen.kt`**: 선수 카드(닉네임 · 지역만. 경험치 · 리그 단계 · 포인트 없음), `QuestPanel`에 `ProgressRing` + 조건 체크 + `QuestHint` 문구, `StreakPanel`에 불꽃 + `period`칸 점 + "N일 더 하면 …", `RecentTripItem`에 등급 도장 + "3 : 1 승리 · 3.9km", 상태줄 `home_status_waiting`을 "출전 대기 중 · 출발하면 경기가 시작돼요"(녹화 스크립트 확인)
+- [x] **T7 `QuestScreen.kt` · `MissionCard.kt`**: 조건을 체크포인트로(회전 수는 칸, 사용률은 막대, 달성은 성공색 체크), `streakImpact` 줄, ACHIEVED면 "CLEAR" 도장 + 꽃가루(진입 시 1회), `MissionCard`의 `LinearProgressIndicator`를 링으로. 보물상자 · 보상 받기 · 일일 상한 줄 없음
+
+T6 · T7 결과:
+- 홈: 선수 카드(머리글자 · 닉네임 · 지역 칩), 퀘스트 카드 = `MissionCard`(링 "2/3 회전" + 조건 체크 + "다음 경기에서 회전 N번 모두 득점하면 클리어"), 연승 카드(불꽃 · "N연승" · 오늘 달성 여부 · `period`칸 점(마지막 칸 금색 테두리) · "N일 더 이어가면 M연승 · 연속 보상 +XP"), 최근 경기(등급 도장 · "3 : 1 승리" · "오늘 22:43 · 3.9km" · "평점 N"/"결과 집계 중"), 상태줄 문구 변경(점은 깜빡이지 않음). 진입 연출: 카드 순차 등장 · 링 채움 · 도장, 탭 건너뛰기
+- 퀘스트: 왼쪽 체크포인트(48dp 체크 원, 회전 수는 칸 — 10칸 넘으면 막대, 사용률은 막대, 채움 연출) · 연승 영향 줄("클리어하면 6연승" / "오늘 클리어로 6연승" + 주기면 " · 연속 보상 +50P"), 클리어면 상태 대신 "CLEAR" 도장 + 꽃가루 1회. 오른쪽 "달성 보상 +20P"(금색) · `QuestHint` 안내 · 버튼(64dp). 보물상자 · 보상 받기 · 일일 상한 없음
+- 문구는 strings.xml `game_*`. 쓰지 않게 된 `mission_progress` · `mission_hint_in_progress` · `mission_hint_failed` · `home_streak_label` · `home_score_grade` 삭제
+- Preview: 홈 1280×720 · 720(클리어 · 집계 중 · 짧은 이동) · 720 빈 상태, 퀘스트 1280×720(클리어) · 720(진행 중 + 보상 주기) · 720(미달성 · 연승 없음), MissionCard
+
+PR-B 남은 단계:
+1. [ ] 에뮬레이터 확인(홈 · 퀘스트, 정차 · 주행 전환 시 연출 멈춤)
+2. [ ] 시연 녹화 스크립트(`scripts/record_demo.py`, 저장소 밖 로컬 전용) 확인: **홈 상태줄 "운행을 기다리고 있어요" → "출전 대기 중 · 출발하면 경기가 시작돼요"**. 홈 최근 경기 행 "평점 N · 등급" → 도장 + "3 : 1 승리" + "평점 N", 연승 카드 제목 "연속 달성" 삭제(→ "N연승"), 퀘스트 카드 "회전 N / M · 모두 제때 켜기" → 링 "N/M 회전". 홈 · 퀘스트 화면도 진입 연출 동안 글자가 투명하게 시작함(약 1.6초 · 3초, 누르면 바로 최종 상태). "시나리오 재생" · "돌아가기" · "확인" · "다음 경기에서 재도전"은 그대로
+3. [ ] ~~reviewer~~ PR-C 뒤 한 번. PR / 머지는 사용자 확인 후 (A가 먼저 머지되면 develop 기준으로 다시 맞춤)
 
 reviewer 추가 포인트: 홈 다음 행동 문구가 D25(다음 운행은 0부터)와 맞는지, 연승 칸 수 · 보상은 `point.streakRewardDays` · `streakRewardPoint`에서 읽는지. 기존 테스트 `HomeViewModelTest`(streakDays → streak), `AchievementsViewModelTest`(StreakCard 동등 비교, 새 필드 기본값으로 유지).
 
-## 9. PR-C 계획 (업적 · 리그 · 문서 마무리)
+## 9. PR-C 계획 (업적 · 리그 · 문서 마무리) — 완료 (2026-11-15)
 
-B 머지 뒤 develop에서 `feature/game-ui-shelf`.
+B가 아직 머지 전이라 `feature/game-ui-lobby` 위에서 `feature/game-ui-shelf`로 시작함. 진행 방식 변경(2장)대로 에이전트 하나가 진행.
 
 TDD 사이클:
-| # | 테스트 | 예상 red |
-| --- | --- | --- |
-| 40 | 업적 연승 카드에 기준값 주기와 채운 칸 수 (`AchievementsViewModelTest`, period 5, Streak(3, …) → period 5, dotsFilled 3) | period 기본값 7 |
-| 41 | 업적 화면에 획득한 배지 수 | `earnedCount` 기본값 0 |
+| # | 테스트 | 예상 red | 상태 |
+| --- | --- | --- | --- |
+| 40 | 업적 연승 카드에 기준값 주기와 채운 칸 수 (`AchievementsViewModelTest`, period 5, Streak(3, …) → period 5, dotsFilled 3) | period 기본값 7 | ✅ (기존 테스트 "연속 보상 주기와 보상 포인트를 기준값에서 읽는다"의 기대값도 period = 5로 맞춤) |
+| 41 | 업적 화면에 획득한 배지 수 | `earnedCount` 기본값 0 | ✅ |
+| 42 | 배지 카드에 서버 배지 코드를 담는다 (계획에 없던 사이클: T8 아이콘이 코드를 써야 해서 추가) | `code` 기본값 "" | ✅ |
+
+실제로 확인한 red는 모두 어서션 실패(7 ≠ 5, 0 ≠ 2, "" ≠ "SIGNAL_100"). 전체 단위 테스트 326개 통과(PR-B 323 + 3).
 
 테스트 없이 고칠 것:
 - **T8 `AchievementsScreen.kt`**: 진열장 그리드, 잠긴 배지는 실루엣(알파 · 회색) + 🔒 + 서버 `condition` 그대로, 획득 배지는 `awardedOn`, 상단 "획득 N / 전체 M", 배지 코드별 아이콘(FIRST_TRIP · STREAK_7 · SIGNAL_100 · SEASON_CHAMPION, 모르는 코드는 기본 트로피. 이모지 대신 icons-core · Canvas), 연승 카드에 진행 점(2차 #16 · 미구현 7). 진행 막대 · "가장 가까운 트로피"는 넣지 않음(결정 7)
@@ -204,9 +231,56 @@ TDD 사이클:
 - README 스크린샷(`docs/screenshots`)은 화면이 바뀌므로 다시 찍기(사용자)
 - 이 문서(`plan-ui.md`) 진행 상태 갱신, 다 끝나면 내용을 plan.md · screen-plan.md로 옮기고 이 문서는 "완료"로 표시
 
-## 10. 남은 사용자 결정
+결과 (커밋 `feat: 업적을 트로피 진열장으로, 리그에 큰 순위와 메달 색` 외):
+- [x] **T8 업적**: 왼쪽 연승 카드(불꽃 · "N연승" · 오늘 달성 · 주기 칸 진행 점 · "N일 더 달성하면 +XP") + 주간 리포트 버튼, 오른쪽 "트로피 진열장 · 획득 N / 전체 M" + 배지 그리드. 아이콘은 `ui/achievements/BadgeIcon.kt`(Canvas: 깃발 · 불꽃 · 방향지시등 · 금 트로피, 모르는 코드는 파랑 트로피). 잠긴 배지는 회색 실루엣 + 자물쇠(`Icons.Filled.Lock`) + 서버 조건, 획득 배지는 금 테두리 · "MM.dd 획득". 배지 순차 등장. 연승 진행 점은 `ui/common/game/StreakDots.kt`로 옮겨 홈과 같이 씀
+- [x] **T9 리그**: "N월 시즌" + D-day 칩, 큰 "N위"(1~3위 메달 색) + "참여자 M명 중"(순위가 없으면 기존 안내 문구), 리그 점수는 한 줄로 작게, 순위표 1~3위 금 · 은 · 동 원, 내 행 파랑 바탕 · 테두리 · "닉네임 (나)"(옆에서 들어옴). 내 리그 패널은 세로 스크롤
+- [x] 문구는 strings.xml. 바뀐 문구: 리그 머리말 "11월 시즌 · D-21" → "11월 시즌" + 칩 "시즌 종료 D-21", "3위 / 24명" → 큰 "3위" + "참여자 24명 중", 내 행 "닉네임 (나)". 업적 연승 "5일" → "5연승", 배지 제목 "배지" → "트로피 진열장" + "획득 N / 전체 M", 잠긴 배지 "잠김" 글자 → 자물쇠 아이콘(설명 "잠김"). 쓰지 않게 된 `league_season` · `league_rank` · `achievements_badges` · `achievements_streak_days` 삭제
+- [x] Preview: 업적 1280×720 · 720(연승 7일 꽉 참) · 720(연승 없음 · 배지 없음), 리그 1280×720(3위) · 720(7위, 내 행이 4위 아래) · 720(순위 비공개 · 순위표 없음)
+- [x] 문서: plan.md "현황 점검" 7 · 8 · 10 완료, 9 일부(퍼펙트 문구만), 2차 #16 · #17 · #22, 결정 기록. screen-plan 머리말(목업 출처) · 1장 · 4.8 리그 · 4.9 업적 · 9장(결정 6 · 7 결정 필요) · 10장
+- [ ] `docs/server-requests.md` 16 · 17: 결정 6 · 7이 아직 열려 있어 적지 않음
+- 검증(11.15): `./gradlew :automotive:testDebugUnitTest :automotive:assembleDebug :automotive:lintDebug` — 단위 테스트 326 통과, assembleDebug 성공, lint 오류 0 · 경고 15(기준선과 같음)
 
-- 결정 5: 종료 음성에서 퀘스트 클리어 · 포인트 · 연승을 먼저 말할지 ((a) 기기 추정으로 말함 (b) 말하지 않음)
-- 결정 6: 리그 단계 · 승강 · 순위 변동 · 경험치를 서버 plan 안건으로 올릴지, 서버 요청 17을 적을지
-- 결정 7: 서버 요청 16(배지 진행도)을 적을지
-- BEST 플레이 · "N초 전 점등"을 별도 feat로 할지
+## 10. 남은 일 (2026-11-15, PR-C 뒤)
+
+1. ~~**리뷰 한 번**~~ 완료: `review/2026-11-15-feature-game-ui.md`(판단 "수정 후 머지"). 지적 1~10 수정은 11장. 남은 것은 reviewer의 "재검토" 절
+2. **에뮬레이터 다시 확인**: 결과 · 하이라이트 · 홈 · 퀘스트 · 업적 · 리그, 정차 ↔ 주행 전환 때 연출이 멈추는지(Preview 렌더링도 Android Studio에서 눈으로 확인 안 됨)
+3. **PR 머지 순서**: #82(PR-A) → #83(PR-B) → PR-C. 앞 PR이 squash merge되면 다음 브랜치를 develop 기준으로 다시 맞춤. 머지는 사용자 확인 후
+4. **README 스크린샷**(`docs/screenshots`) 다시 찍기(사용자)
+5. 시연 녹화 스크립트(`scripts/record_demo.py`) 문구 확인: 7.4-7 · 8장 PR-B 남은 단계 2 · 9장 · 11장 바뀐 문구. **진입 연출 중 첫 탭은 건너뛰기만 함(11장 8)** 이라 진입 직후 버튼을 누르는 스크립트는 연출이 끝난 뒤(약 3.2초) 누르거나 두 번 눌러야 함
+6. **사용자 결정**
+   - 결정 5: 종료 음성에서 퀘스트 클리어 · 포인트 · 연승을 먼저 말할지 ((a) 기기 추정으로 말함 (b) 말하지 않음)
+   - 결정 6: 리그 단계 · 승강 · 순위 변동 · 경험치를 서버 plan 안건으로 올릴지, 서버 요청 17을 적을지
+   - 결정 7: 서버 요청 16(배지 진행도)을 적을지
+   - BEST 플레이 · "N초 전 점등"을 별도 feat로 할지
+   - ~~PR-B에서 남은 질문: 클리어 뒤에도 연속 보상 포인트를 보여 줄지~~ → 결정 12("… 받았어요")
+   - 결과 화면 맨 위 등급 꽃가루도 같은 운행을 다시 열면 다시 나옴(리뷰 9 후반). 퀘스트처럼 운행 ID로 1회만 할지
+   - 항목 상세(SCR-02b) 깜빡이 팁은 서버 `tips` 문구 그대로라 "5초"가 박혀 있음. 서버 `tips`를 `signalLeadSec`과 함께 바꾸도록 서버 팀에 알릴지(결정 15)
+7. 다 끝나면 이 문서를 "완료"로 표시(내용은 plan.md · screen-plan.md에 옮겨 둠)
+
+## 11. 최종 리뷰 지적 수정 (2026-11-15, `feature/game-ui-shelf`)
+
+`review/2026-11-15-feature-game-ui.md`의 지적 1~10과 사용자 결정(11 · 12 · 13)을 PR-C 브랜치에서 한 에이전트가 고침(진행 방식 변경 2장대로 red → green 직접, 커밋은 나눔).
+
+TDD 사이클
+- [x] A1 퀘스트에 회차 키(`TodayMission.periodId` = `missionId:periodKey`) — `MissionRepositoryTest`
+- [x] A2 퀘스트 클리어 축하는 회차당 1회(결정 11): 처음 보면 `celebrate` true, 본 뒤 같은 회차 false, 새 회차 true — `QuestViewModelTest`. 꽃가루가 시작되면(또는 탭으로 건너뛰면) `onCelebrated()`로 기억
+- [x] B "다음 등급까지 N점"(결정 13): `ResultUiState.nextGrade` — `ResultUiStateTest`. 왼쪽 판 등급 도장 아래에 표시
+- [x] 5 종료 음성 "경기 종료. 이번 경기는 회전이 없었어요." — `VoiceScriptTest` 기대 문장 먼저 바꿈
+- [x] 6 결과 화면 팁의 초 = `turn.signalLeadSec`(결정 15): `ResultUiState.tipLeadSec`(옛 `tip` · `tips` 인자 삭제) — `ResultUiStateTest` · `ResultViewModelTest`. `VoiceScript.tripEnd`의 기본값 5는 `TurnConfig().signalLeadSec`으로(refactor)
+
+테스트 없이 고친 것
+- [x] 1 앞 공백이 지워지던 문자열: `achievements_count`("획득 %1$d / 전체 %2$d", "획득 N"만 강조), `game_quest_streak_if_clear_reward` · `game_quest_streak_today_reward`(결정 12). 앞뒤 공백으로 시작 · 끝나는 문자열은 이제 없음
+- [x] 2 결과 왼쪽 판: 도장 칸을 `SpaceEvenly`, 도장 최대 168 → 240dp, 그 아래 "다음 등급 S까지 9점"
+- [x] 3 업적 진열장: 배지 4개 이하면 2열, 많으면 `Adaptive(220dp)`. 카드 최소 240dp, 아이콘 원 112dp · 아이콘 76dp, 이름 titleLarge, 조건 bodyLarge. 진열장 패널 세로 정렬은 위에서부터
+- [x] 4 하이라이트 타임라인: 보이는 점 22 → 34dp. 터치는 줄 전체가 받아 누른 x와 가장 가까운 점 하나를 고름(겹친 64dp 상자가 서로 가로채지 않음). 접근성 동작은 점마다 그대로
+- [x] 5 화면 문구: 홈 최근 경기 행 · 결과 화면 모두 "회전 없는 경기"(결정 14)
+- [x] 7 점수가 없는 스탯 행(집계 중 · 회전 없음 · 제외 · 점수 없음 · 미지원 · 해당 없음 · 준비 중)은 모두 사선 무늬 + "—"
+- [x] 8 진입 연출 중의 탭은 건너뛰기만 하고 소비(`skipRevealOnTap`). 아직 투명한 배너 · 카드 · 버튼이 눌리지 않음. 연출이 끝난 뒤의 탭은 그대로 동작
+- [x] 10 이 문서: 머리말 PR #84, 결정 11~15, 10장 갱신
+
+바뀐 화면 · 음성 문구 (녹화 스크립트 확인용)
+- 업적 머리말 "획득 2 / 전체 5"(공백 복구)
+- 퀘스트 연승 줄 "클리어하면 7연승 · 연속 보상 +50P" / "오늘 클리어로 7연승 · 연속 보상 +50P 받았어요"
+- 결과 "오늘은 회전 없는 경기" → "회전 없는 경기", 홈 "측정할 회전이 없었어요" → "회전 없는 경기"
+- 결과 새 줄 "다음 등급 S까지 9점", 다음 경기 팁 "회전 N초 전에 깜빡이를 켜 보세요."(N = 기준값)
+- 종료 음성 "경기 종료. 오늘은 회전 없는 경기였어요." → "경기 종료. 이번 경기는 회전이 없었어요."

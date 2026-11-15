@@ -115,17 +115,35 @@ class ResultUiStateTest {
     }
 
     @Test
-    fun `실점이 있으면 다음 경기 팁으로 깜빡이 팁을 담는다`() {
+    fun `다음 등급과 남은 점수를 기준값 순서로 구하고 맨 위 등급이거나 점수가 없으면 비운다`() {
         // given
-        // 깜빡이 켬 · 안 켬 · 켬 → 실점 1
-        val trip = result(ScoreState.SCORED, 67, signals = listOf(true, false, true))
-        val tips = mapOf("TURN_SIGNAL" to "회전 전에 깜빡이를 미리 켜 보세요")
+        // 등급 이름은 기준값에서 옴 (순서도 섞어 둠)
+        val grades = listOf(GradeThreshold("실버", 60), GradeThreshold("골드", 90), GradeThreshold("브론즈", 30))
 
         // when
-        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, tips = tips)
+        val silver = result(ScoreState.SCORED, 72).toResultUiState(null, grades)
+        val belowAll = result(ScoreState.SCORED, 20).toResultUiState(null, grades)
+        val top = result(ScoreState.SCORED, 93).toResultUiState(null, grades)
+        val pending = result(ScoreState.PENDING, null).toResultUiState(null, grades)
 
         // then
-        assertEquals("회전 전에 깜빡이를 미리 켜 보세요", state.tip)
+        assertEquals(NextGrade("골드", 18), silver.nextGrade)
+        assertEquals(NextGrade("브론즈", 10), belowAll.nextGrade)
+        assertNull(top.nextGrade)
+        assertNull(pending.nextGrade)
+    }
+
+    @Test
+    fun `실점이 있으면 다음 경기 팁에 기준값 signalLeadSec 초를 담는다`() {
+        // given
+        // 깜빡이 켬 · 안 켬 · 켬 → 실점 1. 서버가 기준값을 7초로 바꿈
+        val trip = result(ScoreState.SCORED, 67, signals = listOf(true, false, true))
+
+        // when
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, signalLeadSec = 7)
+
+        // then
+        assertEquals(7, state.tipLeadSec)
     }
 
     @Test
@@ -133,13 +151,12 @@ class ResultUiStateTest {
         // given
         // 회전 세 번 모두 깜빡이 켬 → 실점 0
         val trip = result(ScoreState.SCORED, 100, signals = listOf(true, true, true))
-        val tips = mapOf("TURN_SIGNAL" to "회전 전에 깜빡이를 미리 켜 보세요")
 
         // when
-        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, tips = tips)
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, signalLeadSec = 7)
 
         // then
-        assertNull(state.tip)
+        assertNull(state.tipLeadSec)
     }
 
     @Test
