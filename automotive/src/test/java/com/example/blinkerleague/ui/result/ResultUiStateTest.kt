@@ -8,7 +8,9 @@ import com.example.blinkerleague.domain.model.TripResult
 import com.example.blinkerleague.domain.model.TurnDirection
 import com.example.blinkerleague.domain.model.TurnRecord
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -92,6 +94,23 @@ class ResultUiStateTest {
 
         // then
         assertNull(state.outcome)
+    }
+
+    @Test
+    fun `기준값에서 가장 높은 등급이면 축하 연출을 켜고 그 아래 등급은 끈다`() {
+        // given
+        // 등급 이름이 아니라 기준값의 minScore 순서로 맨 위와 그다음 등급을 고름
+        val grades = GradeThreshold.DEFAULT.sortedByDescending { it.minScore }
+        val top = result(ScoreState.SCORED, grades[0].minScore)
+        val second = result(ScoreState.SCORED, grades[1].minScore)
+
+        // when
+        val topState = top.toResultUiState(null, GradeThreshold.DEFAULT)
+        val secondState = second.toResultUiState(null, GradeThreshold.DEFAULT)
+
+        // then
+        assertTrue(topState.celebrate)
+        assertFalse(secondState.celebrate)
     }
 
     @Test

@@ -36,6 +36,8 @@ sealed interface ResultUiState {
         val dayOrdinal: Int? = null,
         /** 득점과 실점으로 정한 승패. 회전이 없으면 null */
         val outcome: MatchOutcome? = null,
+        /** 기준값에서 가장 높은 등급일 때만 축하 연출(꽃가루) */
+        val celebrate: Boolean = false,
     ) : ResultUiState
 }
 
