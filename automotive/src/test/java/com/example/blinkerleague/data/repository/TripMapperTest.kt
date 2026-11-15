@@ -6,6 +6,7 @@ import com.example.blinkerleague.domain.model.Trip
 import com.example.blinkerleague.domain.model.TripEvent
 import com.example.blinkerleague.domain.model.TurnDirection
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.double
 import kotlinx.serialization.json.jsonObject
@@ -112,5 +113,26 @@ class TripMapperTest {
         val payload = request.events.single().payload.jsonObject
         assertEquals(setOf("direction", "signalOn", "maxSpeedKmh"), payload.keys)
         assertEquals(32.5, payload["maxSpeedKmh"]!!.jsonPrimitive.double, 0.0)
+    }
+
+    @Test
+    fun `HARSH_ACCEL · HARSH_BRAKE는 빈 payload {}로 저장 · 업로드한다`() {
+        // given
+        // 속도 · 브레이크를 지원하는 운행에서 2분에 급가속, 5분에 급감속
+        val harsh = trip.copy(
+            supported = setOf(SignalType.SPEED, SignalType.BRAKE),
+            events = listOf(
+                TripEvent.HarshAccelEvent("e1", start + 120_000),
+                TripEvent.HarshBrakeEvent("e2", start + 300_000),
+            ),
+        )
+
+        // when
+        val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(harsh), mapper.toEventEntities(harsh)))
+
+        // then
+        assertTrue("supported: ${request.supported}", "SMOOTH_DRIVING" in request.supported)
+        assertEquals(listOf("e1" to "HARSH_ACCEL", "e2" to "HARSH_BRAKE"), request.events.map { it.eventId to it.type })
+        assertEquals(listOf(JsonObject(emptyMap()), JsonObject(emptyMap())), request.events.map { it.payload })
     }
 }
