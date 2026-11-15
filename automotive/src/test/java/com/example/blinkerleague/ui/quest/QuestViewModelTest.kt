@@ -53,4 +53,19 @@ class QuestViewModelTest {
         // then
         assertEquals(StreakImpact(days = 6, todayCleared = true), loaded(vm).streakImpact)
     }
+
+    @Test
+    fun `다음 클리어가 연속 보상 주기면 보상 포인트, 아니면 비움`() = runTest(dispatcher) {
+        // given
+        // 기준값 기본(7일마다 50P): 6일 연속이면 오늘 클리어로 7일째, 5일 연속이면 6일째
+        val reward = QuestViewModel(loadMission = { mission }, loadStreak = { Streak(6, false) })
+        val noReward = QuestViewModel(loadMission = { mission }, loadStreak = { Streak(5, false) })
+
+        // when
+        runCurrent()
+
+        // then
+        assertEquals(50, loaded(reward).streakImpact?.rewardPoint)
+        assertEquals(null, loaded(noReward).streakImpact?.rewardPoint)
+    }
 }
