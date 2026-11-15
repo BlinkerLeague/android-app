@@ -133,12 +133,40 @@ data class GradeThreshold(val grade: String, val minScore: Int) {
 data class Coordinate(val latitude: Double, val longitude: Double)
 
 /**
- * 야간 전조등 기준. 일출 · 일몰은 실제 위치가 아니라 등록 지역의 대표 좌표로 계산함 (원시 위치 미사용)
+ * 야간 전조등 기준. 일출 · 일몰은 실제 위치가 아니라 등록 지역의 대표 좌표로 계산함 (원시 위치 미사용, 서버로 보내지 않음)
  */
 data class NightConfig(
-    /** 지역 코드(시군구, 법정동 코드 앞 5자리) → 대표 좌표 */
-    val regionCoordinates: Map<String, Coordinate> = emptyMap(),
+    /** 시·도 코드(지역 코드 앞 2자리) → 대표 좌표 */
+    val regionCoordinates: Map<String, Coordinate> = SIDO_COORDINATES,
 ) {
-    /** 지역 코드의 대표 좌표. 목록에 없으면 null */
-    fun representativeCoordinate(regionCode: String): Coordinate? = null
+    /** 지역 코드(시군구 5자리)가 속한 시·도의 대표 좌표. 목록에 없으면 null */
+    fun representativeCoordinate(regionCode: String): Coordinate? = regionCoordinates[regionCode.take(2)]
+
+    companion object {
+        /**
+         * 시·도청 위치의 근사 좌표 (소수 2자리). 일출 · 일몰은 경도 1°에 약 4분 차이라 시·도 단위면 충분함.
+         * 강원(42 → 51), 전북(45 → 52)은 특별자치도 출범 전후 코드를 모두 넣음
+         */
+        val SIDO_COORDINATES: Map<String, Coordinate> = mapOf(
+            "11" to Coordinate(37.57, 126.98), // 서울
+            "26" to Coordinate(35.18, 129.08), // 부산
+            "27" to Coordinate(35.87, 128.60), // 대구
+            "28" to Coordinate(37.46, 126.71), // 인천
+            "29" to Coordinate(35.16, 126.85), // 광주
+            "30" to Coordinate(36.35, 127.38), // 대전
+            "31" to Coordinate(35.54, 129.31), // 울산
+            "36" to Coordinate(36.48, 127.29), // 세종
+            "41" to Coordinate(37.29, 127.05), // 경기 (수원)
+            "42" to Coordinate(37.89, 127.73), // 강원 (춘천, 옛 코드)
+            "51" to Coordinate(37.89, 127.73), // 강원특별자치도
+            "43" to Coordinate(36.64, 127.49), // 충북 (청주)
+            "44" to Coordinate(36.66, 126.67), // 충남 (홍성)
+            "45" to Coordinate(35.82, 127.11), // 전북 (전주, 옛 코드)
+            "52" to Coordinate(35.82, 127.11), // 전북특별자치도
+            "46" to Coordinate(34.82, 126.46), // 전남 (무안)
+            "47" to Coordinate(36.58, 128.51), // 경북 (안동 · 예천)
+            "48" to Coordinate(35.24, 128.69), // 경남 (창원)
+            "50" to Coordinate(33.49, 126.50), // 제주
+        )
+    }
 }
