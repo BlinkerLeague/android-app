@@ -143,9 +143,14 @@
 
     <!-- 리그 (SCR-04) -->
     <string name="tab_league">리그</string>
-    <string name="league_season">%1$d월 시즌 · D-%2$d</string>
+    <string name="league_season_month">%1$d월 시즌</string>
+    <string name="league_season_end">시즌 종료</string>
+    <string name="league_dday">D-%1$d</string>
+    <string name="league_my_rank">내 순위</string>
+    <string name="league_rank_unit">위</string>
+    <string name="league_rank_of">참여자 %1$d명 중</string>
+    <string name="league_me">%1$s (나)</string>
     <string name="league_my_score">내 리그 점수</string>
-    <string name="league_rank">%1$d위 / %2$d명</string>
     <string name="league_not_ranked">아직 순위가 없어요 · 참여자 %1$d명</string>
     <string name="league_rank_hidden">참여자가 %1$d명이 되면 순위가 공개돼요 (지금 %2$d명)</string>
     <string name="league_qualified">이번 시즌 순위 자격을 채웠어요</string>
@@ -162,11 +167,13 @@
 
     <!-- 업적 (SCR-05) -->
     <string name="achievements_streak">퀘스트 연속 달성</string>
-    <string name="achievements_streak_days">%1$d일</string>
     <string name="achievements_today_done">오늘 퀘스트를 달성했어요</string>
     <string name="achievements_today_todo">오늘 퀘스트를 달성하면 이어져요</string>
     <string name="achievements_reward_in">%1$d일 더 달성하면 +%2$dP</string>
-    <string name="achievements_badges">배지</string>
+    <string name="achievements_shelf">트로피 진열장</string>
+    <string name="achievements_earned_count">획득 %1$d</string>
+    <string name="achievements_total_count"> / 전체 %1$d</string>
+    <string name="achievements_badges_empty">아직 받을 수 있는 배지가 없어요</string>
     <string name="achievements_locked">잠김</string>
     <string name="achievements_earned">획득</string>
     <string name="achievements_earned_on">%1$s 획득</string>
