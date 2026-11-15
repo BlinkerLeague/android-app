@@ -156,7 +156,14 @@ internal fun TripResult.toResultUiState(
         outcome = if (scoreState == ScoreState.EXCLUDED_SHORT) null else MatchOutcome.of(goals, conceded),
         celebrate = grade != null && grade == grades.maxByOrNull { it.minScore }?.grade,
         tip = if (conceded > 0) tips[MetricItem.TURN_SIGNAL.name] else null,
+        nextGrade = if (scoreState == ScoreState.SCORED) nextGradeOf(score, grades) else null,
     )
+}
+
+/** 기준값을 minScore 순으로 보고 [score]보다 높은 첫 등급. 점수가 없거나 맨 위 등급이면 null */
+private fun nextGradeOf(score: Int?, grades: List<GradeThreshold>): NextGrade? {
+    if (score == null) return null
+    return grades.sortedBy { it.minScore }.firstOrNull { it.minScore > score }?.let { NextGrade(it.grade, it.minScore - score) }
 }
 
 internal fun TripResult.toPlaysUiState(zone: ZoneId): PlaysUiState {

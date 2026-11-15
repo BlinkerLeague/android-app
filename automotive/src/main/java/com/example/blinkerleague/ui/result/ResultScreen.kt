@@ -184,7 +184,7 @@ private fun Loaded(
     }
 }
 
-/** 왼쪽: 머리말 · 스코어보드 · 승패 · 등급 도장 · 평점 · 적립 포인트 */
+/** 왼쪽: 머리말 · 스코어보드 · 승패 · 등급 도장 · 평점 · 다음 등급까지 · 적립 포인트 */
 @Composable
 private fun Scoreboard(state: ResultUiState.Loaded, grades: List<GradeThreshold>, clock: RevealClock) {
     Column(
@@ -211,7 +211,8 @@ private fun Scoreboard(state: ResultUiState.Loaded, grades: List<GradeThreshold>
             Column(
                 Modifier.weight(1f).fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+                // 도장 · 평점 · 다음 등급을 남은 높이에 고르게 (도장은 남은 높이만큼 커짐, 최대 240dp)
+                verticalArrangement = Arrangement.SpaceEvenly,
             ) {
                 Rating(state, grades, clock)
             }
@@ -282,7 +283,7 @@ private fun ColumnScope.Rating(state: ResultUiState.Loaded, grades: List<GradeTh
                     color = gradeColor(it, grades),
                     clock = clock,
                     startMs = ResultMotion.STAMP,
-                    modifier = Modifier.weight(1f, fill = false).heightIn(min = 96.dp, max = 168.dp),
+                    modifier = Modifier.weight(1f, fill = false).heightIn(min = 96.dp, max = 240.dp),
                     glow = state.celebrate,
                 )
             }
@@ -293,6 +294,15 @@ private fun ColumnScope.Rating(state: ResultUiState.Loaded, grades: List<GradeTh
                     ResultMotion.RATING,
                     style = MaterialTheme.typography.headlineMedium,
                     format = { stringResource(R.string.result_score, it) },
+                )
+            }
+            state.nextGrade?.let {
+                Text(
+                    stringResource(R.string.result_next_grade, it.grade, it.points),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.reveal(clock, ResultMotion.RATING),
                 )
             }
         }
@@ -486,7 +496,7 @@ private fun previewState(
 private val TopGradeState = previewState(ScoreState.SCORED, 100, "S", goals = 4, conceded = 0)
     .copy(celebrate = true, earnedPoints = 3, dayOrdinal = 3)
 private val SecondGradeState = previewState(ScoreState.SCORED, 86, "A")
-    .copy(earnedPoints = 3, dayOrdinal = 3, tip = "우회전도 회전 5초 전에 깜빡이를 켜 보세요")
+    .copy(earnedPoints = 3, dayOrdinal = 3, nextGrade = NextGrade("S", 9), tip = "우회전도 회전 5초 전에 깜빡이를 켜 보세요")
 
 @Composable
 private fun ResultPreview(state: ResultUiState) = BlinkerLeagueTheme {
