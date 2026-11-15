@@ -64,6 +64,7 @@ private val HomeViewModelFactory = viewModelFactory {
             showDemoEntry = BuildConfig.DEBUG,
             clock = System::currentTimeMillis,
             zone = ZoneId.systemDefault(),
+            rule = { container.config.point },
         )
     }
 }

@@ -56,7 +56,10 @@ class HomeViewModel(
         speedPermission,
     ) { (quest, streak), trips, status, speed ->
         HomeUiState(
-            streak = streak?.let { StreakCard(it.days, it.todayAchieved, daysToReward(it.days)) },
+            streak = streak?.let {
+                val r = rule()
+                StreakCard(it.days, it.todayAchieved, daysToReward(it.days, r.streakRewardDays), r.streakRewardPoint, r.streakRewardDays)
+            },
             quest = (quest as? QuestLoad.Loaded)?.mission,
             questLoading = quest == QuestLoad.Loading,
             recentTrips = trips.map(::toRow),
