@@ -28,6 +28,7 @@ data class TripRecording(
  *
  * - 방향지시등(TURN_SIGNAL)과 핸들 각도(STEERING_ANGLE)가 모두 지원돼야 회전 이벤트를 만듦 (아니면 서버에서 항목 제외)
  * - 거기에 속도(SPEED)까지 지원되면 깜빡이를 켠 채 잊은 이벤트도 만듦
+ * - 속도(SPEED)와 브레이크(BRAKE)가 지원되면 급가속 · 급감속 이벤트를 만듦 (운행 구간 안의 것만)
  * - 이벤트는 발생 시각 순으로 정렬함
  * - 핸들 각도·위치는 운행 구간 안의 것만 씀
  * - id 생성은 밖에서 주입 ([newId]) — 테스트에서 고정값을 쓸 수 있게
@@ -39,6 +40,7 @@ class TripAssembler(
     private val detector = SteeringTurnDetector(config.turn)
     private val judge = SignalJudge(config.turn)
     private val signalCancelDetector = SignalCancelDetector(config.signalCancel)
+    private val harshDetector = HarshDrivingDetector(config.harsh)
 
     fun assemble(
         tripId: String,
@@ -83,6 +85,16 @@ class TripAssembler(
         } else {
             emptyList()
         }
+        val harshEvents = if (SignalType.SPEED in supported && SignalType.BRAKE in supported) {
+            harshDetector.detect(recording.speeds, recording.brakes).filter { it.occurredAtMs in window }.map {
+                when (it.kind) {
+                    HarshKind.ACCEL -> TripEvent.HarshAccelEvent(id = newId(), occurredAtMs = it.occurredAtMs)
+                    HarshKind.BRAKE -> TripEvent.HarshBrakeEvent(id = newId(), occurredAtMs = it.occurredAtMs)
+                }
+            }
+        } else {
+            emptyList()
+        }
 
         return Trip(
             id = tripId,
@@ -94,7 +106,7 @@ class TripAssembler(
                 TripDistance.km(locations)
             },
             supported = supported,
-            events = (turnEvents + signalLeftOnEvents).sortedBy { it.occurredAtMs },
+            events = (turnEvents + signalLeftOnEvents + harshEvents).sortedBy { it.occurredAtMs },
         )
     }
 }
