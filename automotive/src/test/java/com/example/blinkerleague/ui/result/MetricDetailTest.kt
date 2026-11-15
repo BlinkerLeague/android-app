@@ -40,10 +40,10 @@ class MetricDetailTest {
     }
 
     @Test
-    fun `다른 항목 - 준비 중, 서버가 미지원 이유를 주면 함께, 회전 목록 없음`() {
+    fun `다른 항목 - 서버가 미지원이면 미지원과 이유를 함께, 회전 목록 없음`() {
         val server = listOf(MetricDetail("SMOOTH_DRIVING", "UNSUPPORTED", "SIGNAL_NOT_SUPPORTED", null, emptyMap()))
         val detail = trip.toMetricDetail(MetricItem.SMOOTH_DRIVING, server, GradeThreshold.DEFAULT, tips, zone)
-        assertEquals(MetricValue.ComingSoon, detail.value)
+        assertEquals(MetricValue.Unsupported, detail.value)
         assertEquals("SIGNAL_NOT_SUPPORTED", detail.serverReason)
         assertNull(detail.turnCounts)
         assertTrue(detail.turns.isEmpty())
