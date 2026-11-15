@@ -18,7 +18,7 @@
 | **지갑** | **설정** | |
 | ![지갑](docs/screenshots/wallet.png) | ![설정](docs/screenshots/settings.png) | |
 
-> Pleos Connect 에뮬레이터의 앱 영역(1682×1210dp) 캡처
+> Pleos Connect 에뮬레이터의 앱 영역(1682×1210dp) 캡처 (11.15 정차 화면 게임 UI 반영. 온보딩 · 지갑 · 주간 리포트는 11.09 화면)
 
 ## ✅ 해야 할 일 (1차 제출 전)
 
