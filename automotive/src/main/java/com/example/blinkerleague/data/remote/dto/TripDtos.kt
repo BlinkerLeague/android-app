@@ -45,6 +45,13 @@ data class SignalLeftOnPayload(
     val durationSec: Int,
 )
 
+/** `NIGHT_SEGMENT` 이벤트 payload (openapi `TripEventRequest.payload`) */
+@Serializable
+data class NightSegmentPayload(
+    val durationSec: Int,
+    val headlightOffSec: Int,
+)
+
 /**
  * `POST /api/trips` 응답과 `GET /api/trips/{id}/score` 응답 (서버 plan.md 3.5 `TripResult`).
  * 서버가 아직 안 주는 필드도 있으므로 [score] 이후는 모두 선택값
@@ -143,6 +150,9 @@ object TripEventType {
 
     /** 급감속. payload는 빈 객체 `{}` */
     const val HARSH_BRAKE = "HARSH_BRAKE"
+
+    /** 야간 주행 구간. payload는 [NightSegmentPayload] */
+    const val NIGHT_SEGMENT = "NIGHT_SEGMENT"
 }
 
 object ScoreStatus {
