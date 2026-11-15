@@ -174,7 +174,7 @@
     <string name="achievements_reward_in">%1$d일 더 달성하면 +%2$dP</string>
     <string name="achievements_shelf">트로피 진열장</string>
     <string name="achievements_earned_count">획득 %1$d</string>
-    <string name="achievements_total_count"> / 전체 %1$d</string>
+    <string name="achievements_count">획득 %1$d / 전체 %2$d</string>
     <string name="achievements_badges_empty">아직 받을 수 있는 배지가 없어요</string>
     <string name="achievements_locked">잠김</string>
     <string name="achievements_earned">획득</string>
@@ -282,7 +282,8 @@
     <string name="game_streak_next_reward">%1$d일 더 이어가면 %2$d연승 · 연속 보상 +%3$dP</string>
     <string name="game_quest_streak_if_clear">클리어하면 %1$s</string>
     <string name="game_quest_streak_today">오늘 클리어로 %1$s</string>
-    <string name="game_quest_streak_reward"> · 연속 보상 +%1$dP</string>
+    <string name="game_quest_streak_if_clear_reward">클리어하면 %1$s · 연속 보상 +%2$dP</string>
+    <string name="game_quest_streak_today_reward">오늘 클리어로 %1$s · 연속 보상 +%2$dP 받았어요</string>
     <string name="game_recent_meta">%1$s · %2$.1fkm</string>
     <string name="game_outcome_perfect">완승</string>
     <string name="game_outcome_win">승리</string>

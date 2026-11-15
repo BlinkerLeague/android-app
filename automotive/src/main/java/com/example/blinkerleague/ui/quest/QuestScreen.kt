@@ -249,7 +249,7 @@ private fun FillBar(fraction: Float, color: Color) {
     }
 }
 
-/** 연승 영향: "클리어하면 6연승" / "오늘 클리어로 6연승", 연속 보상 주기면 "· 연속 보상 +50P" */
+/** 연승 영향: "클리어하면 6연승" / "오늘 클리어로 6연승", 연속 보상 주기면 "· 연속 보상 +50P"(오늘 클리어면 "… 받았어요") */
 @Composable
 private fun StreakImpactLine(impact: StreakImpact) {
     Row(
@@ -265,11 +265,16 @@ private fun StreakImpactLine(impact: StreakImpact) {
         val days = stringResource(R.string.game_streak_days, impact.days)
         Text(
             buildAnnotatedString {
-                val text = stringResource(if (impact.todayCleared) R.string.game_quest_streak_today else R.string.game_quest_streak_if_clear, days)
+                // 보상 줄은 한 문자열로 (앞 공백 문자열은 리소스에서 공백이 지워짐, 리뷰 1). 오늘 클리어면 이미 받은 말투
+                val text = when {
+                    impact.rewardPoint == null ->
+                        stringResource(if (impact.todayCleared) R.string.game_quest_streak_today else R.string.game_quest_streak_if_clear, days)
+                    impact.todayCleared -> stringResource(R.string.game_quest_streak_today_reward, days, impact.rewardPoint)
+                    else -> stringResource(R.string.game_quest_streak_if_clear_reward, days, impact.rewardPoint)
+                }
                 val at = text.indexOf(days)
                 append(text)
                 if (at >= 0) addStyle(SpanStyle(color = Flame, fontWeight = FontWeight.Black), at, at + days.length)
-                impact.rewardPoint?.let { append(stringResource(R.string.game_quest_streak_reward, it)) }
             },
             style = MaterialTheme.typography.bodyLarge,
         )
@@ -290,7 +295,7 @@ private fun QuestPreview() = BlinkerLeagueTheme {
         QuestContent(
             QuestUiState.Loaded(
                 TodayMission("회전 깜빡이 완벽", MissionStatus.ACHIEVED, 3, 3, 3, rewardPoint = 20),
-                StreakImpact(days = 6, todayCleared = true),
+                StreakImpact(days = 7, todayCleared = true, rewardPoint = 50),
                 celebrate = true,
             ),
             onBack = {},

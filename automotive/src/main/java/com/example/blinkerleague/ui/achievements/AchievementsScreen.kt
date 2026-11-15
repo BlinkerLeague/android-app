@@ -144,19 +144,21 @@ private fun StreakPanel(streak: StreakCard, modifier: Modifier) {
 /** 트로피 진열장: "획득 N / 전체 M" + 배지 그리드 (진행 막대 · 가장 가까운 트로피는 데이터가 없어 넣지 않음, plan-ui 결정 7) */
 @Composable
 private fun ShelfPanel(state: AchievementsUiState.Loaded, clock: RevealClock, modifier: Modifier) {
-    Panel(modifier) {
+    Panel(modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 stringResource(R.string.achievements_shelf),
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black),
                 modifier = Modifier.weight(1f),
             )
+            // 한 문자열로 두고 "획득 N"만 강조 (앞 공백 문자열은 리소스에서 공백이 지워짐, 리뷰 1)
+            val count = stringResource(R.string.achievements_count, state.earnedCount, state.badges.size)
+            val earned = stringResource(R.string.achievements_earned_count, state.earnedCount)
             Text(
                 buildAnnotatedString {
-                    withStyle(SpanStyle(color = Gold, fontWeight = FontWeight.Black)) {
-                        append(stringResource(R.string.achievements_earned_count, state.earnedCount))
-                    }
-                    append(stringResource(R.string.achievements_total_count, state.badges.size))
+                    append(count)
+                    val at = count.indexOf(earned)
+                    if (at >= 0) addStyle(SpanStyle(color = Gold, fontWeight = FontWeight.Black), at, at + earned.length)
                 },
                 style = MaterialTheme.typography.titleMedium,
             )
@@ -165,7 +167,8 @@ private fun ShelfPanel(state: AchievementsUiState.Loaded, clock: RevealClock, mo
             Text(stringResource(R.string.achievements_badges_empty), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 168.dp),
+            // 배지가 적으면(지금 카탈로그 4개 안팎) 2열로 크게, 많아지면 넓이에 맞춰 늘림 (리뷰 3)
+            columns = if (state.badges.size <= MAX_BADGES_TWO_COLUMNS) GridCells.Fixed(2) else GridCells.Adaptive(minSize = 220.dp),
             modifier = Modifier.weight(1f),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -183,25 +186,25 @@ private fun ShelfPanel(state: AchievementsUiState.Loaded, clock: RevealClock, mo
 private fun BadgeItem(badge: BadgeCard, modifier: Modifier) {
     val locked = !badge.earned
     Surface(
-        modifier = modifier.heightIn(min = 196.dp),
+        modifier = modifier.heightIn(min = 240.dp),
         color = if (locked) MaterialTheme.colorScheme.background else GoldContainer,
         shape = RoundedCornerShape(14.dp),
         border = BorderStroke(2.dp, if (locked) MaterialTheme.colorScheme.outlineVariant else Gold.copy(alpha = 0.6f)),
     ) {
         Column(
-            Modifier.padding(horizontal = 14.dp, vertical = 16.dp),
+            Modifier.padding(horizontal = 16.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Box(contentAlignment = Alignment.BottomEnd) {
                 Box(
                     Modifier
-                        .size(84.dp)
+                        .size(112.dp)
                         .clip(CircleShape)
                         .background(if (locked) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.background),
                     contentAlignment = Alignment.Center,
                 ) {
-                    BadgeIcon(badge.code, locked, Modifier.size(56.dp).alpha(if (locked) 0.7f else 1f))
+                    BadgeIcon(badge.code, locked, Modifier.size(76.dp).alpha(if (locked) 0.7f else 1f))
                 }
                 if (locked) {
                     Icon(
@@ -209,7 +212,7 @@ private fun BadgeItem(badge: BadgeCard, modifier: Modifier) {
                         contentDescription = stringResource(R.string.achievements_locked),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(36.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.outlineVariant)
                             .padding(6.dp),
@@ -218,14 +221,14 @@ private fun BadgeItem(badge: BadgeCard, modifier: Modifier) {
             }
             Text(
                 badge.name,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black),
                 color = if (locked) MaterialTheme.colorScheme.onSurfaceVariant else Gold,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
             )
             Text(
                 badge.condition,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
@@ -244,16 +247,20 @@ private fun BadgeItem(badge: BadgeCard, modifier: Modifier) {
 private fun Panel(
     modifier: Modifier,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+    verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Surface(modifier = modifier, color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(16.dp)) {
         Column(
             Modifier.padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
+            verticalArrangement = verticalArrangement,
             horizontalAlignment = horizontalAlignment,
         ) { content() }
     }
 }
+
+/** 배지가 이 수 이하면 진열장을 2열로 */
+private const val MAX_BADGES_TWO_COLUMNS = 4
 
 private val PreviewState = AchievementsUiState.Loaded(
     StreakCard(5, false, 2),
