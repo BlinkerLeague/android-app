@@ -1,6 +1,7 @@
 package com.example.blinkerleague.ui.result
 
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.model.MatchOutcome
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.TripResult
@@ -65,6 +66,19 @@ class ResultUiStateTest {
 
         // then
         assertNull(state.earnedPoints)
+    }
+
+    @Test
+    fun `결과 화면 상태에 득점과 실점으로 정한 승패를 담는다`() {
+        // given
+        // 깜빡이 켬 · 안 켬 · 켬 → 2 대 1
+        val trip = result(ScoreState.SCORED, 67, signals = listOf(true, false, true))
+
+        // when
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT)
+
+        // then
+        assertEquals(MatchOutcome.WIN, state.outcome)
     }
 
     @Test

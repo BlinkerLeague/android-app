@@ -1,6 +1,7 @@
 package com.example.blinkerleague.ui.result
 
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.model.MatchOutcome
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.TodayMission
@@ -33,6 +34,8 @@ sealed interface ResultUiState {
         val earnedPoints: Int? = null,
         /** 머리말 "오늘의 N번째 경기 종료"의 N. 오늘 운행이 아니거나 모르면 null */
         val dayOrdinal: Int? = null,
+        /** 득점과 실점으로 정한 승패. 회전이 없으면 null */
+        val outcome: MatchOutcome? = null,
     ) : ResultUiState
 }
 
