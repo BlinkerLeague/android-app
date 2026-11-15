@@ -85,4 +85,13 @@ class AchievementsViewModelTest {
         assertEquals(7, daysToReward(7))
         assertEquals(1, daysToReward(13))
     }
+
+    @Test
+    fun `연승 진행 점 - 연승 3일이면 주기 7칸 중 3칸`() {
+        // when
+        val filled = streakDotsFilled(days = 3, period = 7)
+
+        // then
+        assertEquals(3, filled)
+    }
 }
