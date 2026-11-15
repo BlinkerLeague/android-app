@@ -137,6 +137,12 @@ object TripEventType {
 
     /** 깜빡이를 켠 채 잊음. payload는 [SignalLeftOnPayload] */
     const val SIGNAL_LEFT_ON = "SIGNAL_LEFT_ON"
+
+    /** 급가속. payload는 빈 객체 `{}` */
+    const val HARSH_ACCEL = "HARSH_ACCEL"
+
+    /** 급감속. payload는 빈 객체 `{}` */
+    const val HARSH_BRAKE = "HARSH_BRAKE"
 }
 
 object ScoreStatus {

@@ -64,8 +64,20 @@ class TripMapper(
                 occurredAtMs = event.occurredAtMs,
                 payload = json.encodeToString(SignalLeftOnPayload(event.durationSec)),
             )
-            is TripEvent.HarshAccelEvent -> TODO()
-            is TripEvent.HarshBrakeEvent -> TODO()
+            is TripEvent.HarshAccelEvent -> TripEventEntity(
+                eventId = event.id,
+                tripId = trip.id,
+                type = TripEventType.HARSH_ACCEL,
+                occurredAtMs = event.occurredAtMs,
+                payload = EMPTY_PAYLOAD,
+            )
+            is TripEvent.HarshBrakeEvent -> TripEventEntity(
+                eventId = event.id,
+                tripId = trip.id,
+                type = TripEventType.HARSH_BRAKE,
+                occurredAtMs = event.occurredAtMs,
+                payload = EMPTY_PAYLOAD,
+            )
         }
     }
 
@@ -118,6 +130,11 @@ class TripMapper(
     }
 
     private val lenientJson = Json { ignoreUnknownKeys = true }
+
+    private companion object {
+        /** 급가속 · 급감속처럼 추가 정보가 없는 이벤트의 payload */
+        const val EMPTY_PAYLOAD = "{}"
+    }
 
     /** 초 단위까지, 오프셋 포함 (예: 2026-11-03T08:00:00+09:00) */
     private fun isoTime(epochMs: Long): String =
