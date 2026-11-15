@@ -13,4 +13,13 @@ class MatchOutcomeTest {
         // then
         assertEquals(MatchOutcome.WIN, outcome)
     }
+
+    @Test
+    fun `득점과 실점이 같으면 무승부`() {
+        // when
+        val outcome = MatchOutcome.of(goals = 1, conceded = 1)
+
+        // then
+        assertEquals(MatchOutcome.DRAW, outcome)
+    }
 }
