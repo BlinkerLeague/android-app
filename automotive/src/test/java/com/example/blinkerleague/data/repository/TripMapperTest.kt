@@ -5,6 +5,7 @@ import com.example.blinkerleague.domain.model.SignalType
 import com.example.blinkerleague.domain.model.Trip
 import com.example.blinkerleague.domain.model.TripEvent
 import com.example.blinkerleague.domain.model.TurnDirection
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -72,5 +73,26 @@ class TripMapperTest {
         val noSignal = trip.copy(supported = emptySet(), events = emptyList())
         val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(noSignal), emptyList()))
         assertEquals(emptyList<String>(), request.supported)
+    }
+
+    @Test
+    fun `SIGNAL_LEFT_ON 이벤트는 type SIGNAL_LEFT_ON, payload {durationSec}로 저장 · 업로드한다`() {
+        // given
+        // 방향지시등 · 핸들 각도 · 속도를 지원하는 운행에서 깜빡이를 40초 켜 둔 채 잊음
+        val leftOn = trip.copy(
+            supported = setOf(SignalType.TURN_SIGNAL, SignalType.STEERING_ANGLE, SignalType.SPEED),
+            events = listOf(TripEvent.SignalLeftOnEvent("e1", start + 120_000, durationSec = 40)),
+        )
+
+        // when
+        val request = mapper.toUploadRequest(TripWithEvents(mapper.toEntity(leftOn), mapper.toEventEntities(leftOn)))
+
+        // then
+        assertEquals(listOf("SIGNAL_CANCEL", "TURN_SIGNAL"), request.supported)
+        val event = request.events.single()
+        assertEquals("e1", event.eventId)
+        assertEquals("SIGNAL_LEFT_ON", event.type)
+        assertEquals("2026-11-03T08:02:00+09:00", event.occurredAt)
+        assertEquals(Json.parseToJsonElement("""{"durationSec":40}"""), event.payload)
     }
 }
