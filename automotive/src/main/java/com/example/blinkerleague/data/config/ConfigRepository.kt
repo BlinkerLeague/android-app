@@ -64,7 +64,7 @@ internal fun DetectionConfig.mergedWith(response: ThresholdsResponse): Detection
         trip = this.trip.copy(
             minDistanceKm = trip?.minDistanceKm ?: this.trip.minDistanceKm,
             parkEndMinutes = trip?.parkEndMinutes ?: this.trip.parkEndMinutes,
-            maxEvents = trip?.maxEvents ?: this.trip.maxEvents,
+            maxEvents = trip?.maxEvents?.takeIf { it > 0 } ?: this.trip.maxEvents,
         ),
         turn = this.turn.copy(
             steeringEnterDeg = turn?.steeringEnterDeg ?: this.turn.steeringEnterDeg,
