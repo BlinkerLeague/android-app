@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.blinkerleague.domain.config.GradeThreshold
+import com.example.blinkerleague.domain.model.MetricDetail
 import com.example.blinkerleague.domain.model.ScoreState
 import com.example.blinkerleague.domain.model.TodayMission
 import com.example.blinkerleague.domain.model.TripResult
@@ -30,6 +31,8 @@ class ResultViewModel(
     private val grades: List<GradeThreshold>,
     /** 이 운행이 오늘 몇 번째 경기인지. 오늘 운행이 아니거나 모르면 null */
     private val loadDayOrdinal: suspend () -> Int? = { null },
+    /** 서버 항목 결과(metrics). 업로드 전이거나 실패면 null */
+    private val loadMetrics: suspend () -> List<MetricDetail>? = { null },
 ) : ViewModel() {
 
     private val mission = MutableStateFlow<TodayMission?>(null)
