@@ -149,7 +149,7 @@ internal fun TripResult.toPlaysUiState(zone: ZoneId): PlaysUiState {
                 time = time(it.occurredAtMs),
                 direction = it.direction,
                 goal = it.signalOn,
-                position = if (endedAtMs == startedAtMs) 0f else (it.occurredAtMs - startedAtMs).toFloat() / (endedAtMs - startedAtMs),
+                position = if (endedAtMs == startedAtMs) 0f else ((it.occurredAtMs - startedAtMs).toFloat() / (endedAtMs - startedAtMs)).coerceIn(0f, 1f),
             )
         },
     )
