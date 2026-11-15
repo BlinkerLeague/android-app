@@ -12,6 +12,8 @@ sealed interface AchievementsUiState {
         /** 연속 달성. 못 받으면 null (그 칸만 숨김) */
         val streak: StreakCard?,
         val badges: List<BadgeCard>,
+        /** 획득한 배지 수 ("획득 N / 전체 M"의 N) */
+        val earnedCount: Int = 0,
     ) : AchievementsUiState
 }
 

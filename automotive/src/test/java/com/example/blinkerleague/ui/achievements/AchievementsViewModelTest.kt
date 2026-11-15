@@ -100,6 +100,32 @@ class AchievementsViewModelTest {
     }
 
     @Test
+    fun `업적 화면에 획득한 배지 수`() = runTest(dispatcher) {
+        // given
+        // 배지 3개 중 2개 획득
+        val vm = AchievementsViewModel(
+            { null },
+            {
+                listOf(
+                    Badge("FIRST_TRIP", "첫 경기", "점수가 난 첫 운행", true, at),
+                    Badge("STREAK_7", "7일 연속", "퀘스트 7일 연속 클리어", false, null),
+                    Badge("SIGNAL_100", "깜빡이 100회", "회전 깜빡이 100회", true, at),
+                )
+            },
+            zone,
+        )
+
+        // when
+        vm.refresh()
+        runCurrent()
+
+        // then
+        val state = vm.uiState.value as AchievementsUiState.Loaded
+        assertEquals(2, state.earnedCount)
+        assertEquals(3, state.badges.size)
+    }
+
+    @Test
     fun `7일마다 보상 - 남은 날 계산`() {
         assertEquals(7, daysToReward(0))
         assertEquals(4, daysToReward(3))
