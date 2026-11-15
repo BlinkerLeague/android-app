@@ -96,6 +96,9 @@ internal fun DetectionConfig.mergedWith(response: ThresholdsResponse): Detection
         harsh = harsh.copy(
             deltaKmhPerSec = response.harsh?.deltaKmhPerSec ?: harsh.deltaKmhPerSec,
         ),
+        rain = rain.copy(
+            minWiperSec = response.rain?.minWiperSec ?: rain.minWiperSec,
+        ),
     )
 }
 
