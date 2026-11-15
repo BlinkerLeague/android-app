@@ -5,6 +5,7 @@
 - 기획서 (원본): https://claude.ai/artifact/8xWTvcr2nsR3zC57iVAYgZ
 - UI 목업 (참고용, 11.08 개정): https://claude.ai/artifact/EjjhjWCfMLr6d3aFThibn9
 - **화면 기준 문서: [`docs/screen-plan.md`](docs/screen-plan.md)** (목업과 다르면 이 문서를 따름)
+- **정차 화면 게임 UI (2차, 진행 중): [`plan-ui.md`](plan-ui.md)** — 끝난 것 · 남은 것 · 결정, 목업 [`docs/mockups/game-ui.html`](docs/mockups/game-ui.html)
 - 구현 가이드 (10/27, 기획서 문서의 탭): SDK 사용 흐름, 핸들 각도 판정, 확인 목록
 - Pleos 앱 보안 가이드 대응표: [`docs/security-checklist.md`](docs/security-checklist.md)
 - Pleos 문의 사항(실차·SDK·심사): [`docs/pleos-inquiries.md`](docs/pleos-inquiries.md)
