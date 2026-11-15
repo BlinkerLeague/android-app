@@ -2,8 +2,11 @@ package com.example.blinkerleague.data.vehicle
 
 import ai.pleos.playground.vehicle.Vehicle
 import ai.pleos.playground.vehicle.constant.area.TurnSignalValue
+import ai.pleos.playground.vehicle.constant.control.LightState
 import ai.pleos.playground.vehicle.constant.control.VehicleGear
+import ai.pleos.playground.vehicle.listener.BrakePedalStatusListener
 import ai.pleos.playground.vehicle.listener.GearSelectionListener
+import ai.pleos.playground.vehicle.listener.LightStateListener
 import ai.pleos.playground.vehicle.listener.SteeringWheelAngleListener
 import ai.pleos.playground.vehicle.listener.TurnSignalStateListener
 import android.car.Car
@@ -14,8 +17,10 @@ import android.content.Context
 import android.content.pm.PackageManager
 import com.example.blinkerleague.AppLog
 import com.example.blinkerleague.domain.model.Availability
+import com.example.blinkerleague.domain.model.BrakeSample
 import com.example.blinkerleague.domain.model.CapabilityReport
 import com.example.blinkerleague.domain.model.Gear
+import com.example.blinkerleague.domain.model.HeadlightSample
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.SteeringSample
@@ -23,6 +28,7 @@ import com.example.blinkerleague.domain.model.TurnSignalState
 import com.example.blinkerleague.domain.model.VehicleStateSample
 import kotlin.coroutines.resume
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -35,12 +41,14 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * 실제 차량 신호 공급원: Pleos Vehicle SDK 2.3.2(방향지시등·핸들 각도·기어) + CarPropertyManager(속도).
+ * 실제 차량 신호 공급원: Pleos Vehicle SDK 2.3.2(방향지시등·핸들 각도·기어·브레이크·하향등) + CarPropertyManager(속도).
  *
  * API·권한은 SDK 클래스(javap)와 에뮬레이터 실측으로 확인함 (docs/platform-capabilities.md):
  * - 방향지시등 `TurnSignal.registerTurnSignalState` — `pleos.car.permission.CAR_LIGHTS`
  * - 핸들 각도 `SteeringWheel.registerSteeringWheelAngle` (도, 에뮬레이터에서 오른쪽이 음수) — `CAR_DRIVE`
  * - 기어 `Gear.registerGearSelection` (capability 확인 API 없음 → get 성공 여부로 판단) — `CAR_DRIVE`
+ * - 브레이크 페달 `Brake.registerBrakePedalStatus` (값이 바뀔 때만 옴) — `CAR_DRIVE`
+ * - 하향등 `Light.registerLowBeamLightState` (`ON`만 켜짐, `DAYTIME_RUNNING`은 꺼짐으로 봄) — `CAR_LIGHTS`
  * - 속도 CarProperty `PERF_VEHICLE_SPEED` (m/s, 약 10Hz) — `android.car.permission.CAR_SPEED`(런타임)
  * - 시동 상태 API는 없음 → [VehicleStateSample.ignitionOn]은 항상 null
  *
@@ -74,6 +82,8 @@ class PleosVehicleSignalSource(
         steering = check { ok, fail -> vehicle.getSteeringWheel().checkSteeringWheelAngleCapabilities({ _, _ -> ok() }, fail) },
         gear = check { ok, fail -> vehicle.getGear().getCurrentGearSelectionState({ ok() }, fail) },
         speed = speedAvailability(),
+        brake = check { ok, fail -> vehicle.getBrake().checkBrakePedalStatusCapabilities({ ok() }, fail) },
+        headlight = check { ok, fail -> vehicle.getLight().checkLowBeamLightStateCapabilities({ _, _ -> ok() }, fail) },
     )
 
     private fun speedGranted() =
@@ -151,6 +161,47 @@ class PleosVehicleSignalSource(
         gear.registerGearSelection(listener)
         awaitClose { gear.unregisterGearSelection(listener) }
     }
+
+    override val brakes: Flow<BrakeSample> = callbackFlow {
+        val brake = vehicle.getBrake()
+        val listener = object : BrakePedalStatusListener {
+            override fun onBrakePedalStatusUpdated(pressed: Boolean?) {
+                pressed?.let { trySend(BrakeSample(clock(), it)) }
+            }
+            override fun onFailed(exception: Exception) {
+                AppLog.w(TAG, "브레이크 미지원: $exception")
+                close()
+            }
+        }
+        if (!register("브레이크") { brake.registerBrakePedalStatus(listener) }) return@callbackFlow
+        awaitClose { brake.unregisterBrakePedalStatus(listener) }
+    }
+
+    override val headlights: Flow<HeadlightSample> = callbackFlow {
+        val light = vehicle.getLight()
+        val listener = object : LightStateListener {
+            override fun onLightStateUpdated(state: LightState?) {
+                state?.let { trySend(HeadlightSample(clock(), on = it == LightState.ON)) }
+            }
+            override fun onFailed(exception: Exception) {
+                AppLog.w(TAG, "하향등 미지원: $exception")
+                close()
+            }
+        }
+        if (!register("하향등") { light.registerLowBeamLightState(listener) }) return@callbackFlow
+        awaitClose { light.unregisterLowBeamLightState(listener) }
+    }
+
+    /** 리스너 등록. 권한이 없어 SecurityException이 나면 수집을 멈추지 않고 이 Flow만 끝냄 */
+    private fun ProducerScope<*>.register(name: String, block: () -> Unit): Boolean =
+        try {
+            block()
+            true
+        } catch (e: SecurityException) {
+            AppLog.w(TAG, "$name 권한 없음: $e")
+            close()
+            false
+        }
 
     /** 권한이 생기면 구독하고, 없어지면 멈춤. 권한이 없는 동안은 아무것도 보내지 않음(끝나지 않음) */
     override val speeds: Flow<SpeedSample> = (speedGranted ?: flowOf(true))
