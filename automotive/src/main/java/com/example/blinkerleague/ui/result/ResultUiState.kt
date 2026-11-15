@@ -94,7 +94,10 @@ internal fun TripResult.toResultUiState(
 ): ResultUiState.Loaded {
     val goals = turns.count { it.signalOn }
     val canMeasureTurns = SignalType.TURN_SIGNAL in supported && SignalType.STEERING_ANGLE in supported
+    val serverTurnScore = serverMetrics.firstOrNull { it.metric == MetricItem.TURN_SIGNAL.name }?.score
     val turnValue: MetricValue = when {
+        // 서버가 깜빡이 항목 점수를 줬으면 총점 대신 그 점수
+        serverTurnScore != null -> MetricValue.Score(serverTurnScore)
         !canMeasureTurns -> MetricValue.Unsupported
         scoreState == ScoreState.EXCLUDED_SHORT -> MetricValue.Excluded
         scoreState == ScoreState.REJECTED -> MetricValue.NotScored
