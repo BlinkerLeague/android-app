@@ -31,8 +31,15 @@ class SignalCancelDetector(private val config: SignalCancelConfig) {
             if (sample.state != TurnSignalState.OFF) {
                 if (start == null) onSinceMs = sample.timestampMs
             } else if (start != null) {
-                val durationSec = ((sample.timestampMs - start) / 1_000).toInt()
-                if (durationSec > config.forgetSec) result += SignalLeftOn(start, durationSec)
+                val offMs = sample.timestampMs
+                // 구간 안에 회전이 있으면 마지막 회전이 끝난 뒤부터 셈
+                val countFromMs = turns
+                    .filter { it.startMs < offMs && it.endMs > start }
+                    .maxOfOrNull { it.endMs }
+                    ?.coerceIn(start, offMs)
+                    ?: start
+                val durationSec = ((offMs - countFromMs) / 1_000).toInt()
+                if (durationSec > config.forgetSec) result += SignalLeftOn(countFromMs, durationSec)
                 onSinceMs = null
             }
         }
