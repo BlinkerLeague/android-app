@@ -103,4 +103,13 @@ class AchievementsViewModelTest {
         // then
         assertEquals(listOf(7, 7), filled)
     }
+
+    @Test
+    fun `연승 0일이면 진행 점을 채우지 않는다`() {
+        // when
+        val filled = streakDotsFilled(days = 0, period = 7)
+
+        // then
+        assertEquals(0, filled)
+    }
 }
