@@ -18,6 +18,9 @@ enum class ScoreItem {
 
     /** 안전벨트 (출발 시 착용 · 주행 중 미착용 시간) */
     SEAT_BELT,
+
+    /** 우천 주행 (와이퍼가 켜진 구간의 하향등 꺼진 시간) */
+    RAIN_DRIVING,
     ;
 
     companion object {

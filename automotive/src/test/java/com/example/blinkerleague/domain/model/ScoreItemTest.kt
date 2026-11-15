@@ -90,4 +90,16 @@ class ScoreItemTest {
         // then
         assertFalse("측정 항목: $items", ScoreItem.SAFETY_WARNING in items)
     }
+
+    @Test
+    fun `와이퍼와 하향등이 있으면 RAIN_DRIVING 항목을 넣는다`() {
+        // given
+        val signals = setOf(SignalType.WIPER, SignalType.HEADLIGHT)
+
+        // when
+        val items = ScoreItem.measurable(signals)
+
+        // then
+        assertTrue("측정 항목: $items", ScoreItem.RAIN_DRIVING in items)
+    }
 }
