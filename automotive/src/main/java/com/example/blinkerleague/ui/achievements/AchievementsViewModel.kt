@@ -39,6 +39,7 @@ class AchievementsViewModel(
                     badges = b.orEmpty().map {
                         BadgeCard(it.name, it.condition, it.earned, it.awardedAtMs?.let { ms -> DATE.format(Instant.ofEpochMilli(ms).atZone(zone)) })
                     },
+                    earnedCount = b.orEmpty().count { it.earned },
                 )
             }
         }
