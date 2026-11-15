@@ -60,6 +60,9 @@ sealed interface MetricValue {
     /** 이 차량 미지원 (0점이 아니라 제외) */
     data object Unsupported : MetricValue
 
+    /** 이 운행에는 해당 없음 (서버 NOT_APPLICABLE) */
+    data object NotApplicable : MetricValue
+
     /** P1 항목 */
     data object ComingSoon : MetricValue
 }

@@ -132,6 +132,23 @@ class ResultUiStateTest {
     }
 
     @Test
+    fun `서버가 UNSUPPORTED면 이 차량 미지원, NOT_APPLICABLE이면 해당 없음을 보인다`() {
+        // given
+        val trip = result(ScoreState.SCORED, 72)
+        val serverMetrics = listOf(
+            MetricDetail(metric = "SAFETY_WARNING", status = "UNSUPPORTED", reason = null, score = null, counts = emptyMap(), weight = null),
+            MetricDetail(metric = "NIGHT_HEADLIGHT", status = "NOT_APPLICABLE", reason = null, score = null, counts = emptyMap(), weight = null),
+        )
+
+        // when
+        val state = trip.toResultUiState(null, GradeThreshold.DEFAULT, serverMetrics = serverMetrics)
+
+        // then
+        assertEquals(MetricValue.Unsupported, state.metrics.first { it.item == MetricItem.SAFETY_WARNING }.value)
+        assertEquals(MetricValue.NotApplicable, state.metrics.first { it.item == MetricItem.NIGHT_HEADLIGHT }.value)
+    }
+
+    @Test
     fun `타임라인 - 시각순 카드, 득점은 깜빡이 켠 회전`() {
         val plays = result(ScoreState.SCORED, 67).toPlaysUiState(zone)
         assertEquals("08:10", plays.startedAt)
