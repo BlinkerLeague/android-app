@@ -4,6 +4,7 @@ import com.example.blinkerleague.data.scenario.Scenarios
 import com.example.blinkerleague.domain.config.DetectionConfig
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SignalType
+import com.example.blinkerleague.domain.model.SteeringSample
 import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.TripEvent
 import com.example.blinkerleague.domain.model.TurnDirection
@@ -90,5 +91,32 @@ class TripAssemblerTest {
 
         // then
         assertEquals(listOf(TripEvent.SignalLeftOnEvent(id = "event-1", occurredAtMs = 10_000, durationSec = 40)), trip.events)
+    }
+
+    @Test
+    fun `조립한 회전 이벤트에 최고 속도를 담는다`() {
+        // given
+        // 핸들을 40s에 꺾기 시작해 42s에 100도, 45s에 풀어 왼쪽 회전 40s ~ 45s
+        val steering = listOf(
+            SteeringSample(0, 0f),
+            SteeringSample(40_000, 30f),
+            SteeringSample(42_000, 100f),
+            SteeringSample(45_000, 0f),
+        )
+        // 회전 시작 때 35km/h(39.5s 샘플), 회전 중 32km/h, 회전 뒤 50km/h
+        val speeds = listOf(SpeedSample(39_500, 35f), SpeedSample(41_000, 32f), SpeedSample(46_000, 50f))
+
+        // when
+        val trip = assembler.assemble(
+            tripId = "t",
+            startedAtMs = 0,
+            endedAtMs = 60_000,
+            recording = TripRecording(steering, emptyList(), emptyList(), emptyList(), speeds),
+            supported = all,
+        )
+
+        // then
+        val turn = trip.events.filterIsInstance<TripEvent.TurnEvent>().single()
+        assertEquals(35.0, turn.maxSpeedKmh)
     }
 }

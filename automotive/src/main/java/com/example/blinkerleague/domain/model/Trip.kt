@@ -24,6 +24,8 @@ sealed interface TripEvent {
         val direction: TurnDirection,
         val signalOn: Boolean,
         val uTurn: Boolean?,
+        /** 회전 구간 최고 속도(km/h). 속도를 모르면 null */
+        val maxSpeedKmh: Double? = null,
     ) : TripEvent
 
     /** 깜빡이를 켠 채 잊음. [durationSec]는 회전 뒤 minSpeedKmh 이상으로 달리며 켜 둔 시간 */
