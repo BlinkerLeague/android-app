@@ -4,6 +4,7 @@ import com.example.blinkerleague.domain.config.SignalCancelConfig
 import com.example.blinkerleague.domain.model.SignalSample
 import com.example.blinkerleague.domain.model.SpeedSample
 import com.example.blinkerleague.domain.model.Turn
+import com.example.blinkerleague.domain.model.TurnSignalState
 
 /** 깜빡이를 켠 채 잊은 구간 하나. [occurredAtMs]는 깜빡이를 켠 시각, [durationSec]는 켜져 있던 시간 */
 data class SignalLeftOn(
@@ -22,5 +23,19 @@ class SignalCancelDetector(private val config: SignalCancelConfig) {
         speeds: List<SpeedSample>,
         tripStartMs: Long,
         tripEndMs: Long,
-    ): List<SignalLeftOn> = emptyList()
+    ): List<SignalLeftOn> {
+        val result = mutableListOf<SignalLeftOn>()
+        var onSinceMs: Long? = null
+        for (sample in signals) {
+            val start = onSinceMs
+            if (sample.state != TurnSignalState.OFF) {
+                if (start == null) onSinceMs = sample.timestampMs
+            } else if (start != null) {
+                val durationSec = ((sample.timestampMs - start) / 1_000).toInt()
+                if (durationSec > config.forgetSec) result += SignalLeftOn(start, durationSec)
+                onSinceMs = null
+            }
+        }
+        return result
+    }
 }
