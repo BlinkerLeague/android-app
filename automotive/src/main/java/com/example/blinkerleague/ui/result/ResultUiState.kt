@@ -99,6 +99,7 @@ internal fun TripResult.toResultUiState(
     tips: Map<String, String> = emptyMap(),
 ): ResultUiState.Loaded {
     val goals = turns.count { it.signalOn }
+    val conceded = turns.size - goals
     val canMeasureTurns = SignalType.TURN_SIGNAL in supported && SignalType.STEERING_ANGLE in supported
     val turnValue: MetricValue = when {
         !canMeasureTurns -> MetricValue.Unsupported
@@ -116,7 +117,7 @@ internal fun TripResult.toResultUiState(
         grade = grade,
         distanceKm = distanceKm,
         goals = goals,
-        conceded = turns.size - goals,
+        conceded = conceded,
         metrics = listOf(
             MetricRow(MetricItem.TURN_SIGNAL, turnValue),
             MetricRow(MetricItem.SMOOTH_DRIVING, MetricValue.ComingSoon),
@@ -125,9 +126,9 @@ internal fun TripResult.toResultUiState(
         ),
         mission = mission,
         earnedPoints = earnedPoints?.takeIf { scoreState == ScoreState.SCORED && it > 0 },
-        outcome = if (scoreState == ScoreState.EXCLUDED_SHORT) null else MatchOutcome.of(goals, turns.size - goals),
+        outcome = if (scoreState == ScoreState.EXCLUDED_SHORT) null else MatchOutcome.of(goals, conceded),
         celebrate = grade != null && grade == grades.maxByOrNull { it.minScore }?.grade,
-        tip = if (turns.size - goals > 0) tips[MetricItem.TURN_SIGNAL.name] else null,
+        tip = if (conceded > 0) tips[MetricItem.TURN_SIGNAL.name] else null,
     )
 }
 
