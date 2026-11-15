@@ -28,4 +28,28 @@ class HarshDrivingDetectorTest {
         // then
         assertEquals(listOf(HarshEvent(occurredAtMs = 2_000, kind = HarshKind.ACCEL)), result)
     }
+
+    @Test
+    fun `급가속이 이어지는 동안은 한 번만 센다`() {
+        // given
+        // 0.5초 간격: 20 → 20 → 20 → 30 → 40 → 50 → 55 → 56 → 56km/h
+        // 1.5s ~ 3s는 모두 1초 전보다 10km/h 이상 늘어남, 3.5s부터 기준 미만
+        val speeds = listOf(
+            SpeedSample(0, 20f),
+            SpeedSample(500, 20f),
+            SpeedSample(1_000, 20f),
+            SpeedSample(1_500, 30f),
+            SpeedSample(2_000, 40f),
+            SpeedSample(2_500, 50f),
+            SpeedSample(3_000, 55f),
+            SpeedSample(3_500, 56f),
+            SpeedSample(4_000, 56f),
+        )
+
+        // when
+        val result = detector.detect(speeds = speeds, brakes = emptyList())
+
+        // then
+        assertEquals(listOf(HarshEvent(occurredAtMs = 1_500, kind = HarshKind.ACCEL)), result)
+    }
 }
